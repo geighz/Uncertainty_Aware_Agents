@@ -56,10 +56,14 @@ for i in range(epochs):
         print("Adjust\n{}\ntowards\n{}".format(qval, target))
 
         # Optimize the model
+        # Clear gradients of all optimized torch.Tensor s.
         optimizer.zero_grad()
         loss.backward()
         for p in model.parameters():
             p.grad.data.clamp_(-1, 1)
+        # compute gradients
+        # Gradient clipping can keep things stable.
+        # update model parameters
         optimizer.step()
         print("New Qval\n{}\n".format(model(v_state)))
 
