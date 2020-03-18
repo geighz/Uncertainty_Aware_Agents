@@ -18,29 +18,29 @@ BATCH_SIZE = 10
 memory = ReplayMemory(buffer)
 
 for i in range(epochs):
-    print("Game #: %s" % (i,))
+    # print("Game #: %s" % (i,))
     state = initGridPlayer()
-    print(dispGrid(state))
+    # print(dispGrid(state))
     status = 1
     step = 0
     # while game still in progress
     while (status == 1):
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
         qval = model(v_state)
-        print(qval)
+        # print(qval)
         if (np.random.random() < epsilon):  # choose random action
             action = np.random.randint(0, 4)
-            print("Take random action {}".format(action))
+            # print("Take random action {}".format(action))
         else:  # choose best action from Q(s,a) values
             action = np.argmax(qval.data)
-            print("Take best action {}".format(action))
+            # print("Take best action {}".format(action))
         # Take action, observe new state S'
         new_state = makeMove(state, action)
         # Observe reward
         reward = getReward(new_state)
-        print("reward: {}".format(reward))
-        print("New state:\n", dispGrid(new_state))
-        print("\n")
+        # print("reward: {}".format(reward))
+        # print("New state:\n", dispGrid(new_state))
+        # print("\n")
         step += 1
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         newQ = model(v_new_state)
@@ -51,7 +51,7 @@ for i in range(epochs):
         else:  # terminal state
             update = reward
         target[0][action] = update  # target output
-        print("Adjust\n{}\ntowards\n{}".format(qval, target))
+        # print("Adjust\n{}\ntowards\n{}".format(qval, target))
         output = loss(qval, target)
 
         # Optimize the model
@@ -64,7 +64,7 @@ for i in range(epochs):
             p.grad.data.clamp_(-1, 1)
         # update model parameters
         optimizer.step()
-        print("New Qval\n{}\n".format(model(v_state)))
+        # print("New Qval\n{}\n".format(model(v_state)))
 
         state = new_state
         if reward != -1:
@@ -92,7 +92,7 @@ def testAlgo(init=0):
     while (status == 1):
         v_state = Variable(torch.from_numpy(state))
         qval = model(v_state.view(64))
-        print(qval)
+        # print(qval)
         action = np.argmax(qval.data)  # take action with highest Q-value
         print('Move #: %s; Taking action: %s' % (i, action))
         state = makeMove(state, action)
