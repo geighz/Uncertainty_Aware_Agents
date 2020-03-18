@@ -37,7 +37,7 @@ def initGridPlayer():
     # place pit
     state[1, 1] = np.array([0, 1, 0, 0])
     # place goal
-    state[1, 2] = np.array([1, 0, 0, 0])
+    state[3, 3] = np.array([1, 0, 0, 0])
 
     a = findLoc(state, np.array([0, 0, 0, 1]))  # find grid position of player (agent)
     w = findLoc(state, np.array([0, 0, 1, 0]))  # find wall
