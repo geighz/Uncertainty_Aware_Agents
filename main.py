@@ -10,7 +10,7 @@ epochs = 1000
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 model = Q_learning(64, [164, 150], 4, hidden_unit)
-optimizer = optim.RMSprop(model.parameters(), lr=1e-2)
+optimizer = optim.RMSprop(model.parameters(), lr=1e-3)
 # optimizer = optim.SGD(model.parameters(), lr = 0.1, momentum = 0)
 criterion = torch.nn.MSELoss()
 buffer = 80
