@@ -107,4 +107,5 @@ def testAlgo(init=0):
             break
 
 
-testAlgo(init=1)
+for i in range(20):
+    testAlgo(init=1)
