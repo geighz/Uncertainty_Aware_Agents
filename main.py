@@ -107,4 +107,4 @@ def testAlgo(init=0):
             break
 
 
-testAlgo(init=0)
+testAlgo(init=1)
