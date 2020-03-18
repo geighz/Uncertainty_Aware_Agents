@@ -6,7 +6,7 @@ import torch
 
 ## Include the replay experience
 
-epochs = 400
+epochs = 1000
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 model = Q_learning(64, [164, 150], 4, hidden_unit)
