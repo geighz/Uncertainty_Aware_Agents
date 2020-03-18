@@ -53,6 +53,7 @@ for i in range(epochs):
         target[0][action] = update  # target output
 
         loss = criterion(qval, target)
+        print("Adjust\n{}\ntowards\n{}".format(qval, target))
 
         # Optimize the model
         optimizer.zero_grad()
@@ -60,6 +61,7 @@ for i in range(epochs):
         for p in model.parameters():
             p.grad.data.clamp_(-1, 1)
         optimizer.step()
+        print("New Qval\n{}\n".format(model(v_state)))
 
         state = new_state
         if reward != -1:
