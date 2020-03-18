@@ -12,7 +12,7 @@ epsilon = 1
 model = Q_learning(64, [164, 150], 4, hidden_unit)
 optimizer = optim.RMSprop(model.parameters(), lr=1e-3)
 # optimizer = optim.SGD(model.parameters(), lr = 0.1, momentum = 0)
-criterion = torch.nn.MSELoss()
+loss = torch.nn.MSELoss()
 buffer = 80
 BATCH_SIZE = 10
 memory = ReplayMemory(buffer)
@@ -51,15 +51,14 @@ for i in range(epochs):
         else:  # terminal state
             update = reward
         target[0][action] = update  # target output
-
-        loss = criterion(qval, target)
         print("Adjust\n{}\ntowards\n{}".format(qval, target))
+        output = loss(qval, target)
 
         # Optimize the model
         # Clear gradients of all optimized torch.Tensor s.
         optimizer.zero_grad()
-        loss.backward()
         # compute gradients
+        output.backward()
         # Gradient clipping can keep things stable.
         for p in model.parameters():
             p.grad.data.clamp_(-1, 1)
