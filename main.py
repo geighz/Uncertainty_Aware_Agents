@@ -6,41 +6,46 @@ import torch
 
 ## Include the replay experience
 
-epochs = 1000
+epochs = 1
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 model = Q_learning(64, [164, 150], 4, hidden_unit)
-optimizer = optim.RMSprop(model.parameters(), lr=1e-3)
-# optimizer = optim.SGD(model.parameters(), lr = 0.1, momentum = 0)
+for hidden in model.hidden_units:
+    print(hidden.nn.weight.size())
+    print(hidden.nn.weight)
+print(model.final_unit.weight.size())
+print(model.final_unit.weight)
+# optimizer = optim.RMSprop(model.parameters(), lr=0.001)
+optimizer = optim.SGD(model.parameters(), lr=0.1)
 loss = torch.nn.MSELoss()
-buffer = 80
-BATCH_SIZE = 10
-memory = ReplayMemory(buffer)
+# buffer = 80
+# BATCH_SIZE = 10
+# memory = ReplayMemory(buffer)
 
 for i in range(epochs):
-    # print("Game #: %s" % (i,))
-    state = initGridPlayer()
-    # print(dispGrid(state))
+    print("Game #: %s" % (i,))
+    state = initGrid()
+    print(dispGrid(state))
     status = 1
     step = 0
     # while game still in progress
     while (status == 1):
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
         qval = model(v_state)
-        # print(qval)
+        print(qval)
         if (np.random.random() < epsilon):  # choose random action
             action = np.random.randint(0, 4)
-            # print("Take random action {}".format(action))
+            print("Take random action {}".format(action))
         else:  # choose best action from Q(s,a) values
             action = np.argmax(qval.data)
-            # print("Take best action {}".format(action))
+            print("Take best action {}".format(action))
         # Take action, observe new state S'
         new_state = makeMove(state, action)
         # Observe reward
         reward = getReward(new_state)
-        # print("reward: {}".format(reward))
-        # print("New state:\n", dispGrid(new_state))
-        # print("\n")
+        print("reward: {}".format(reward))
+        print("New state:\n", dispGrid(new_state))
+        print("\n")
         step += 1
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         newQ = model(v_new_state)
@@ -51,7 +56,7 @@ for i in range(epochs):
         else:  # terminal state
             update = reward
         target[0][action] = update  # target output
-        # print("Adjust\n{}\ntowards\n{}".format(qval, target))
+        print("Adjust\n{}\ntowards\n{}".format(qval, target))
         output = loss(qval, target)
 
         # Optimize the model
@@ -60,11 +65,15 @@ for i in range(epochs):
         # compute gradients
         output.backward()
         # Gradient clipping can keep things stable.
-        for p in model.parameters():
-            p.grad.data.clamp_(-1, 1)
+        # for p in model.parameters():
+        #     p.grad.data.clamp_(-1, 1)
         # update model parameters
         optimizer.step()
-        # print("New Qval\n{}\n".format(model(v_state)))
+        newqval = model(v_state)
+        print("New Qval\n{}".format(newqval))
+        difference = qval - newqval
+        print(difference)
+        print()
 
         state = new_state
         if reward != -1:
@@ -94,9 +103,9 @@ def testAlgo(init=0):
         qval = model(v_state.view(64))
         # print(qval)
         action = np.argmax(qval.data)  # take action with highest Q-value
-        print('Move #: %s; Taking action: %s' % (i, action))
+        # print('Move #: %s; Taking action: %s' % (i, action))
         state = makeMove(state, action)
-        print(dispGrid(state))
+        # print(dispGrid(state))
         reward = getReward(state)
         if reward != -1:
             status = 0
@@ -107,5 +116,4 @@ def testAlgo(init=0):
             break
 
 
-for i in range(20):
-    testAlgo(init=1)
+testAlgo(init=0)
