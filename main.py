@@ -26,10 +26,10 @@ for i in range(epochs):
     print("Game #: %s" % (i,))
     state = init_grid_player()
     print(disp_grid(state))
-    status = 1
+    game_over = False
     step = 0
     # while game still in progress
-    while status == 1:
+    while not game_over:
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
         qval = model(v_state)
         print(qval)
@@ -79,8 +79,8 @@ for i in range(epochs):
         print()
 
         state = new_state
-        if reward != -1:
-            status = 0
+        if reward != -2:
+            game_over = True
         if step > 20:
             break
     if epsilon > 0.1:
