@@ -24,8 +24,8 @@ loss = torch.nn.MSELoss()
 
 for i in range(epochs):
     print("Game #: %s" % (i,))
-    state = initGridPlayer()
-    print(dispGrid(state))
+    state = init_grid_player()
+    print(disp_grid(state))
     status = 1
     step = 0
     # while game still in progress
@@ -40,11 +40,11 @@ for i in range(epochs):
             action = np.argmax(qval.data)
             print("Take best action {}".format(action))
         # Take action, observe new state S'
-        new_state = makeMove(state, action)
+        new_state = make_move(state, action)
         # Observe reward
-        reward = getReward(new_state)
+        reward = get_reward(new_state)
         print("reward: {}".format(reward))
-        print("New state:\n", dispGrid(new_state))
+        print("New state:\n", disp_grid(new_state))
         print("\n")
         step += 1
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
@@ -91,12 +91,12 @@ def testAlgo(init=0):
     if init == 0:
         state = initGrid()
     elif init == 1:
-        state = initGridPlayer()
+        state = init_grid_player()
     elif init == 2:
-        state = initGridRand()
+        state = init_grid_rand()
 
     print("Initial State:")
-    print(dispGrid(state))
+    print(disp_grid(state))
     status = 1
     # while game still in progress
     while (status == 1):
@@ -105,9 +105,9 @@ def testAlgo(init=0):
         print(qval)
         action = np.argmax(qval.data)  # take action with highest Q-value
         print('Move #: %s; Taking action: %s' % (i, action))
-        state = makeMove(state, action)
-        print(dispGrid(state))
-        reward = getReward(state)
+        state = make_move(state, action)
+        print(disp_grid(state))
+        reward = get_reward(state)
         if reward != -1:
             status = 0
             print("Reward: %s" % (reward,))
