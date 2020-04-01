@@ -5,7 +5,6 @@ import torch.nn.functional as F
 import numpy as np
 from collections import namedtuple
 import random
-from keras.models import load_model
 
 class hidden_unit(nn.Module):
     def __init__(self, in_channels, out_channels, activation):
@@ -32,11 +31,6 @@ class Q_learning(nn.Module):
             prev_layer = hidden
         self.final_unit = nn.Linear(prev_layer, out_channels, bias=False)
         nn.init.normal_(self.final_unit.weight, std=0.07)
-        model_load = load_model('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Keras/simpleModel.h5')
-        weights = model_load.get_weights()
-        self.hidden_units[0].nn.weight.data = torch.from_numpy(np.transpose(weights[0]))
-        self.hidden_units[1].nn.weight.data = torch.from_numpy(np.transpose(weights[2]))
-        self.final_unit.weight.data = torch.from_numpy(np.transpose(weights[4]))
 
     def forward(self, x):
         out = x.view(-1, self.in_channels).float()
