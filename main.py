@@ -9,7 +9,7 @@ import torch
 epochs = 10
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
-model = Q_learning(64, [164, 150], 4, hidden_unit)
+model = Q_learning(80, [164, 150], 16, hidden_unit)
 # for hidden in model.hidden_units:
 #     print(hidden.nn.weight.size())
 #     print(hidden.nn.weight)
@@ -29,18 +29,20 @@ for i in range(epochs):
     status = 1
     step = 0
     # while game still in progress
-    while (status == 1):
+    while status == 1:
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
         qval = model(v_state)
         print(qval)
-        if (np.random.random() < epsilon):  # choose random action
-            action = np.random.randint(0, 4)
+        if np.random.random() < epsilon:  # choose random action
+            action = np.random.randint(0, 16)
             print("Take random action {}".format(action))
         else:  # choose best action from Q(s,a) values
             action = np.argmax(qval.data)
             print("Take best action {}".format(action))
         # Take action, observe new state S'
-        new_state = make_move(state, action)
+        action_a = action // 4
+        action_b = action % 4
+        new_state = make_move(state, action_a, action_b)
         # Observe reward
         reward = get_reward(new_state)
         print("reward: {}".format(reward))
@@ -57,7 +59,7 @@ for i in range(epochs):
             update = reward
         target[0][action] = update  # target output
         print("Adjust\n{}\ntowards\n{}".format(qval, target))
-        #dies sorgt für einen backward pass nicht nur durch qval sondern auch durch target
+        # dies sorgt für einen backward pass nicht nur durch qval sondern auch durch target
         output = loss(qval, target)
 
         # Optimize the model
@@ -85,7 +87,7 @@ for i in range(epochs):
         epsilon -= (1 / epochs)
 
 
-## Here is the test of AI
+# Here is the test of AI
 def testAlgo(init=0):
     i = 0
     if init == 0:
@@ -112,9 +114,10 @@ def testAlgo(init=0):
             status = 0
             print("Reward: %s" % (reward,))
         i += 1  # If we're taking more than 10 actions, just stop, we probably can't win this game
-        if (i > 10):
+        if i > 10:
             print("Game lost; too many moves.")
             break
+
 
 for i in range(20):
     testAlgo(init=1)
