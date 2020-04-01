@@ -167,7 +167,9 @@ def disp_grid(state):
             grid[i, j] = ' '
 
     if player_a_loc:
-        grid[player_a_loc] = 'P'  # player
+        grid[player_a_loc] = 'A'  # player A
+    if player_b_loc:
+        grid[player_b_loc] = 'B'  # player B
     if wall:
         grid[wall] = 'W'  # wall
     if goal:
