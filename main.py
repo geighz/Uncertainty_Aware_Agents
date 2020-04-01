@@ -103,11 +103,13 @@ def testAlgo(init=0):
     # while game still in progress
     while (status == 1):
         v_state = Variable(torch.from_numpy(state))
-        qval = model(v_state.view(64))
+        qval = model(v_state.view(80))
         print(qval)
         action = np.argmax(qval.data)  # take action with highest Q-value
         print('Move #: %s; Taking action: %s' % (i, action))
-        state = make_move(state, action)
+        action_a = action // 4
+        action_b = action % 4
+        state = make_move(state, action_a, action_b)
         print(disp_grid(state))
         reward = get_reward(state)
         if reward != -1:
