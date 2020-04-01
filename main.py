@@ -6,17 +6,17 @@ import torch
 
 ## Include the replay experience
 
-epochs = 1
+epochs = 10
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 model = Q_learning(64, [164, 150], 4, hidden_unit)
-for hidden in model.hidden_units:
-    print(hidden.nn.weight.size())
-    print(hidden.nn.weight)
-print(model.final_unit.weight.size())
-print(model.final_unit.weight)
-# optimizer = optim.RMSprop(model.parameters(), lr=0.001)
-optimizer = optim.SGD(model.parameters(), lr=0.1)
+# for hidden in model.hidden_units:
+#     print(hidden.nn.weight.size())
+#     print(hidden.nn.weight)
+# print(model.final_unit.weight.size())
+# print(model.final_unit.weight)
+optimizer = optim.RMSprop(model.parameters(), lr=0.001)
+# optimizer = optim.SGD(model.parameters(), lr=0.1)
 loss = torch.nn.MSELoss()
 # buffer = 80
 # BATCH_SIZE = 10
@@ -24,7 +24,7 @@ loss = torch.nn.MSELoss()
 
 for i in range(epochs):
     print("Game #: %s" % (i,))
-    state = initGrid()
+    state = initGridPlayer()
     print(dispGrid(state))
     status = 1
     step = 0
@@ -49,14 +49,15 @@ for i in range(epochs):
         step += 1
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         newQ = model(v_new_state)
-        maxQ = newQ.max(1)[0]
-        target = qval.clone()
+        maxQ = newQ.max(1)[0].detach()
+        target = qval.clone().detach()
         if reward == -1:  # non-terminal state
             update = (reward + (gamma * maxQ))
         else:  # terminal state
             update = reward
         target[0][action] = update  # target output
         print("Adjust\n{}\ntowards\n{}".format(qval, target))
+        #dies sorgt für einen backward pass nicht nur durch qval sondern auch durch target
         output = loss(qval, target)
 
         # Optimize the model
@@ -101,11 +102,11 @@ def testAlgo(init=0):
     while (status == 1):
         v_state = Variable(torch.from_numpy(state))
         qval = model(v_state.view(64))
-        # print(qval)
+        print(qval)
         action = np.argmax(qval.data)  # take action with highest Q-value
-        # print('Move #: %s; Taking action: %s' % (i, action))
+        print('Move #: %s; Taking action: %s' % (i, action))
         state = makeMove(state, action)
-        # print(dispGrid(state))
+        print(dispGrid(state))
         reward = getReward(state)
         if reward != -1:
             status = 0
@@ -115,5 +116,5 @@ def testAlgo(init=0):
             print("Game lost; too many moves.")
             break
 
-
-testAlgo(init=0)
+for i in range(20):
+    testAlgo(init=1)
