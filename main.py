@@ -6,7 +6,7 @@ import torch
 
 ## Include the replay experience
 
-epochs = 1000
+epochs = 500
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 model_a = Q_learning(80, [164, 150], 4, hidden_unit)
@@ -16,8 +16,10 @@ model_b = Q_learning(80, [164, 150], 4, hidden_unit)
 #     print(hidden.nn.weight)
 # print(model.final_unit.weight.size())
 # print(model.final_unit.weight)
-optimizer_a = optim.RMSprop(model_a.parameters(), lr=0.001)
-optimizer_b = optim.RMSprop(model_b.parameters(), lr=0.001)
+# optimizer_a = optim.RMSprop(model_a.parameters(), lr=0.001)
+# optimizer_b = optim.RMSprop(model_b.parameters(), lr=0.001)
+optimizer_a = optim.Adam(model_a.parameters(), lr=0.001)
+optimizer_b = optim.Adam(model_b.parameters(), lr=0.001)
 # optimizer = optim.SGD(model.parameters(), lr=0.1)
 loss_a = torch.nn.MSELoss()
 loss_b = torch.nn.MSELoss()
