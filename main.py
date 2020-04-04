@@ -149,12 +149,12 @@ for i in range(epochs):
         # update model parameters
         optimizer_a.step()
         optimizer_b.step()
-        newqval_a = model_a(v_state)
-        newqval_b = model_b(v_state)
+        # newqval_a = model_a(v_state)
+        # newqval_b = model_b(v_state)
         # print("New Qval\n{}".format(newqval_a))
         # print("New Qval\n{}".format(newqval_b))
-        difference_a = qval_a - newqval_a
-        difference_b = qval_b - newqval_b
+        # difference_a = qval_a - newqval_a
+        # difference_b = qval_b - newqval_b
         # print(difference_a)
         # print(difference_b)
         # print()
