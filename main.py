@@ -76,9 +76,9 @@ optimizer_b = optim.Adam(model_b.parameters(), lr=0.001)
 # optimizer_b = optim.SGD(model_b.parameters(), lr=0.02)
 loss_a = torch.nn.MSELoss()
 loss_b = torch.nn.MSELoss()
-# buffer = 80
-# BATCH_SIZE = 10
-# memory = ReplayMemory(buffer)
+buffer = 80
+BATCH_SIZE = 40
+memory = ReplayMemory(buffer)
 
 for i in range(epochs):
     # print("Game #: %s" % (i,))
@@ -161,10 +161,10 @@ for i in range(epochs):
         if reward != -2:
             game_over = True
             tmp = 0
-            for a in range(20):
+            for a in range(100):
                 tmp += testAlgo(init=1)
             episode_durations.append(tmp)
-            if i % 500 == 0:
+            if i % 1000 == 0:
                 plot_durations()
         if step > 20:
             break
