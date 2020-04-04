@@ -86,7 +86,6 @@ for i in range(epochs):
     # print(disp_grid(state))
     game_over = False
     step = 0
-    reward_sum = 0
     # while game still in progress
     while not game_over:
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
@@ -110,7 +109,6 @@ for i in range(epochs):
         new_state = make_move(state, action_a, action_b)
         # Observe reward
         reward = get_reward(new_state)
-        reward_sum += reward
         # print("reward: {}".format(reward))
         # print("New state:\n", disp_grid(new_state))
         # print("\n")
