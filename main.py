@@ -58,7 +58,7 @@ def testAlgo(init=0):
             return reward_sum
 
 
-epochs = 1005
+epochs = 1001
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 model_a = Q_learning(80, [164, 150], 4, hidden_unit)
@@ -74,8 +74,8 @@ optimizer_a = optim.Adam(model_a.parameters(), lr=0.001)
 optimizer_b = optim.Adam(model_b.parameters(), lr=0.001)
 # optimizer_a = optim.SGD(model_a.parameters(), lr=0.02)
 # optimizer_b = optim.SGD(model_b.parameters(), lr=0.02)
-loss_a = torch.nn.MSELoss()
-loss_b = torch.nn.MSELoss()
+criterion_a = torch.nn.MSELoss()
+criterion_b = torch.nn.MSELoss()
 buffer = 80
 BATCH_SIZE = 40
 memory = ReplayMemory(buffer)
@@ -91,71 +91,84 @@ for i in range(epochs):
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
         qval_a = model_a(v_state)
         qval_b = model_b(v_state)
-        # print(qval_a)
-        # print(qval_b)
         if np.random.random() < epsilon:  # choose random action
             action_a = np.random.randint(0, 4)
             # print("A takes random action {}".format(action_a))
         else:  # choose best action from Q(s,a) values
             action_a = np.argmax(qval_a.data)
             # print("A takes best action {}".format(action_a))
-        if np.random.random() < epsilon:  # choose random action
+        if np.random.random() < epsilon:
             action_b = np.random.randint(0, 4)
-            # print("B takes random action {}".format(action_b))
         else:  # choose best action from Q(s,a) values
             action_b = np.argmax(qval_b.data)
-            # print("B takes best action {}".format(action_b))
         # Take action, observe new state S'
         new_state = make_move(state, action_a, action_b)
+        v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         # Observe reward
         reward = get_reward(new_state)
         # print("reward: {}".format(reward))
         # print("New state:\n", disp_grid(new_state))
         # print("\n")
+        memory.push(v_state.data, action_a, action_b, v_new_state.data, reward)
+        if (len(memory) < buffer): #if buffer not filled, add to it
+            state = new_state
+            if reward != -2: #if reached terminal state, update game status
+                break
+            else:
+                continue
+        transitions = memory.sample(BATCH_SIZE)
+        batch = Transition(*zip(*transitions))
+        state_batch = Variable(torch.cat(batch.state))
+        action_a_batch = Variable(torch.LongTensor(batch.action_a)).view(-1, 1)
+        action_b_batch = Variable(torch.LongTensor(batch.action_b)).view(-1, 1)
+        new_state_batch = Variable(torch.cat(batch.new_state))
+        reward_batch = Variable(torch.FloatTensor(batch.reward))
+        non_final_mask = (reward_batch == -2)
+
+        # tmp_state = state_batch[0].view(4,4,5).numpy()
+        # print(disp_grid(tmp_state))
+        # tmp_action_a = action_a_batch[0]
+        # print(tmp_action_a)
+        # tmp_reward = reward_batch[0]
+        # print(tmp_reward)
+        # tmp_new_state = new_state_batch[0].view(4,4,5).numpy()
+        # print(disp_grid(tmp_new_state))
+
         step += 1
-        v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
-        newQ_a = model_a(v_new_state)
-        maxQ_a = newQ_a.max(1)[0].detach()
-        newQ_b = model_b(v_new_state)
-        maxQ_b = newQ_b.max(1)[0].detach()
-        target_a = qval_a.clone().detach()
-        target_b = qval_b.clone().detach()
-        if reward == -2:  # non-terminal state
-            update_a = (reward + (gamma * maxQ_a))
-            update_b = (reward + (gamma * maxQ_b))
-        else:  # terminal state
-            update_a = reward
-            update_b = reward
-        target_a[0][action_a] = update_a  # target output
-        target_b[0][action_b] = update_b  # target output
-        # print("A: Adjust\n{}\ntowards\n{}".format(qval_a, target_a))
-        # print("B: Adjust\n{}\ntowards\n{}".format(qval_b, target_b))
-        # dies sorgt für einen backward pass nicht nur durch qval sondern auch durch target
-        output_a = loss_a(qval_a, target_a)
-        output_b = loss_b(qval_b, target_b)
+        qval_batch_a = model_a(state_batch)
+        qval_batch_b = model_b(state_batch)
+        state_action_values_a = qval_batch_a.gather(1, action_a_batch)
+        state_action_values_a = state_action_values_a.view(1, -1)
+        state_action_values_b = qval_batch_b.gather(1, action_b_batch)
+        state_action_values_b = state_action_values_b.view(1, -1)
+        newQ_a = model_a(new_state_batch)
+        newQ_b = model_b(new_state_batch)
+        maxQ_a = newQ_a.max(1)[0]
+        maxQ_b = newQ_b.max(1)[0]
+        y_a = reward_batch
+        y_b = reward_batch.clone()
+        y_a[non_final_mask] += gamma * maxQ_a[non_final_mask]
+        y_b[non_final_mask] += gamma * maxQ_b[non_final_mask]
+        y_a = y_a.view(1, -1)
+        y_b = y_b.view(1, -1)
+        y_a = y_a.detach()
+        y_b = y_b.detach()
+        loss_a = criterion_a(state_action_values_a, y_a)
+        loss_b = criterion_b(state_action_values_b, y_b)
 
         # Optimize the model
         # Clear gradients of all optimized torch.Tensor s.
         optimizer_a.zero_grad()
         optimizer_b.zero_grad()
         # compute gradients
-        output_a.backward()
-        output_b.backward()
+        loss_a.backward()
+        loss_b.backward()
         # Gradient clipping can keep things stable.
         # for p in model.parameters():
         #     p.grad.data.clamp_(-1, 1)
         # update model parameters
         optimizer_a.step()
         optimizer_b.step()
-        # newqval_a = model_a(v_state)
-        # newqval_b = model_b(v_state)
-        # print("New Qval\n{}".format(newqval_a))
-        # print("New Qval\n{}".format(newqval_b))
-        # difference_a = qval_a - newqval_a
-        # difference_b = qval_b - newqval_b
-        # print(difference_a)
-        # print(difference_b)
-        # print()
 
         state = new_state
         if reward != -2:
@@ -164,7 +177,7 @@ for i in range(epochs):
             for a in range(100):
                 tmp += testAlgo(init=1)
             episode_durations.append(tmp)
-            if i % 1000 == 0:
+            if i % 50 == 0:
                 plot_durations()
         if step > 20:
             break
