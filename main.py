@@ -137,10 +137,8 @@ for i in range(epochs):
         step += 1
         qval_batch_a = model_a(state_batch)
         qval_batch_b = model_b(state_batch)
-        state_action_values_a = qval_batch_a.gather(1, action_a_batch)
-        state_action_values_a = state_action_values_a.view(1, -1)
-        state_action_values_b = qval_batch_b.gather(1, action_b_batch)
-        state_action_values_b = state_action_values_b.view(1, -1)
+        state_action_values_a = qval_batch_a.gather(1, action_a_batch).view(1, -1)
+        state_action_values_b = qval_batch_b.gather(1, action_b_batch).view(1, -1)
         newQ_a = model_a(new_state_batch)
         newQ_b = model_b(new_state_batch)
         maxQ_a = newQ_a.max(1)[0]
@@ -149,10 +147,8 @@ for i in range(epochs):
         y_b = reward_batch.clone()
         y_a[non_final_mask] += gamma * maxQ_a[non_final_mask]
         y_b[non_final_mask] += gamma * maxQ_b[non_final_mask]
-        y_a = y_a.view(1, -1)
-        y_b = y_b.view(1, -1)
-        y_a = y_a.detach()
-        y_b = y_b.detach()
+        y_a = y_a.view(1, -1).detach()
+        y_b = y_b.view(1, -1).detach()
         loss_a = criterion_a(state_action_values_a, y_a)
         loss_b = criterion_b(state_action_values_b, y_b)
 
