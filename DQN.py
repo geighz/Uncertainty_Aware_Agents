@@ -41,7 +41,7 @@ class Q_learning(nn.Module):
 
 
 Transition = namedtuple('Transition',
-                        ('state', 'action', 'new_state', 'reward'))
+                        ('state', 'action_a', 'action_b', 'new_state', 'reward'))
 
 
 class ReplayMemory(object):

@@ -76,9 +76,9 @@ optimizer_b = optim.Adam(model_b.parameters(), lr=0.001)
 # optimizer_b = optim.SGD(model_b.parameters(), lr=0.02)
 loss_a = torch.nn.MSELoss()
 loss_b = torch.nn.MSELoss()
-# buffer = 80
-# BATCH_SIZE = 10
-# memory = ReplayMemory(buffer)
+buffer = 80
+BATCH_SIZE = 40
+memory = ReplayMemory(buffer)
 
 for i in range(epochs):
     # print("Game #: %s" % (i,))
