@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+graph_output/
 env/
 build/
 develop-eggs/
