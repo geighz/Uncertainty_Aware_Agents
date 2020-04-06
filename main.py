@@ -86,6 +86,7 @@ buffer = 80
 BATCH_SIZE = 40
 memory = ReplayMemory(buffer)
 
+state_counter = {}
 for i in range(epochs):
     # print("Game #: %s" % (i,))
     state = init_grid_player()
