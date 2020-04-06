@@ -128,16 +128,6 @@ for i in range(epochs):
         new_state_batch = Variable(torch.cat(batch.new_state))
         reward_batch = Variable(torch.FloatTensor(batch.reward))
         non_final_mask = (reward_batch == -2)
-
-        # tmp_state = state_batch[0].view(4,4,5).numpy()
-        # print(disp_grid(tmp_state))
-        # tmp_action_a = action_a_batch[0]
-        # print(tmp_action_a)
-        # tmp_reward = reward_batch[0]
-        # print(tmp_reward)
-        # tmp_new_state = new_state_batch[0].view(4,4,5).numpy()
-        # print(disp_grid(tmp_new_state))
-
         step += 1
         qval_batch_a = model_a(state_batch)
         qval_batch_b = model_b(state_batch)
