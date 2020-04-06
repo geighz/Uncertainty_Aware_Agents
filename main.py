@@ -1,3 +1,4 @@
+import math
 from DQN import ReplayMemory, Transition, hidden_unit, Q_learning
 from torch.autograd import Variable
 from gridworld import *
@@ -11,6 +12,7 @@ episode_durations = []
 def plot_durations():
     plt.figure(2)
     plt.clf()
+    # plt.ylim((200,700))
     durations_t = torch.tensor(episode_durations, dtype=torch.float)
     plt.title('Training...')
     plt.xlabel('Episode')
@@ -93,6 +95,14 @@ for i in range(epochs):
     # while game still in progress
     while not game_over:
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
+        #Hash the current state and count it
+        hash_of_state = list(v_state[0].numpy().astype(int))
+        hash_of_state = bin(int(''.join(map(str, hash_of_state)), 2) << 1)
+        if hash_of_state in state_counter:
+            state_counter[hash_of_state] += 1
+        else:
+            state_counter[hash_of_state] = 1
+        # print(math.sqrt(state_counter[hash_of_state]))
         qval_a = model_a(v_state)
         qval_b = model_b(v_state)
         if np.random.random() < epsilon:  # choose random action
