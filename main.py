@@ -65,11 +65,11 @@ epochs = 1001
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 model_a = Q_learning(80, [164, 150], 4, hidden_unit)
-model_a.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth'))
-model_a.eval()
+# model_a.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth'))
+# model_a.eval()
 model_b = Q_learning(80, [164, 150], 4, hidden_unit)
-model_b.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_b.pth'))
-model_b.eval()
+# model_b.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_b.pth'))
+# model_b.eval()
 # for hidden in model.hidden_units:
 #     print(hidden.nn.weight.size())
 #     print(hidden.nn.weight)
