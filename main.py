@@ -22,7 +22,7 @@ def plot_durations():
 # Here is the test of AI
 def testAlgo(init=0):
     if init == 0:
-        state = initGrid()
+        state = init_grid()
     elif init == 1:
         state = init_grid_player()
     elif init == 2:

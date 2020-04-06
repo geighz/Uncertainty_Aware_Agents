@@ -14,7 +14,7 @@ def findLoc(state, obj):
 
 
 # Initialize stationary grid, all items are placed deterministically
-def initGrid():
+def init_grid():
     state = np.zeros((4, 4, 5))
     # place player a
     state[0, 1] = np.array([0, 0, 0, 1, 0])
