@@ -21,8 +21,9 @@ def plot_durations():
     # Take 100 episode averages and plot them too
     plt.pause(0.1)  # pause a bit so that plots are updated
 
+
 # Here is the test of AI
-def testAlgo(init=0):
+def test_algo(init=0):
     if init == 0:
         state = init_grid()
     elif init == 1:
@@ -176,7 +177,7 @@ for i in range(epochs):
             game_over = True
             tmp = 0
             for a in range(100):
-                tmp += testAlgo(init=1)
+                tmp += test_algo(init=1)
             episode_durations.append(tmp)
             if i % 50 == 0:
                 plot_durations()
