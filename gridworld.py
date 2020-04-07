@@ -18,6 +18,22 @@ def findLoc(state, obj):
                 return i, j
 
 
+def get_grid_for_player(state, player):
+    if np.array_equal(player, player_a):
+        return state
+    old_player_a_loc, old_player_b_loc, wall_loc, goal_loc, pit_loc = find_objects(state)
+    state = np.zeros((4, 4, 5))
+    state[old_player_a_loc] = player_b.copy()
+    state[old_player_b_loc] = player_a.copy()
+    # re-place pit
+    state[pit_loc] = pit.copy()
+    # re-place wall
+    state[wall_loc] = wall.copy()
+    # re-place goal
+    state[goal_loc] = goal.copy()
+    return state
+
+
 # Initialize stationary grid, all items are placed deterministically
 def init_grid():
     state = np.zeros((4, 4, 5))
