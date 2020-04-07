@@ -83,8 +83,8 @@ optimizer_b = optim.Adam(model_b.parameters(), lr=0.001)
 # optimizer_b = optim.SGD(model_b.parameters(), lr=0.02)
 criterion_a = torch.nn.MSELoss()
 criterion_b = torch.nn.MSELoss()
-buffer = 80
-BATCH_SIZE = 40
+buffer = 1
+BATCH_SIZE = 1
 memory = ReplayMemory(buffer)
 
 state_counter = {}
