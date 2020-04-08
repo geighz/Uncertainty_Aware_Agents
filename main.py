@@ -2,24 +2,12 @@ import math
 from DQN import ReplayMemory, Transition, hidden_unit, Q_learning
 from torch.autograd import Variable
 from gridworld import *
+from Miner import *
+from Plotter import *
 import torch.optim as optim
 import torch
-import matplotlib.pyplot as plt
 
-episode_durations = []
-
-
-def plot_durations():
-    plt.figure(2)
-    plt.clf()
-    # plt.ylim((200,700))
-    durations_t = torch.tensor(episode_durations, dtype=torch.float)
-    plt.title('Training...')
-    plt.xlabel('Episode')
-    plt.ylabel('Reward')
-    plt.plot(durations_t.numpy())
-    # Take 100 episode averages and plot them too
-    plt.pause(0.1)  # pause a bit so that plots are updated
+reward_history = []
 
 
 # Here is the test of AI
@@ -61,7 +49,28 @@ def test_algo(init=0):
             return reward_sum
 
 
-epochs = 1001
+# Here is the test of AI
+def test_all_states():
+    reward_sum = 0
+    for game_id in range(50):
+        state = load_state_with_id(game_id)
+        steps = 0
+        status = 1
+        while status == 1:
+            v_state = Variable(torch.from_numpy(state))
+            qval_a = model_a(v_state.view(80))
+            qval_b = model_b(v_state.view(80))
+            action_a = np.argmax(qval_a.data)
+            action_b = np.argmax(qval_b.data)
+            state = make_move(state, action_a, action_b)
+            reward = get_reward(state)
+            reward_sum += reward
+            steps += 1
+            if reward != -2 or steps > 10:
+                status = 0
+    return reward_sum/50
+
+epochs = 501
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 model_a = Q_learning(80, [164, 150], 4, hidden_unit)
@@ -86,8 +95,13 @@ criterion_b = torch.nn.MSELoss()
 buffer = 1
 BATCH_SIZE = 1
 memory = ReplayMemory(buffer)
-
-state_counter = {}
+sum_asked_for_advise = 0
+x = []
+asked_dic = []
+sum_given_advise = 0
+given_dic = []
+times_asked_for_advise = 0
+times_given_advise = 0
 for i in range(epochs):
     # print("Game #: %s" % (i,))
     state = init_grid_player()
@@ -97,26 +111,27 @@ for i in range(epochs):
     # while game still in progress
     while not game_over:
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
-        #Hash the current state and count it
-        hash_of_state = list(v_state[0].numpy().astype(int))
-        hash_of_state = bin(int(''.join(map(str, hash_of_state)), 2) << 1)
-        if hash_of_state in state_counter:
-            state_counter[hash_of_state] += 1
-        else:
-            state_counter[hash_of_state] = 1
-        # print(math.sqrt(state_counter[hash_of_state]))
         qval_a = model_a(v_state)
         qval_b = model_b(v_state)
-        if np.random.random() < epsilon:  # choose random action
-            action_a = np.random.randint(0, 4)
-            # print("A takes random action {}".format(action_a))
-        else:  # choose best action from Q(s,a) values
-            action_a = np.argmax(qval_a.data)
-            # print("A takes best action {}".format(action_a))
-        if np.random.random() < epsilon:
-            action_b = np.random.randint(0, 4)
-        else:  # choose best action from Q(s,a) values
-            action_b = np.argmax(qval_b.data)
+
+        action_a = None
+        action_b = None
+        prob_ask = probability_ask_with_state(state)
+        if np.random.random() < prob_ask:
+            # ask for advice
+            # print("ask for advice")
+            times_asked_for_advise += 1
+            prob_give = advising_probability_in_state(state)
+            if np.random.random() < prob_give:
+                # give advise
+                # print("give advise")
+                times_given_advise += 1
+                action_a = give_advise(state, model_b)
+                action_b = give_advise(state, model_a)
+        if action_a is None:
+            action_a = exploration_strategy(qval_a, epsilon)
+        if action_b is None:
+            action_b = exploration_strategy(qval_b, epsilon)
         # Take action, observe new state S'
         new_state = make_move(state, action_a, action_b)
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
@@ -172,15 +187,24 @@ for i in range(epochs):
         optimizer_a.step()
         optimizer_b.step()
 
+        count_state(state)
         state = new_state
         if reward != -2:
             game_over = True
-            tmp = 0
-            for a in range(100):
-                tmp += test_algo(init=1)
-            episode_durations.append(tmp)
-            if i % 50 == 0:
-                plot_durations()
+            if i % 25 == 0:
+                x.append(i)
+                average_reward = test_all_states()
+                reward_history.append(average_reward)
+                asked_dic.append(times_asked_for_advise)
+                given_dic.append(times_given_advise)
+                times_asked_for_advise = 0
+                times_given_advise = 0
+            sum_asked_for_advise += times_asked_for_advise
+            sum_given_advise += times_given_advise
+            if i % 500 == 0 and not i == 0:
+                plot_durations(x, reward_history)
+                plot_give(x, given_dic)
+                plot_ask(x, asked_dic)
         if step > 20:
             break
     if epsilon > 0.02:
