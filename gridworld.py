@@ -5,6 +5,12 @@ player_b = np.array([0, 0, 0, 0, 1])
 wall = np.array([0, 0, 1, 0, 0])
 pit = np.array([0, 1, 0, 0, 0])
 goal = np.array([1, 0, 0, 0, 0])
+all_states = np.genfromtxt('all_states.csv', delimiter=',')
+
+
+def load_state_with_id(index):
+    return all_states[index].reshape((4, 4, 5))
+
 
 def randPair(s, e):
     return np.random.randint(s, e), np.random.randint(s, e)
