@@ -81,7 +81,7 @@ agent_b.set_partner(agent_a)
 
 # TODO can I put the optimizer into the Miner class
 optimizer_a = optim.Adam(agent_a.get_model_parameters(), lr=0.001)
-optimizer_b = optim.Adam(agent_a.get_model_parameters(), lr=0.001)
+optimizer_b = optim.Adam(agent_b.get_model_parameters(), lr=0.001)
 # optimizer_a = optim.SGD(model_a.parameters(), lr=0.02)
 # optimizer_b = optim.SGD(model_b.parameters(), lr=0.02)
 criterion_a = torch.nn.MSELoss()
