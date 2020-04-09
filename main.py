@@ -26,13 +26,8 @@ def test_algo(init=0):
     reward_sum = 0
     # while game still in progress
     while (status == 1):
-        v_state = Variable(torch.from_numpy(state))
-        qval_a = model_a(v_state.view(80))
-        qval_b = model_b(v_state.view(80))
-        # print(qval_a)
-        # print(qval_b)
-        action_a = np.argmax(qval_a.data)  # take action with highest Q-value
-        action_b = np.argmax(qval_b.data)  # take action with highest Q-value
+        action_a = agent_a.choose_best_action(state)
+        action_b = agent_b.choose_best_action(state)
         # print('A: Move #: %s; Taking action: %s' % (i, action_a))
         # print('B: Move #: %s; Taking action: %s' % (i, action_b))
         state = make_move(state, action_a, action_b)
@@ -52,16 +47,14 @@ def test_algo(init=0):
 # Here is the test of AI
 def test_all_states():
     reward_sum = 0
+    # TODO: return the average score instead of sum over 100 games
     for game_id in range(50):
         state = load_state_with_id(game_id)
         steps = 0
         status = 1
         while status == 1:
-            v_state = Variable(torch.from_numpy(state))
-            qval_a = model_a(v_state.view(80))
-            qval_b = model_b(v_state.view(80))
-            action_a = np.argmax(qval_a.data)
-            action_b = np.argmax(qval_b.data)
+            action_a = agent_a.choose_best_action(state)
+            action_b = agent_b.choose_best_action(state)
             state = make_move(state, action_a, action_b)
             reward = get_reward(state)
             reward_sum += reward
@@ -73,12 +66,7 @@ def test_all_states():
 epochs = 501
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
-model_a = Q_learning(80, [164, 150], 4, hidden_unit)
-# model_a.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth'))
-# model_a.eval()
-model_b = Q_learning(80, [164, 150], 4, hidden_unit)
-# model_b.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_b.pth'))
-# model_b.eval()
+
 # for hidden in model.hidden_units:
 #     print(hidden.nn.weight.size())
 #     print(hidden.nn.weight)
@@ -86,8 +74,14 @@ model_b = Q_learning(80, [164, 150], 4, hidden_unit)
 # print(model.final_unit.weight)
 # optimizer_a = optim.RMSprop(model_a.parameters(), lr=0.001)
 # optimizer_b = optim.RMSprop(model_b.parameters(), lr=0.001)
-optimizer_a = optim.Adam(model_a.parameters(), lr=0.001)
-optimizer_b = optim.Adam(model_b.parameters(), lr=0.001)
+agent_a = Miner()
+agent_b = Miner()
+agent_a.set_partner(agent_b)
+agent_b.set_partner(agent_a)
+
+# TODO can I put the optimizer into the Miner class
+optimizer_a = optim.Adam(agent_a.get_model_parameters(), lr=0.001)
+optimizer_b = optim.Adam(agent_a.get_model_parameters(), lr=0.001)
 # optimizer_a = optim.SGD(model_a.parameters(), lr=0.02)
 # optimizer_b = optim.SGD(model_b.parameters(), lr=0.02)
 criterion_a = torch.nn.MSELoss()
@@ -100,50 +94,32 @@ x = []
 asked_dic = []
 sum_given_advise = 0
 given_dic = []
-times_asked_for_advise = 0
-times_given_advise = 0
 for i in range(epochs):
-    # print("Game #: %s" % (i,))
+    print("Game #: %s" % (i,))
     state = init_grid_player()
-    # print(disp_grid(state))
+    print(disp_grid(state))
     game_over = False
     step = 0
     # while game still in progress
     while not game_over:
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
-        qval_a = model_a(v_state)
-        qval_b = model_b(v_state)
 
-        action_a = None
-        action_b = None
-        prob_ask = probability_ask_with_state(state)
-        if np.random.random() < prob_ask:
-            # ask for advice
-            # print("ask for advice")
-            times_asked_for_advise += 1
-            prob_give = advising_probability_in_state(state)
-            if np.random.random() < prob_give:
-                # give advise
-                # print("give advise")
-                times_given_advise += 1
-                action_a = give_advise(state, model_b)
-                action_b = give_advise(state, model_a)
-        if action_a is None:
-            action_a = exploration_strategy(qval_a, epsilon)
-        if action_b is None:
-            action_b = exploration_strategy(qval_b, epsilon)
+        # TODO: choose best action seems to return way better results
+        action_a = agent_a.choose_training_action(state, epsilon)
+        action_b = agent_b.choose_training_action(state, epsilon)
         # Take action, observe new state S'
         new_state = make_move(state, action_a, action_b)
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         # Observe reward
         reward = get_reward(new_state)
-        # print("reward: {}".format(reward))
-        # print("New state:\n", disp_grid(new_state))
-        # print("\n")
+        print("reward: {}".format(reward))
+        print("New state:\n", disp_grid(new_state))
+        print("\n")
         memory.push(v_state.data, action_a, action_b, v_new_state.data, reward)
-        if (len(memory) < buffer): #if buffer not filled, add to it
+        # if buffer not filled, add to it
+        if len(memory) < buffer:
             state = new_state
-            if reward != -2: #if reached terminal state, update game status
+            if reward != -2:
                 break
             else:
                 continue
@@ -156,14 +132,11 @@ for i in range(epochs):
         reward_batch = Variable(torch.FloatTensor(batch.reward))
         non_final_mask = (reward_batch == -2)
         step += 1
-        qval_batch_a = model_a(state_batch)
-        qval_batch_b = model_b(state_batch)
-        state_action_values_a = qval_batch_a.gather(1, action_a_batch).view(1, -1)
-        state_action_values_b = qval_batch_b.gather(1, action_b_batch).view(1, -1)
-        newQ_a = model_a(new_state_batch)
-        newQ_b = model_b(new_state_batch)
-        maxQ_a = newQ_a.max(1)[0]
-        maxQ_b = newQ_b.max(1)[0]
+        state_action_values_a = agent_a.get_state_action_value(state_batch, action_a_batch)
+        state_action_values_b = agent_b.get_state_action_value(state_batch, action_b_batch)
+        # TODO: wieso haben beide agents genau die gleichen werte hier
+        maxQ_a = agent_a.get_max_q_value(new_state_batch)
+        maxQ_b = agent_b.get_max_q_value(new_state_batch)
         y_a = reward_batch
         y_b = reward_batch.clone()
         y_a[non_final_mask] += gamma * maxQ_a[non_final_mask]
@@ -186,21 +159,22 @@ for i in range(epochs):
         # update model parameters
         optimizer_a.step()
         optimizer_b.step()
-
-        count_state(state)
+        # TODO: replace with state fom state batch
+        agent_a.count_state(state)
+        agent_b.count_state(state)
         state = new_state
         if reward != -2:
             game_over = True
+            sum_asked_for_advise += agent_a.times_asked_for_advise
+            sum_given_advise += agent_a.times_given_advise
             if i % 25 == 0:
                 x.append(i)
                 average_reward = test_all_states()
                 reward_history.append(average_reward)
-                asked_dic.append(times_asked_for_advise)
-                given_dic.append(times_given_advise)
-                times_asked_for_advise = 0
-                times_given_advise = 0
-            sum_asked_for_advise += times_asked_for_advise
-            sum_given_advise += times_given_advise
+                asked_dic.append(agent_a.times_asked_for_advise)
+                given_dic.append(agent_a.times_given_advise)
+                agent_a.times_asked_for_advise = 0
+                agent_a.times_given_advise = 0
             if i % 500 == 0 and not i == 0:
                 plot_durations(x, reward_history)
                 plot_give(x, given_dic)
