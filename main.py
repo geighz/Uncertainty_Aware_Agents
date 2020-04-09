@@ -47,7 +47,6 @@ def test_algo(init=0):
 # Here is the test of AI
 def test_all_states():
     reward_sum = 0
-    # TODO: return the average score instead of sum over 100 games
     for game_id in range(50):
         state = load_state_with_id(game_id)
         steps = 0
