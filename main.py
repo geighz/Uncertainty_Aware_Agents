@@ -41,27 +41,26 @@ x = []
 asked_dic = []
 sum_given_advise = 0
 given_dic = []
+env = Goldmine()
 for i in range(epochs):
     print("Game #: %s" % (i,))
-    state = init_grid_player()
-    render(state)
-    game_over = False
+    state = env.reset()
+    env.render()
+    done = False
     step = 0
     # while game still in progress
-    while not game_over:
+    while not done:
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
-
         # TODO: choose best action seems to return way better results
         action_a = agent_a.choose_training_action(state, epsilon)
         action_b = agent_b.choose_training_action(state, epsilon)
         # Take action, observe new state S'
-        new_state = make_move(state, action_a, action_b)
+        new_state, reward, done, _ = env.step(action_a, action_b)
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         # Observe reward
-        reward = get_reward(new_state)
         print("reward: {}".format(reward))
         print("New state:")
-        render(new_state)
+        env.render()
         print("\n")
         memory.push(v_state.data, action_a, action_b, v_new_state.data, reward)
         # if buffer not filled, add to it
@@ -111,8 +110,7 @@ for i in range(epochs):
         agent_a.count_state(state)
         agent_b.count_state(state)
         state = new_state
-        if is_done(state):
-            game_over = True
+        if done:
             sum_asked_for_advise += agent_a.times_asked_for_advise
             sum_given_advise += agent_a.times_given_advise
             if i % 25 == 0:
