@@ -8,8 +8,29 @@ goal = np.array([1, 0, 0, 0, 0])
 all_states = np.genfromtxt('all_states.csv', delimiter=',')
 
 
-def load_state_with_id(index):
-    return all_states[index].reshape((4, 4, 5))
+class Goldmine:
+    def __init__(self):
+        self.state = init_grid_player()
+        self.isDone = False
+
+
+    def step(self, action_a, action_b):
+        if not self.isDone:
+            self.state = make_move(self.state, action_a, action_b)
+            self.isDone = is_done(self.state)
+        return self.state, get_reward(self.state), self.isDone, "Info"
+
+    def reset(self, state_id):
+        self.state = load_state_with_id(state_id)
+        self.isDone = False
+        return self.state
+
+    def render(self, mode='human'):
+        render(self.state)
+
+
+def load_state_with_id(state_id):
+    return all_states[state_id].reshape((4, 4, 5))
 
 
 def randPair(s, e):

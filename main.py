@@ -11,22 +11,25 @@ reward_history = []
 
 
 # Here is the test of AI
-def test_all_states():
+def evaluate_agents():
     reward_sum = 0
-    for game_id in range(50):
-        state = load_state_with_id(game_id)
+    env = Goldmine()
+    for state_id in range(50):
+        observation = env.reset(state_id)
+        # env.render()
         steps = 0
-        status = 1
-        while status == 1:
-            action_a = agent_a.choose_best_action(state)
-            action_b = agent_b.choose_best_action(state)
-            state = make_move(state, action_a, action_b)
-            reward = get_reward(state)
+        done = False
+        while not done:
+            action_a = agent_a.choose_best_action(observation)
+            action_b = agent_b.choose_best_action(observation)
+            observation, reward, done, info = env.step(action_a, action_b)
+            # env.render()
             reward_sum += reward
             steps += 1
-            if is_done(state) or steps > 10:
-                status = 0
+            if steps > 10:
+                done = True
     return reward_sum/50
+
 
 epochs = 1001
 gamma = 0.9  # since it may take several moves to goal, making gamma high
@@ -135,7 +138,7 @@ for i in range(epochs):
             sum_given_advise += agent_a.times_given_advise
             if i % 25 == 0:
                 x.append(i)
-                average_reward = test_all_states()
+                average_reward = evaluate_agents()
                 reward_history.append(average_reward)
                 asked_dic.append(agent_a.times_asked_for_advise)
                 given_dic.append(agent_a.times_given_advise)
