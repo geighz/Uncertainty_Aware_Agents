@@ -204,8 +204,7 @@ def render(state):
         grid[goal_loc] = '+'  # goal
     if pit:
         grid[pit] = '-'  # pit
-
-    return grid
+    print(grid)
 
 
 def is_done(state):

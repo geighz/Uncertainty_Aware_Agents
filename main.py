@@ -18,9 +18,7 @@ def test_algo(init=0):
         state = init_grid_player()
     elif init == 2:
         state = init_grid_rand()
-
     # print("Initial State:")
-    # print(disp_grid(state))
     i = 0
     status = 1
     reward_sum = 0
@@ -31,7 +29,6 @@ def test_algo(init=0):
         # print('A: Move #: %s; Taking action: %s' % (i, action_a))
         # print('B: Move #: %s; Taking action: %s' % (i, action_b))
         state = make_move(state, action_a, action_b)
-        # print(disp_grid(state))
         reward = get_reward(state)
         reward_sum += reward
         if is_done(state):
@@ -62,7 +59,7 @@ def test_all_states():
                 status = 0
     return reward_sum/50
 
-epochs = 501
+epochs = 1001
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 
@@ -96,7 +93,7 @@ given_dic = []
 for i in range(epochs):
     print("Game #: %s" % (i,))
     state = init_grid_player()
-    print(render(state))
+    render(state)
     game_over = False
     step = 0
     # while game still in progress
@@ -112,7 +109,8 @@ for i in range(epochs):
         # Observe reward
         reward = get_reward(new_state)
         print("reward: {}".format(reward))
-        print("New state:\n", render(new_state))
+        print("New state:")
+        render(new_state)
         print("\n")
         memory.push(v_state.data, action_a, action_b, v_new_state.data, reward)
         # if buffer not filled, add to it
