@@ -11,37 +11,6 @@ reward_history = []
 
 
 # Here is the test of AI
-def test_algo(init=0):
-    if init == 0:
-        state = init_grid()
-    elif init == 1:
-        state = init_grid_player()
-    elif init == 2:
-        state = init_grid_rand()
-    # print("Initial State:")
-    i = 0
-    status = 1
-    reward_sum = 0
-    # while game still in progress
-    while (status == 1):
-        action_a = agent_a.choose_best_action(state)
-        action_b = agent_b.choose_best_action(state)
-        # print('A: Move #: %s; Taking action: %s' % (i, action_a))
-        # print('B: Move #: %s; Taking action: %s' % (i, action_b))
-        state = make_move(state, action_a, action_b)
-        reward = get_reward(state)
-        reward_sum += reward
-        if is_done(state):
-            status = 0
-            return reward_sum
-            # print("Reward: %s" % (reward,))
-        i += 1  # If we're taking more than 10 actions, just stop, we probably can't win this game
-        if i > 10:
-            # print("Reward: Game lost; too many moves.")
-            return reward_sum
-
-
-# Here is the test of AI
 def test_all_states():
     reward_sum = 0
     for game_id in range(50):
