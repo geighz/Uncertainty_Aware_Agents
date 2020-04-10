@@ -187,7 +187,7 @@ def find_objects(state):
     return player_a_loc, player_b_loc, wall_loc, goal_loc, pit_loc
 
 
-def disp_grid(state):
+def render(state):
     grid = np.zeros((4, 4), dtype=str)
     player_a_loc, player_b_loc, wall_loc, goal_loc, pit = find_objects(state)
     for i in range(0, 4):

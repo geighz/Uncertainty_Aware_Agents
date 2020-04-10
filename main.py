@@ -96,7 +96,7 @@ given_dic = []
 for i in range(epochs):
     print("Game #: %s" % (i,))
     state = init_grid_player()
-    print(disp_grid(state))
+    print(render(state))
     game_over = False
     step = 0
     # while game still in progress
@@ -112,7 +112,7 @@ for i in range(epochs):
         # Observe reward
         reward = get_reward(new_state)
         print("reward: {}".format(reward))
-        print("New state:\n", disp_grid(new_state))
+        print("New state:\n", render(new_state))
         print("\n")
         memory.push(v_state.data, action_a, action_b, v_new_state.data, reward)
         # if buffer not filled, add to it
