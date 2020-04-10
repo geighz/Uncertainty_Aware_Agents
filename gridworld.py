@@ -13,15 +13,17 @@ class Goldmine:
         self.state = init_grid_player()
         self.isDone = False
 
-
     def step(self, action_a, action_b):
         if not self.isDone:
             self.state = make_move(self.state, action_a, action_b)
             self.isDone = is_done(self.state)
         return self.state, get_reward(self.state), self.isDone, "Info"
 
-    def reset(self, state_id):
-        self.state = load_state_with_id(state_id)
+    def reset(self, state_id=None):
+        if state_id is None:
+            self.state = init_grid_player()
+        else:
+            self.state = load_state_with_id(state_id)
         self.isDone = False
         return self.state
 
