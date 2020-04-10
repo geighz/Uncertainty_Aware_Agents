@@ -206,3 +206,11 @@ def disp_grid(state):
         grid[pit] = '-'  # pit
 
     return grid
+
+
+def is_done(state):
+    player_a_loc, player_b_loc, wall_loc, goal_loc, pit_loc = find_objects(state)
+    if not player_a_loc or not player_b_loc or not wall_loc or not goal_loc or not pit_loc:
+        return True
+    else:
+        return False
