@@ -1,6 +1,8 @@
 import math
 from DQN import ReplayMemory, Transition, hidden_unit, Q_learning
 from torch.autograd import Variable
+
+from evaluation import *
 from gridworld import *
 from Miner import *
 from Plotter import *
@@ -8,29 +10,6 @@ import torch.optim as optim
 import torch
 
 reward_history = []
-
-
-# Here is the test of AI
-def evaluate_agents():
-    reward_sum = 0
-    env = Goldmine()
-    for state_id in range(50):
-        observation = env.reset(state_id)
-        # env.render()
-        steps = 0
-        done = False
-        while not done:
-            action_a = agent_a.choose_best_action(observation)
-            action_b = agent_b.choose_best_action(observation)
-            observation, reward, done, info = env.step(action_a, action_b)
-            # env.render()
-            reward_sum += reward
-            steps += 1
-            if steps > 10:
-                done = True
-    return reward_sum/50
-
-
 epochs = 1001
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
@@ -138,7 +117,7 @@ for i in range(epochs):
             sum_given_advise += agent_a.times_given_advise
             if i % 25 == 0:
                 x.append(i)
-                average_reward = evaluate_agents()
+                average_reward = evaluate_agents(agent_a, agent_b)
                 reward_history.append(average_reward)
                 asked_dic.append(agent_a.times_asked_for_advise)
                 given_dic.append(agent_a.times_given_advise)
