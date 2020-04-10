@@ -34,7 +34,7 @@ def test_algo(init=0):
         # print(disp_grid(state))
         reward = get_reward(state)
         reward_sum += reward
-        if reward != -2:
+        if is_done(state):
             status = 0
             return reward_sum
             # print("Reward: %s" % (reward,))
@@ -58,7 +58,7 @@ def test_all_states():
             reward = get_reward(state)
             reward_sum += reward
             steps += 1
-            if reward != -2 or steps > 10:
+            if is_done(state) or steps > 10:
                 status = 0
     return reward_sum/50
 
@@ -162,7 +162,7 @@ for i in range(epochs):
         agent_a.count_state(state)
         agent_b.count_state(state)
         state = new_state
-        if reward != -2:
+        if is_done(state):
             game_over = True
             sum_asked_for_advise += agent_a.times_asked_for_advise
             sum_given_advise += agent_a.times_given_advise
