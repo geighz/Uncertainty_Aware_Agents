@@ -8,7 +8,7 @@ class hidden_unit(nn.Module):
         super(hidden_unit, self).__init__()
         self.activation = activation
         # linear transformation to the incoming data
-        self.nn = nn.Linear(in_channels, out_channels, bias=False)
+        self.nn = nn.Linear(in_channels, out_channels)
         nn.init.normal_(self.nn.weight, std=0.07)
 
     def forward(self, x):
@@ -26,7 +26,7 @@ class Q_learning(nn.Module):
         for hidden in hidden_layers:
             self.hidden_units.append(unit(prev_layer, hidden, activation))
             prev_layer = hidden
-        self.final_unit = nn.Linear(prev_layer, out_channels, bias=False)
+        self.final_unit = nn.Linear(prev_layer, out_channels)
         nn.init.normal_(self.final_unit.weight, std=0.07)
 
     def forward(self, x):
