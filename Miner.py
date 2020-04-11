@@ -46,15 +46,12 @@ class Miner:
     def set_partner(self, other_agent):
         self.other_agent = other_agent
 
-    def get_model_parameters(self):
-        return self.model.parameters()
-
     def give_advise(self, state):
         prob_give = self.advising_probability_in_state(state)
         if np.random.random() > prob_give:
             return None
         # give advise
-        print("give advise")
+        # print("give advise")
         self.times_given_advise += 1
         inv_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
         v_state = Variable(torch.from_numpy(inv_state)).view(1, -1)
