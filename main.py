@@ -14,17 +14,21 @@ epochs = 1001
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 
-# for hidden in model.hidden_units:
-#     print(hidden.nn.weight.size())
-#     print(hidden.nn.weight)
-# print(model.final_unit.weight.size())
-# print(model.final_unit.weight)
-# optimizer_a = optim.RMSprop(model_a.parameters(), lr=0.001)
-# optimizer_b = optim.RMSprop(model_b.parameters(), lr=0.001)
 agent_a = Miner()
 agent_b = Miner()
 agent_a.set_partner(agent_b)
 agent_b.set_partner(agent_a)
+# for hidden in agent_a.model.hidden_units:
+#     print(hidden.nn.weight.size())
+#     print(hidden.nn.weight)
+#     print(hidden.nn.bias.size())
+#     print(hidden.nn.bias)
+print(agent_a.model.final_unit.weight.size())
+print(agent_a.model.final_unit.weight)
+print(agent_a.model.final_unit.bias.size())
+print(agent_a.model.final_unit.bias)
+# optimizer_a = optim.RMSprop(model_a.parameters(), lr=0.001)
+# optimizer_b = optim.RMSprop(model_b.parameters(), lr=0.001)
 
 # TODO can I put the optimizer into the Miner class
 optimizer_a = optim.Adam(agent_a.model.parameters(), lr=0.001)
@@ -43,9 +47,9 @@ sum_given_advise = 0
 given_dic = []
 env = Goldmine()
 for i in range(epochs):
-    print("Game #: %s" % (i,))
+    # print("Game #: %s" % (i,))
     state = env.reset()
-    env.render()
+    # env.render()
     done = False
     step = 0
     # while game still in progress
@@ -58,10 +62,10 @@ for i in range(epochs):
         new_state, reward, done, _ = env.step(action_a, action_b)
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         # Observe reward
-        print("reward: {}".format(reward))
-        print("New state:")
-        env.render()
-        print("\n")
+        # print("reward: {}".format(reward))
+        # print("New state:")
+        # env.render()
+        # print("\n")
         memory.push(v_state.data, action_a, action_b, v_new_state.data, reward)
         # if buffer not filled, add to it
         if len(memory) < buffer:
