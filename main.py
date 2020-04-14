@@ -23,18 +23,10 @@ agent_b.set_partner(agent_a)
 #     print(hidden.nn.weight)
 #     print(hidden.nn.bias.size())
 #     print(hidden.nn.bias)
-print(agent_a.model.final_unit.weight.size())
-print(agent_a.model.final_unit.weight)
-print(agent_a.model.final_unit.bias.size())
-print(agent_a.model.final_unit.bias)
-# optimizer_a = optim.RMSprop(model_a.parameters(), lr=0.001)
-# optimizer_b = optim.RMSprop(model_b.parameters(), lr=0.001)
 
 # TODO can I put the optimizer into the Miner class
 optimizer_a = optim.Adam(agent_a.model.parameters(), lr=0.001)
 optimizer_b = optim.Adam(agent_b.model.parameters(), lr=0.001)
-# optimizer_a = optim.SGD(model_a.parameters(), lr=0.02)
-# optimizer_b = optim.SGD(model_b.parameters(), lr=0.02)
 criterion_a = torch.nn.MSELoss()
 criterion_b = torch.nn.MSELoss()
 buffer = 1
