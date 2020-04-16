@@ -34,14 +34,17 @@ optimizers_b = []
 for i in range(agent_a.model.number_heads):
     optimizers_a.append(optim.Adam(agent_a.model.heads[i].parameters()))
     optimizers_b.append(optim.Adam(agent_b.model.heads[i].parameters()))
+    # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
+    # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
+
 criterion = torch.nn.MSELoss()
 buffer = 1
 BATCH_SIZE = 1
 memory = ReplayMemory(buffer)
 sum_asked_for_advise = 0
+sum_given_advise = 0
 x = []
 asked_dic = []
-sum_given_advise = 0
 given_dic = []
 env = Goldmine()
 for i in range(epochs):
