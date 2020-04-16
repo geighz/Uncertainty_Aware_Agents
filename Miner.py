@@ -31,8 +31,6 @@ def advising_probability(psi):
 
 
 class Miner:
-    # TODO: DO I need thiss variable?
-    # advising_dic = {}
 
     def __init__(self, number_heads):
         self.model = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
