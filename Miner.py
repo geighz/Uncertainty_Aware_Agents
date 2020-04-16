@@ -10,7 +10,7 @@ vg = 0.25
 
 
 def hash_state(state):
-    hash_value = list(state[0].numpy().astype(int))
+    hash_value = list(state.view(1, -1)[0].numpy().astype(int))
     hash_value = bin(int(''.join(map(str, hash_value)), 2) << 1)
     return hash_value
 
@@ -33,6 +33,7 @@ def advising_probability(psi):
 class Miner:
 
     def __init__(self, number_heads):
+        self.number_heads = number_heads
         self.model = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.times_asked_for_advise = 0
         self.times_given_advise = 0
@@ -57,7 +58,7 @@ class Miner:
 
     def advising_probability_in_state(self, state):
         inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
-        v_inverse_state = Variable(torch.from_numpy(inverse_state)).view(1, -1)
+        v_inverse_state = Variable(torch.from_numpy(inverse_state))
         hash_of_inverse_state = hash_state(v_inverse_state)
         if hash_of_inverse_state in self.state_counter:
             number_of_visits = self.state_counter[hash_of_inverse_state]
@@ -69,7 +70,7 @@ class Miner:
 
     def probability_ask_with_state(self, state):
         # TODO: Is it necessary to convert the state to a tensor and back when hasing?
-        v_state = Variable(torch.from_numpy(state)).view(1, -1)
+        v_state = Variable(torch.from_numpy(state))
         hash_of_state = hash_state(v_state)
         ypsilon = self.ypsilon_visit(hash_of_state)
         return probability_ask_with_ypsilon(ypsilon)
@@ -84,7 +85,7 @@ class Miner:
         return result
 
     def count_state(self, state):
-        v_state = Variable(torch.from_numpy(state)).view(1, -1)
+        v_state = Variable(torch.from_numpy(state))
         hash_of_state = hash_state(v_state)
         if hash_of_state in self.state_counter:
             self.state_counter[hash_of_state] += 1
@@ -116,39 +117,25 @@ class Miner:
 
     def choose_best_action(self, state):
         v_state = Variable(torch.from_numpy(state))
-        qval = self.get_q_values(v_state)
+        qval = self.model(v_state)
         # q-values derived from all heads, compare with
         # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
         # page 5
         final_q_function = qval[0]
-        for i in range(self.model.number_heads - 1):
+        for i in range(self.number_heads - 1):
             final_q_function += qval[i + 1]
         # print(qval)
         # take action with highest Q-value
-        final_q_function = final_q_function.data / self.model.number_heads
+        final_q_function = final_q_function.data / self.number_heads
         return np.argmax(final_q_function.data)
 
-    def get_q_values(self, state):
-        # TODO: scheinbar wuerde
-        # v_state = Variable(torch.from_numpy(state))
-        # qval = self.model(v_state.view(80))
-        # es auch tun
-        result = []
-        for i in range(self.model.number_heads):
-            result.append(self.model.heads[i](state))
-        return result
-
     def get_qval_for_best_action_in(self, state):
-        qval = self.get_q_values(state)
-        # mean = torch.mean(torch.stack(qval))
-        sum = qval[0]
-        for i in range(self.model.number_heads - 1):
-            sum += qval[i+1]
-        return sum.max(1)[0]/self.model.number_heads
+        qval = self.model.q_circumflex(state)
+        return qval.max(1)[0]
 
     def get_state_action_value(self, state, action):
-        qval = self.get_q_values(state)
+        qval = self.model(state)
         result = []
-        for i in range(len(qval)):
-            result.append(qval[i].gather(1, action).view(1, -1))
+        for i in range(self.number_heads):
+            result.append(qval[i].gather(1, action))
         return result
