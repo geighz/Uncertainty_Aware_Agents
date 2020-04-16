@@ -24,7 +24,7 @@ def plot_ask(x, asked_dic):
 def plot_durations(x, reward_history):
     plt.figure(2)
     plt.clf()
-    # plt.ylim((200,700))
+    plt.ylim((-16, 6))
     plt.title('Training...')
     plt.xlabel('Episode')
     plt.ylabel('Reward')
