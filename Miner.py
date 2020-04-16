@@ -1,8 +1,6 @@
 import math
-
 from DQN import *
 from gridworld import *
-from torch.autograd import Variable
 import torch
 
 va = 0.6
@@ -10,7 +8,7 @@ vg = 0.25
 
 
 def hash_state(state):
-    hash_value = list(state.view(1, -1)[0].numpy().astype(int))
+    hash_value = list(state[0].numpy().astype(int))
     hash_value = bin(int(''.join(map(str, hash_value)), 2) << 1)
     return hash_value
 
@@ -58,8 +56,7 @@ class Miner:
 
     def advising_probability_in_state(self, state):
         inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
-        v_inverse_state = Variable(torch.from_numpy(inverse_state))
-        hash_of_inverse_state = hash_state(v_inverse_state)
+        hash_of_inverse_state = hash_state(inverse_state)
         if hash_of_inverse_state in self.state_counter:
             number_of_visits = self.state_counter[hash_of_inverse_state]
         else:
@@ -70,8 +67,7 @@ class Miner:
 
     def probability_ask_with_state(self, state):
         # TODO: Is it necessary to convert the state to a tensor and back when hasing?
-        v_state = Variable(torch.from_numpy(state))
-        hash_of_state = hash_state(v_state)
+        hash_of_state = hash_state(state)
         ypsilon = self.ypsilon_visit(hash_of_state)
         return probability_ask_with_ypsilon(ypsilon)
 
@@ -85,8 +81,7 @@ class Miner:
         return result
 
     def count_state(self, state):
-        v_state = Variable(torch.from_numpy(state))
-        hash_of_state = hash_state(v_state)
+        hash_of_state = hash_state(state)
         if hash_of_state in self.state_counter:
             self.state_counter[hash_of_state] += 1
         else:
@@ -116,8 +111,7 @@ class Miner:
         return action
 
     def choose_best_action(self, state):
-        v_state = Variable(torch.from_numpy(state))
-        qval = self.model(v_state)
+        qval = self.model(state)
         # q-values derived from all heads, compare with
         # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
         # page 5

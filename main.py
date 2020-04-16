@@ -57,8 +57,8 @@ for i in range(epochs):
     while not done:
         v_state = Variable(torch.from_numpy(state)).view(1, -1)
         # TODO: choose best action seems to return way better results
-        action_a = agent_a.choose_training_action(state, epsilon)
-        action_b = agent_b.choose_training_action(state, epsilon)
+        action_a = agent_a.choose_training_action(v_state, epsilon)
+        action_b = agent_b.choose_training_action(v_state, epsilon)
         # Take action, observe new state S'
         new_state, reward, done, _ = env.step(action_a, action_b)
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
@@ -126,8 +126,8 @@ for i in range(epochs):
         # for p in model.parameters():
         #     p.grad.data.clamp_(-1, 1)
         # TODO: replace with state fom state batch
-        agent_a.count_state(state)
-        agent_b.count_state(state)
+        agent_a.count_state(state_batch)
+        agent_b.count_state(state_batch)
         state = new_state
         if done:
             sum_asked_for_advise += agent_a.times_asked_for_advise
