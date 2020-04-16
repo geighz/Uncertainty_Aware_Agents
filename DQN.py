@@ -72,6 +72,14 @@ class Bootstrapped_DQN(nn.Module):
             result.append(self.heads[i](x))
         return result
 
+    def q_circumflex(self, x):
+        qval = self.__call__(x)
+        # mean = torch.mean(torch.stack(qval))
+        sum = qval[0]
+        for i in range(self.number_heads - 1):
+            sum += qval[i+1]
+        return sum/self.number_heads
+
 
 Transition = namedtuple('Transition',
                         ('state', 'action_a', 'action_b', 'new_state', 'reward', 'non_final'))
