@@ -28,6 +28,11 @@ def advising_probability(psi):
     return 1 - (1 + vg) ** -psi
 
 
+def variance(predictions):
+    predictions = torch.stack(predictions)
+    return predictions.var(dim=0) # .sum / len(predictions)
+
+
 class Miner:
 
     def __init__(self, number_heads):
