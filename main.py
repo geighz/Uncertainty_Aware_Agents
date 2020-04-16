@@ -1,5 +1,5 @@
 import math
-from DQN import ReplayMemory, Transition, hidden_unit, Q_learning
+from DQN import ReplayMemory, Transition, hidden_unit, Body_net
 from torch.autograd import Variable
 
 from evaluation import *
@@ -13,9 +13,12 @@ reward_history = []
 epochs = 1001
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
-
-agent_a = Miner()
-agent_b = Miner()
+number_heads = 1
+agent_a = Miner(number_heads)
+# for head in agent_a.model.heads:
+#     for name, param in head.named_parameters():
+#         print(name, param.data)
+agent_b = Miner(number_heads)
 agent_a.set_partner(agent_b)
 agent_b.set_partner(agent_a)
 # for hidden in agent_a.model.hidden_units:
@@ -25,10 +28,13 @@ agent_b.set_partner(agent_a)
 #     print(hidden.nn.bias)
 
 # TODO can I put the optimizer into the Miner class
-optimizer_a = optim.Adam(agent_a.model.parameters(), lr=0.001)
-optimizer_b = optim.Adam(agent_b.model.parameters(), lr=0.001)
-criterion_a = torch.nn.MSELoss()
-criterion_b = torch.nn.MSELoss()
+optimizers_a = []
+optimizers_b = []
+# Fuer jeden head gibt es einen optimizer
+for i in range(agent_a.model.number_heads):
+    optimizers_a.append(optim.Adam(agent_a.model.heads[i].parameters()))
+    optimizers_b.append(optim.Adam(agent_b.model.heads[i].parameters()))
+criterion = torch.nn.MSELoss()
 buffer = 1
 BATCH_SIZE = 1
 memory = ReplayMemory(buffer)
@@ -39,9 +45,9 @@ sum_given_advise = 0
 given_dic = []
 env = Goldmine()
 for i in range(epochs):
-    # print("Game #: %s" % (i,))
+    print("Game #: %s" % (i,))
     state = env.reset()
-    # env.render()
+    env.render()
     done = False
     step = 0
     # while game still in progress
@@ -54,11 +60,11 @@ for i in range(epochs):
         new_state, reward, done, _ = env.step(action_a, action_b)
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         # Observe reward
-        # print("reward: {}".format(reward))
-        # print("New state:")
-        # env.render()
-        # print("\n")
-        memory.push(v_state.data, action_a, action_b, v_new_state.data, reward)
+        print("reward: {}".format(reward))
+        print("New state:")
+        env.render()
+        print("\n")
+        memory.push(v_state.data, action_a, action_b, v_new_state.data, reward, not done)
         # if buffer not filled, add to it
         if len(memory) < buffer:
             state = new_state
@@ -73,35 +79,49 @@ for i in range(epochs):
         action_b_batch = Variable(torch.LongTensor(batch.action_b)).view(-1, 1)
         new_state_batch = Variable(torch.cat(batch.new_state))
         reward_batch = Variable(torch.FloatTensor(batch.reward))
-        non_final_mask = (reward_batch == -2)
+        non_final_mask = Variable(torch.ByteTensor(batch.non_final))
         step += 1
         state_action_values_a = agent_a.get_state_action_value(state_batch, action_a_batch)
         state_action_values_b = agent_b.get_state_action_value(state_batch, action_b_batch)
         # TODO: wieso haben beide agents genau die gleichen werte hier
-        maxQ_a = agent_a.get_max_q_value(new_state_batch)
-        maxQ_b = agent_b.get_max_q_value(new_state_batch)
-        y_a = reward_batch
-        y_b = reward_batch.clone()
-        y_a[non_final_mask] += gamma * maxQ_a[non_final_mask]
-        y_b[non_final_mask] += gamma * maxQ_b[non_final_mask]
-        y_a = y_a.view(1, -1).detach()
-        y_b = y_b.view(1, -1).detach()
-        loss_a = criterion_a(state_action_values_a, y_a)
-        loss_b = criterion_b(state_action_values_b, y_b)
+        maxQ_a = agent_a.get_qval_for_best_action_in(new_state_batch)
+        maxQ_b = agent_b.get_qval_for_best_action_in(new_state_batch)
+        target_a = reward_batch
+        target_b = reward_batch.clone()
+        target_a[non_final_mask] += gamma * maxQ_a[non_final_mask]
+        target_b[non_final_mask] += gamma * maxQ_b[non_final_mask]
+        target_a = target_a.view(1, -1).detach()
+        target_b = target_b.view(1, -1).detach()
+        loss_a = []
+        loss_b = []
+        # TODO: hier nimmt er für jeden head den loss, eigentlich sollte der abtch nur fuer ein teil der heads verwendet werden
+        for a in range(agent_a.model.number_heads):
+            use_sample = np.random.randint(0, agent_a.model.number_heads)
+            if use_sample == 0:
+                loss_a.append(criterion(state_action_values_a[a], target_a))
+                loss_b.append(criterion(state_action_values_b[a], target_b))
+            else:
+                loss_a.append(None)
+                loss_b.append(None)
+
 
         # Optimize the model
         # Clear gradients of all optimized torch.Tensor s.
-        optimizer_a.zero_grad()
-        optimizer_b.zero_grad()
-        # compute gradients
-        loss_a.backward()
-        loss_b.backward()
+        for a in range(agent_a.model.number_heads):
+            if loss_a[a] is not None:
+                # clear gradient
+                optimizers_a[a].zero_grad()
+                # compute gradients
+                loss_a[a].backward()
+                # update model parameters
+                optimizers_a[a].step()
+            if loss_b[a] is not None:
+                optimizers_b[a].zero_grad()
+                loss_b[a].backward()
+                optimizers_b[a].step()
         # Gradient clipping can keep things stable.
         # for p in model.parameters():
         #     p.grad.data.clamp_(-1, 1)
-        # update model parameters
-        optimizer_a.step()
-        optimizer_b.step()
         # TODO: replace with state fom state batch
         agent_a.count_state(state)
         agent_b.count_state(state)
@@ -119,8 +139,8 @@ for i in range(epochs):
                 agent_a.times_given_advise = 0
             if i % 500 == 0 and not i == 0:
                 plot_durations(x, reward_history)
-                plot_give(x, given_dic)
-                plot_ask(x, asked_dic)
+                # plot_give(x, given_dic)
+                # plot_ask(x, asked_dic)
         if step > 20:
             break
     if epsilon > 0.02:
