@@ -37,7 +37,10 @@ class Miner:
 
     def __init__(self, number_heads):
         self.number_heads = number_heads
-        self.model = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
+        self.policy_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
+        self.target_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.target_net.eval()
         self.times_asked_for_advise = 0
         self.times_given_advise = 0
         self.state_counter = {}
@@ -116,7 +119,7 @@ class Miner:
         return action
 
     def choose_best_action(self, state):
-        qval = self.model(state)
+        qval = self.policy_net(state)
         # q-values derived from all heads, compare with
         # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
         # page 5
@@ -129,11 +132,11 @@ class Miner:
         return np.argmax(final_q_function.data)
 
     def get_qval_for_best_action_in(self, state):
-        qval = self.model.q_circumflex(state)
+        qval = self.policy_net.q_circumflex(state)
         return qval.max(1)[0]
 
     def get_state_action_value(self, state, action):
-        qval = self.model(state)
+        qval = self.policy_net(state)
         result = []
         for i in range(self.number_heads):
             result.append(qval[i].gather(1, action))

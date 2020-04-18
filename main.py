@@ -31,9 +31,9 @@ agent_b.set_partner(agent_a)
 optimizers_a = []
 optimizers_b = []
 # Fuer jeden head gibt es einen optimizer
-for i in range(agent_a.model.number_heads):
-    optimizers_a.append(optim.Adam(agent_a.model.heads[i].parameters()))
-    optimizers_b.append(optim.Adam(agent_b.model.heads[i].parameters()))
+for i in range(agent_a.policy_net.number_heads):
+    optimizers_a.append(optim.Adam(agent_a.policy_net.heads[i].parameters()))
+    optimizers_b.append(optim.Adam(agent_b.policy_net.heads[i].parameters()))
     # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
     # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
@@ -98,8 +98,8 @@ for i in range(epochs):
         loss_a = []
         loss_b = []
         # TODO: hier nimmt er für jeden head den loss, eigentlich sollte der abtch nur fuer ein teil der heads verwendet werden
-        for a in range(agent_a.model.number_heads):
-            use_sample = np.random.randint(0, agent_a.model.number_heads)
+        for a in range(agent_a.policy_net.number_heads):
+            use_sample = np.random.randint(0, agent_a.policy_net.number_heads)
             if use_sample == 0:
                 loss_a.append(criterion(state_action_values_a[a], target_a))
                 loss_b.append(criterion(state_action_values_b[a], target_b))
@@ -110,7 +110,7 @@ for i in range(epochs):
 
         # Optimize the model
         # Clear gradients of all optimized torch.Tensor s.
-        for a in range(agent_a.model.number_heads):
+        for a in range(agent_a.policy_net.number_heads):
             if loss_a[a] is not None:
                 # clear gradient
                 optimizers_a[a].zero_grad()
