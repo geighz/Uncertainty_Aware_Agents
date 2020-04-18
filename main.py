@@ -15,17 +15,9 @@ GAMMA = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 number_heads = 4
 agent_a = Miner(number_heads)
-# for head in agent_a.model.heads:
-#     for name, param in head.named_parameters():
-#         print(name, param.data)
 agent_b = Miner(number_heads)
 agent_a.set_partner(agent_b)
 agent_b.set_partner(agent_a)
-# for hidden in agent_a.model.hidden_units:
-#     print(hidden.nn.weight.size())
-#     print(hidden.nn.weight)
-#     print(hidden.nn.bias.size())
-#     print(hidden.nn.bias)
 
 # TODO can I put the optimizer into the Miner class
 optimizers_a = []
