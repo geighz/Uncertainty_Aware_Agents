@@ -38,9 +38,10 @@ for i_episode in range(agent_a.policy_net.number_heads):
     # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
 criterion = torch.nn.MSELoss()
-buffer = 80
+BUFFER = 80
 BATCH_SIZE = 10
-memory = ReplayMemory(buffer)
+TARGET_UPDATE = 10
+memory = ReplayMemory(BUFFER)
 sum_asked_for_advise = 0
 sum_given_advise = 0
 x = []
@@ -69,7 +70,7 @@ for i_episode in range(epochs):
         print("\n")
         memory.push(v_state.data, action_a, action_b, v_new_state.data, reward, not done)
         # if buffer not filled, add to it
-        if len(memory) < buffer:
+        if len(memory) < BUFFER:
             state = new_state
             if reward != -2:
                 break
