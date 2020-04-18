@@ -31,9 +31,9 @@ agent_b.set_partner(agent_a)
 optimizers_a = []
 optimizers_b = []
 # Fuer jeden head gibt es einen optimizer
-for i in range(agent_a.policy_net.number_heads):
-    optimizers_a.append(optim.Adam(agent_a.policy_net.heads[i].parameters()))
-    optimizers_b.append(optim.Adam(agent_b.policy_net.heads[i].parameters()))
+for i_episode in range(agent_a.policy_net.number_heads):
+    optimizers_a.append(optim.Adam(agent_a.policy_net.heads[i_episode].parameters()))
+    optimizers_b.append(optim.Adam(agent_b.policy_net.heads[i_episode].parameters()))
     # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
     # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
@@ -47,8 +47,8 @@ x = []
 asked_dic = []
 given_dic = []
 env = Goldmine()
-for i in range(epochs):
-    print("Game #: %s" % (i,))
+for i_episode in range(epochs):
+    print("Game #: %s" % (i_episode,))
     state = env.reset()
     env.render()
     done = False
@@ -132,15 +132,15 @@ for i in range(epochs):
         if done:
             sum_asked_for_advise += agent_a.times_asked_for_advise
             sum_given_advise += agent_a.times_given_advise
-            if i % 25 == 0:
-                x.append(i)
+            if i_episode % 25 == 0:
+                x.append(i_episode)
                 average_reward = evaluate_agents(agent_a, agent_b)
                 reward_history.append(average_reward)
                 asked_dic.append(agent_a.times_asked_for_advise)
                 given_dic.append(agent_a.times_given_advise)
                 agent_a.times_asked_for_advise = 0
                 agent_a.times_given_advise = 0
-            if i % 500 == 0 and not i == 0:
+            if i_episode % 500 == 0 and not i_episode == 0:
                 plot_durations(x, reward_history)
                 # plot_give(x, given_dic)
                 # plot_ask(x, asked_dic)
