@@ -38,8 +38,8 @@ for i in range(agent_a.model.number_heads):
     # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
 criterion = torch.nn.MSELoss()
-buffer = 1
-BATCH_SIZE = 1
+buffer = 80
+BATCH_SIZE = 10
 memory = ReplayMemory(buffer)
 sum_asked_for_advise = 0
 sum_given_advise = 0
