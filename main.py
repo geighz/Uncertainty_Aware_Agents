@@ -13,7 +13,7 @@ reward_history = []
 epochs = 1001
 gamma = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
-number_heads = 1
+number_heads = 4
 agent_a = Miner(number_heads)
 # for head in agent_a.model.heads:
 #     for name, param in head.named_parameters():
