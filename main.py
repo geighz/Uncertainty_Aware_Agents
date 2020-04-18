@@ -11,7 +11,7 @@ import torch
 
 reward_history = []
 epochs = 1001
-gamma = 0.9  # since it may take several moves to goal, making gamma high
+GAMMA = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 number_heads = 4
 agent_a = Miner(number_heads)
@@ -91,8 +91,8 @@ for i in range(epochs):
         maxQ_b = agent_b.get_qval_for_best_action_in(new_state_batch)
         target_a = reward_batch
         target_b = reward_batch.clone()
-        target_a[non_final_mask] += gamma * maxQ_a[non_final_mask]
-        target_b[non_final_mask] += gamma * maxQ_b[non_final_mask]
+        target_a[non_final_mask] += GAMMA * maxQ_a[non_final_mask]
+        target_b[non_final_mask] += GAMMA * maxQ_b[non_final_mask]
         target_a = target_a.view(1, -1).detach()
         target_b = target_b.view(1, -1).detach()
         loss_a = []
