@@ -132,7 +132,7 @@ class Miner:
         return np.argmax(final_q_function.data)
 
     def get_qval_for_best_action_in(self, state):
-        qval = self.policy_net.q_circumflex(state)
+        qval = self.target_net.q_circumflex(state)
         return qval.max(1)[0]
 
     def get_state_action_value(self, state, action):

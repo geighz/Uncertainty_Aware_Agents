@@ -13,7 +13,7 @@ reward_history = []
 epochs = 1001
 GAMMA = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
-number_heads = 4
+number_heads = 1
 agent_a = Miner(number_heads)
 agent_b = Miner(number_heads)
 agent_a.set_partner(agent_b)
@@ -23,16 +23,16 @@ agent_b.set_partner(agent_a)
 optimizers_a = []
 optimizers_b = []
 # Fuer jeden head gibt es einen optimizer
-for i_episode in range(agent_a.policy_net.number_heads):
-    optimizers_a.append(optim.Adam(agent_a.policy_net.heads[i_episode].parameters()))
-    optimizers_b.append(optim.Adam(agent_b.policy_net.heads[i_episode].parameters()))
+for head_number in range(agent_a.policy_net.number_heads):
+    optimizers_a.append(optim.Adam(agent_a.policy_net.heads[head_number].parameters()))
+    optimizers_b.append(optim.Adam(agent_b.policy_net.heads[head_number].parameters()))
     # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
     # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
 criterion = torch.nn.MSELoss()
 BUFFER = 80
 BATCH_SIZE = 10
-TARGET_UPDATE = 10
+TARGET_UPDATE = 5
 memory = ReplayMemory(BUFFER)
 sum_asked_for_advise = 0
 sum_given_advise = 0
@@ -86,16 +86,16 @@ for i_episode in range(epochs):
         target_b = reward_batch.clone()
         target_a[non_final_mask] += GAMMA * maxQ_a[non_final_mask]
         target_b[non_final_mask] += GAMMA * maxQ_b[non_final_mask]
-        target_a = target_a.view(1, -1).detach()
-        target_b = target_b.view(1, -1).detach()
+        target_a = target_a.detach()
+        target_b = target_b.detach()
         loss_a = []
         loss_b = []
         # TODO: hier nimmt er für jeden head den loss, eigentlich sollte der abtch nur fuer ein teil der heads verwendet werden
         for a in range(agent_a.policy_net.number_heads):
             use_sample = np.random.randint(0, agent_a.policy_net.number_heads)
             if use_sample == 0:
-                loss_a.append(criterion(state_action_values_a[a], target_a))
-                loss_b.append(criterion(state_action_values_b[a], target_b))
+                loss_a.append(criterion(state_action_values_a[a].view(10), target_a))
+                loss_b.append(criterion(state_action_values_b[a].view(10), target_b))
             else:
                 loss_a.append(None)
                 loss_b.append(None)
@@ -141,6 +141,10 @@ for i_episode in range(epochs):
             break
     if epsilon > 0.02:
         epsilon -= (1 / epochs)
+    if i_episode % TARGET_UPDATE == 0:
+        for head_number in range(agent_a.policy_net.number_heads):
+            agent_a.target_net.heads[head_number].load_state_dict(agent_a.policy_net.heads[head_number].state_dict())
+            agent_b.target_net.heads[head_number].load_state_dict(agent_b.policy_net.heads[head_number].state_dict())
 
 # torch.save(model_a.state_dict(), '/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth')
 # torch.save(model_b.state_dict(), '/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_b.pth')
