@@ -2,9 +2,13 @@ import math
 from DQN import *
 from gridworld import *
 import torch
+import torch.optim as optim
 
 va = 0.6
 vg = 0.25
+# since it may take several moves to goal, making gamma high
+GAMMA = 0.9
+criterion = torch.nn.MSELoss()
 
 
 def hash_state(state):
@@ -44,6 +48,10 @@ class Miner:
         self.times_asked_for_advise = 0
         self.times_given_advise = 0
         self.state_counter = {}
+        self.optimizers = []
+        # Fuer jeden head gibt es einen optimizer
+        for head_number in range(self.policy_net.number_heads):
+            self.optimizers.append(optim.Adam(self.policy_net.heads[head_number].parameters()))
 
     # model.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth'))
     # model.eval()
@@ -141,3 +149,27 @@ class Miner:
         for i in range(self.number_heads):
             result.append(qval[i].gather(1, action))
         return result
+
+    def optimize(self, state, action, new_state, reward, non_final_mask):
+        state_action_values = self.get_state_action_value(state, action)
+        maxQ = self.get_qval_for_best_action_in(new_state)
+        target = reward
+        target[non_final_mask] += GAMMA * maxQ[non_final_mask]
+        # TODO: can I move the detach further up?
+        target = target.detach()
+        loss = []
+        for a in range(self.number_heads):
+            use_sample = np.random.randint(0, self.number_heads)
+            if use_sample == 0:
+                loss.append(criterion(state_action_values[a].view(10), target))
+            else:
+                loss.append(None)
+        for a in range(self.number_heads):
+            if loss[a] is not None:
+                # clear gradient
+                self.optimizers[a].zero_grad()
+                # compute gradients
+                loss[a].backward()
+                # update model parameters
+                self.optimizers[a].step()
+        self.count_state(state)
