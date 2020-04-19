@@ -153,6 +153,7 @@ class Miner:
     def optimize(self, state, action, new_state, reward, non_final_mask):
         state_action_values = self.get_state_action_value(state, action)
         maxQ = self.get_qval_for_best_action_in(new_state)
+        # TODO: Do I change the value in the replay memory by modifying it?
         target = reward
         target[non_final_mask] += GAMMA * maxQ[non_final_mask]
         # TODO: can I move the detach further up?
@@ -164,6 +165,7 @@ class Miner:
                 loss.append(criterion(state_action_values[a].view(10), target))
             else:
                 loss.append(None)
+        # TODO: hier nimmt er für jeden head den loss, eigentlich sollte der abtch nur fuer ein teil der heads verwendet werden
         for a in range(self.number_heads):
             if loss[a] is not None:
                 # clear gradient
