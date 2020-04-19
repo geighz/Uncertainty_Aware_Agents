@@ -9,19 +9,31 @@ from Plotter import *
 import torch.optim as optim
 import torch
 
-reward_history = []
 epochs = 1001
 GAMMA = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
-number_heads = 1
+number_heads = 4
+BUFFER = 80
+BATCH_SIZE = 10
+TARGET_UPDATE = 5
+sum_asked_for_advise = 0
+sum_given_advise = 0
 agent_a = Miner(number_heads)
 agent_b = Miner(number_heads)
 agent_a.set_partner(agent_b)
 agent_b.set_partner(agent_a)
+reward_history = []
+x = []
+asked_dic = []
+given_dic = []
 
 # TODO can I put the optimizer into the Miner class
 optimizers_a = []
 optimizers_b = []
+criterion = torch.nn.MSELoss()
+memory = ReplayMemory(BUFFER)
+env = Goldmine()
+
 # Fuer jeden head gibt es einen optimizer
 for head_number in range(agent_a.policy_net.number_heads):
     optimizers_a.append(optim.Adam(agent_a.policy_net.heads[head_number].parameters()))
@@ -29,17 +41,6 @@ for head_number in range(agent_a.policy_net.number_heads):
     # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
     # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
-criterion = torch.nn.MSELoss()
-BUFFER = 80
-BATCH_SIZE = 10
-TARGET_UPDATE = 5
-memory = ReplayMemory(BUFFER)
-sum_asked_for_advise = 0
-sum_given_advise = 0
-x = []
-asked_dic = []
-given_dic = []
-env = Goldmine()
 for i_episode in range(epochs):
     print("Game #: %s" % (i_episode,))
     state = env.reset()
@@ -54,6 +55,7 @@ for i_episode in range(epochs):
         action_b = agent_b.choose_training_action(v_state, epsilon)
         # Take action, observe new state S'
         new_state, reward, done, _ = env.step(action_a, action_b)
+        step += 1
         v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         # Observe reward
         print("reward: {}".format(reward))
@@ -76,7 +78,6 @@ for i_episode in range(epochs):
         new_state_batch = Variable(torch.cat(batch.new_state))
         reward_batch = Variable(torch.FloatTensor(batch.reward))
         non_final_mask = Variable(torch.ByteTensor(batch.non_final))
-        step += 1
         state_action_values_a = agent_a.get_state_action_value(state_batch, action_a_batch)
         state_action_values_b = agent_b.get_state_action_value(state_batch, action_b_batch)
         # TODO: wieso haben beide agents genau die gleichen werte hier
