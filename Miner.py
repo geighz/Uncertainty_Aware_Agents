@@ -52,6 +52,8 @@ class Miner:
         # Fuer jeden head gibt es einen optimizer
         for head_number in range(self.policy_net.number_heads):
             self.optimizers.append(optim.Adam(self.policy_net.heads[head_number].parameters()))
+            # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
+            # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
     # model.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth'))
     # model.eval()
@@ -153,19 +155,21 @@ class Miner:
     def optimize(self, state, action, new_state, reward, non_final_mask):
         state_action_values = self.get_state_action_value(state, action)
         maxQ = self.get_qval_for_best_action_in(new_state)
-        # TODO: Do I change the value in the replay memory by modifying it?
-        target = reward
+        target = reward.clone()
         target[non_final_mask] += GAMMA * maxQ[non_final_mask]
         # TODO: can I move the detach further up?
         target = target.detach()
         loss = []
+        # TODO: hier nimmt er für jeden head den loss, eigentlich sollte der abtch nur fuer ein teil der heads verwendet werden
         for a in range(self.number_heads):
             use_sample = np.random.randint(0, self.number_heads)
             if use_sample == 0:
                 loss.append(criterion(state_action_values[a].view(10), target))
             else:
                 loss.append(None)
-        # TODO: hier nimmt er für jeden head den loss, eigentlich sollte der abtch nur fuer ein teil der heads verwendet werden
+
+        # Optimize the model
+        # Clear gradients of all optimized torch.Tensor s.
         for a in range(self.number_heads):
             if loss[a] is not None:
                 # clear gradient

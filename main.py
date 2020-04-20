@@ -6,11 +6,9 @@ from evaluation import *
 from gridworld import *
 from Miner import *
 from Plotter import *
-import torch.optim as optim
 import torch
 
 epochs = 1001
-GAMMA = 0.9  # since it may take several moves to goal, making gamma high
 epsilon = 1
 number_heads = 4
 BUFFER = 80
@@ -27,19 +25,8 @@ x = []
 asked_dic = []
 given_dic = []
 
-# TODO can I put the optimizer into the Miner class
-optimizers_a = []
-optimizers_b = []
-criterion = torch.nn.MSELoss()
 memory = ReplayMemory(BUFFER)
 env = Goldmine()
-
-# Fuer jeden head gibt es einen optimizer
-for head_number in range(agent_a.policy_net.number_heads):
-    optimizers_a.append(optim.Adam(agent_a.policy_net.heads[head_number].parameters()))
-    optimizers_b.append(optim.Adam(agent_b.policy_net.heads[head_number].parameters()))
-    # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
-    # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
 for i_episode in range(epochs):
     print("Game #: %s" % (i_episode,))
@@ -78,50 +65,8 @@ for i_episode in range(epochs):
         new_state_batch = Variable(torch.cat(batch.new_state))
         reward_batch = Variable(torch.FloatTensor(batch.reward))
         non_final_mask = Variable(torch.ByteTensor(batch.non_final))
-        state_action_values_a = agent_a.get_state_action_value(state_batch, action_a_batch)
-        state_action_values_b = agent_b.get_state_action_value(state_batch, action_b_batch)
-        # TODO: wieso haben beide agents genau die gleichen werte hier
-        maxQ_a = agent_a.get_qval_for_best_action_in(new_state_batch)
-        maxQ_b = agent_b.get_qval_for_best_action_in(new_state_batch)
-        target_a = reward_batch
-        target_b = reward_batch.clone()
-        target_a[non_final_mask] += GAMMA * maxQ_a[non_final_mask]
-        target_b[non_final_mask] += GAMMA * maxQ_b[non_final_mask]
-        target_a = target_a.detach()
-        target_b = target_b.detach()
-        loss_a = []
-        loss_b = []
-        # TODO: hier nimmt er für jeden head den loss, eigentlich sollte der abtch nur fuer ein teil der heads verwendet werden
-        for a in range(agent_a.policy_net.number_heads):
-            use_sample = np.random.randint(0, agent_a.policy_net.number_heads)
-            if use_sample == 0:
-                loss_a.append(criterion(state_action_values_a[a].view(10), target_a))
-                loss_b.append(criterion(state_action_values_b[a].view(10), target_b))
-            else:
-                loss_a.append(None)
-                loss_b.append(None)
-
-
-        # Optimize the model
-        # Clear gradients of all optimized torch.Tensor s.
-        for a in range(agent_a.policy_net.number_heads):
-            if loss_a[a] is not None:
-                # clear gradient
-                optimizers_a[a].zero_grad()
-                # compute gradients
-                loss_a[a].backward()
-                # update model parameters
-                optimizers_a[a].step()
-            if loss_b[a] is not None:
-                optimizers_b[a].zero_grad()
-                loss_b[a].backward()
-                optimizers_b[a].step()
-        # Gradient clipping can keep things stable.
-        # for p in model.parameters():
-        #     p.grad.data.clamp_(-1, 1)
-        # TODO: replace with state fom state batch
-        agent_a.count_state(state_batch)
-        agent_b.count_state(state_batch)
+        agent_a.optimize(state_batch, action_a_batch, new_state_batch, reward_batch, non_final_mask)
+        agent_b.optimize(state_batch, action_b_batch, new_state_batch, reward_batch, non_final_mask)
         state = new_state
         if done:
             sum_asked_for_advise += agent_a.times_asked_for_advise
