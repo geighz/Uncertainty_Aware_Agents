@@ -2,9 +2,13 @@ import math
 from DQN import *
 from gridworld import *
 import torch
+import torch.optim as optim
 
 va = 0.6
 vg = 0.25
+# since it may take several moves to goal, making gamma high
+GAMMA = 0.9
+criterion = torch.nn.MSELoss()
 
 
 def hash_state(state):
@@ -44,6 +48,11 @@ class Miner:
         self.times_asked_for_advise = 0
         self.times_given_advise = 0
         self.state_counter = {}
+        self.optimizers_a = []
+        for head_number in range(self.policy_net.number_heads):
+            self.optimizers_a.append(optim.Adam(self.policy_net.heads[head_number].parameters()))
+            # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
+            # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
     # model.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth'))
     # model.eval()
@@ -141,3 +150,34 @@ class Miner:
         for i in range(self.number_heads):
             result.append(qval[i].gather(1, action))
         return result
+
+    def optimize(self, state_batch, action_a_batch, new_state_batch, reward_batch, non_final_mask):
+        state_action_values_a = self.get_state_action_value(state_batch, action_a_batch)
+        maxQ_a = self.get_qval_for_best_action_in(new_state_batch)
+        target_a = reward_batch.clone()
+        target_a[non_final_mask] += GAMMA * maxQ_a[non_final_mask]
+        target_a = target_a.detach()
+        loss_a = []
+        # TODO: hier nimmt er für jeden head den loss, eigentlich sollte der abtch nur fuer ein teil der heads verwendet werden
+        for a in range(self.policy_net.number_heads):
+            use_sample = np.random.randint(0, self.policy_net.number_heads)
+            if use_sample == 0:
+                loss_a.append(criterion(state_action_values_a[a].view(10), target_a))
+            else:
+                loss_a.append(None)
+
+        # Optimize the model
+        # Clear gradients of all optimized torch.Tensor s.
+        for a in range(self.policy_net.number_heads):
+            if loss_a[a] is not None:
+                # clear gradient
+                self.optimizers_a[a].zero_grad()
+                # compute gradients
+                loss_a[a].backward()
+                # update model parameters
+                self.optimizers_a[a].step()
+        # Gradient clipping can keep things stable.
+        # for p in model.parameters():
+        #     p.grad.data.clamp_(-1, 1)
+        # TODO: replace with state fom state batch
+        self.count_state(state_batch)
