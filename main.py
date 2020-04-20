@@ -14,8 +14,6 @@ number_heads = 4
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
-sum_asked_for_advise = 0
-sum_given_advise = 0
 agent_a = Miner(number_heads)
 agent_b = Miner(number_heads)
 agent_a.set_partner(agent_b)
@@ -69,8 +67,6 @@ for i_episode in range(epochs):
         agent_b.optimize(state_batch, action_b_batch, new_state_batch, reward_batch, non_final_mask)
         state = new_state
         if done:
-            sum_asked_for_advise += agent_a.times_asked_for_advise
-            sum_given_advise += agent_a.times_given_advise
             if i_episode % 25 == 0:
                 x.append(i_episode)
                 average_reward = evaluate_agents(agent_a, agent_b)
