@@ -1,9 +1,4 @@
-import math
-from DQN import ReplayMemory, Transition, hidden_unit, Body_net
-from torch.autograd import Variable
-
 from evaluation import *
-from gridworld import *
 from Miner import *
 from Plotter import *
 import torch
@@ -34,19 +29,19 @@ for i_episode in range(epochs):
     step = 0
     # while game still in progress
     while not done:
+        v_state = env.v_state
         # TODO: choose best action seems to return way better results
         action_a = agent_a.choose_training_action(env, epsilon)
         action_b = agent_b.choose_training_action(env, epsilon)
         # Take action, observe new state S'
         new_state, reward, done, _ = env.step(action_a, action_b)
         step += 1
-        v_new_state = Variable(torch.from_numpy(new_state)).view(1, -1)
         # Observe reward
         print("reward: {}".format(reward))
         print("New state:")
         env.render()
         print("\n")
-        memory.push(env.v_state.data, action_a, action_b, v_new_state.data, reward, not done)
+        memory.push(v_state.data, action_a, action_b, env.v_state.data, reward, not done)
         # if buffer not filled, add to it
         if len(memory) < BUFFER:
             state = new_state
@@ -86,8 +81,3 @@ for i_episode in range(epochs):
         for head_number in range(agent_a.policy_net.number_heads):
             agent_a.target_net.heads[head_number].load_state_dict(agent_a.policy_net.heads[head_number].state_dict())
             agent_b.target_net.heads[head_number].load_state_dict(agent_b.policy_net.heads[head_number].state_dict())
-
-# torch.save(model_a.state_dict(), '/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth')
-# torch.save(model_b.state_dict(), '/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_b.pth')
-# for i in range(20):
-#     testAlgo(init=1)
