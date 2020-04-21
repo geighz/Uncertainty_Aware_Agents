@@ -6,8 +6,6 @@ import torch
 epochs = 1001
 epsilon = 1
 number_heads = 4
-BUFFER = 80
-BATCH_SIZE = 10
 TARGET_UPDATE = 5
 agent_a = Miner(number_heads)
 agent_b = Miner(number_heads)
@@ -18,8 +16,22 @@ x = []
 asked_dic = []
 given_dic = []
 
+BUFFER = 80
+BATCH_SIZE = 10
 memory = ReplayMemory(BUFFER)
 env = Goldmine()
+
+
+def sample():
+    transitions = memory.sample(BATCH_SIZE)
+    batch = Transition(*zip(*transitions))
+    states = Variable(torch.cat(batch.state))
+    actions_a = Variable(torch.LongTensor(batch.action_a)).view(-1, 1)
+    actions_b = Variable(torch.LongTensor(batch.action_b)).view(-1, 1)
+    new_states = Variable(torch.cat(batch.new_state))
+    rewards = Variable(torch.FloatTensor(batch.reward))
+    non_final = Variable(torch.ByteTensor(batch.non_final))
+    return states, actions_a, actions_b, new_states, rewards, non_final
 
 
 def track_progress(episode_number):
@@ -55,16 +67,9 @@ for i_episode in range(epochs):
                 break
             else:
                 continue
-        transitions = memory.sample(BATCH_SIZE)
-        batch = Transition(*zip(*transitions))
-        state_batch = Variable(torch.cat(batch.state))
-        action_a_batch = Variable(torch.LongTensor(batch.action_a)).view(-1, 1)
-        action_b_batch = Variable(torch.LongTensor(batch.action_b)).view(-1, 1)
-        new_state_batch = Variable(torch.cat(batch.new_state))
-        reward_batch = Variable(torch.FloatTensor(batch.reward))
-        non_final_mask = Variable(torch.ByteTensor(batch.non_final))
-        agent_a.optimize(state_batch, action_a_batch, new_state_batch, reward_batch, non_final_mask)
-        agent_b.optimize(state_batch, action_b_batch, new_state_batch, reward_batch, non_final_mask)
+        states, actions_a, actions_b, new_states, rewards, non_final = sample()
+        agent_a.optimize(states, actions_a, new_states, rewards, non_final)
+        agent_b.optimize(states, actions_b, new_states, rewards, non_final)
         if done:
             track_progress(i_episode)
         if step > 20:
@@ -73,5 +78,5 @@ for i_episode in range(epochs):
         epsilon -= (1 / epochs)
     if i_episode % TARGET_UPDATE == 0:
         for head_number in range(agent_a.policy_net.number_heads):
-            agent_a.set_target_to_policy_net()
-            agent_b.set_target_to_policy_net()
+            agent_a.update_target_net()
+            agent_b.update_target_net()

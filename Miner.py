@@ -183,7 +183,7 @@ class Miner:
                 self.optimizers[a].step()
         self.count_state(state)
 
-    def set_target_to_policy_net(self):
+    def update_target_net(self):
         for head_number in range(self.number_heads):
             policy_head = self.policy_net.heads[head_number]
             target_head = self.target_net.heads[head_number]
