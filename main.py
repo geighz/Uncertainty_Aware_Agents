@@ -61,7 +61,7 @@ for i_episode in range(epochs):
                 agent_a.times_advisee = 0
                 agent_a.times_advisor = 0
             if i_episode % 500 == 0 and not i_episode == 0:
-                plot_durations(x, reward_history)
+                plot_rewards(x, reward_history)
                 # plot_give(x, given_dic)
                 # plot_ask(x, asked_dic)
         if step > 20:

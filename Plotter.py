@@ -21,7 +21,7 @@ def plot_ask(x, asked_dic):
     plt.pause(0.1)
 
 
-def plot_durations(x, reward_history):
+def plot_rewards(x, reward_history):
     plt.figure(2)
     plt.clf()
     plt.ylim((-16, 6))
