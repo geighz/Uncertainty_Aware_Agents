@@ -37,7 +37,7 @@ def advising_probability(psi):
 
 def variance(predictions):
     predictions = torch.stack(predictions)
-    return predictions.var(dim=0) # .sum / len(predictions)
+    return predictions.var(dim=0)
 
 
 class Miner:
@@ -144,10 +144,6 @@ class Miner:
         final_q_function = final_q_function.data / self.number_heads
         return np.argmax(final_q_function.data)
 
-    def get_qval_for_best_action_in(self, state):
-        qval = self.target_net.q_circumflex(state)
-        return qval.max(1)[0]
-
     def get_state_action_value(self, state, action):
         qval = self.policy_net(state)
         result = []
@@ -157,13 +153,10 @@ class Miner:
 
     def optimize(self, state, action, new_state, reward, non_final_mask):
         state_action_values = self.get_state_action_value(state, action)
-        maxQ = self.get_qval_for_best_action_in(new_state)
-        target = reward.clone()
+        maxQ = self.target_net.q_circumflex(new_state).max(1)[0]
+        target = reward.clone().detach()
         target[non_final_mask] += GAMMA * maxQ[non_final_mask]
-        # TODO: can I move the detach further up?
-        target = target.detach()
         loss = []
-        # TODO: hier nimmt er für jeden head den loss, eigentlich sollte der abtch nur fuer ein teil der heads verwendet werden
         for a in range(self.number_heads):
             use_sample = np.random.randint(0, self.number_heads)
             if use_sample == 0:

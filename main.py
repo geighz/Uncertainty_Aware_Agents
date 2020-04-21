@@ -21,6 +21,7 @@ BATCH_SIZE = 10
 memory = ReplayMemory(BUFFER)
 env = Goldmine()
 
+
 def track_progress(episode_number):
     if episode_number % 25 == 0:
         x.append(episode_number)
