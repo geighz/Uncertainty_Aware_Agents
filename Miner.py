@@ -48,8 +48,8 @@ class Miner:
         self.target_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
-        self.times_asked_for_advise = 0
-        self.times_given_advise = 0
+        self.times_advisee = 0
+        self.times_advisor = 0
         self.state_counter = {}
         self.optimizers = []
         # Fuer jeden head gibt es einen optimizer
@@ -70,7 +70,7 @@ class Miner:
             return None
         # give advise
         # print("give advise")
-        self.times_given_advise += 1
+        self.times_advisor += 1
         inv_state = get_grid_for_player(env.state, np.array([0, 0, 0, 0, 1]))
         action = self.choose_best_action(v_state(inv_state))
         return action
@@ -125,7 +125,7 @@ class Miner:
         if np.random.random() < prob_ask*0:
             # ask for advice
             # print("ask for advice")
-            self.times_asked_for_advise += 1
+            self.times_advisee += 1
             action = self.other_agent.give_advise(env)
         if action is None:
             action = self.exploration_strategy(env, epsilon)

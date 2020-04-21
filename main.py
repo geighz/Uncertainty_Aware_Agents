@@ -23,29 +23,21 @@ env = Goldmine()
 
 for i_episode in range(epochs):
     print("Game #: %s" % (i_episode,))
-    state = env.reset()
-    env.render()
+    env.reset()
     done = False
     step = 0
     # while game still in progress
     while not done:
         v_state = env.v_state
-        # TODO: choose best action seems to return way better results
         action_a = agent_a.choose_training_action(env, epsilon)
         action_b = agent_b.choose_training_action(env, epsilon)
         # Take action, observe new state S'
-        new_state, reward, done, _ = env.step(action_a, action_b)
+        _, reward, done, _ = env.step(action_a, action_b)
         step += 1
-        # Observe reward
-        print("reward: {}".format(reward))
-        print("New state:")
-        env.render()
-        print("\n")
         memory.push(v_state.data, action_a, action_b, env.v_state.data, reward, not done)
         # if buffer not filled, add to it
         if len(memory) < BUFFER:
-            state = new_state
-            if reward != -2:
+            if done:
                 break
             else:
                 continue
@@ -59,16 +51,15 @@ for i_episode in range(epochs):
         non_final_mask = Variable(torch.ByteTensor(batch.non_final))
         agent_a.optimize(state_batch, action_a_batch, new_state_batch, reward_batch, non_final_mask)
         agent_b.optimize(state_batch, action_b_batch, new_state_batch, reward_batch, non_final_mask)
-        state = new_state
         if done:
             if i_episode % 25 == 0:
                 x.append(i_episode)
                 average_reward = evaluate_agents(agent_a, agent_b)
                 reward_history.append(average_reward)
-                asked_dic.append(agent_a.times_asked_for_advise)
-                given_dic.append(agent_a.times_given_advise)
-                agent_a.times_asked_for_advise = 0
-                agent_a.times_given_advise = 0
+                asked_dic.append(agent_a.times_advisee)
+                given_dic.append(agent_a.times_advisor)
+                agent_a.times_advisee = 0
+                agent_a.times_advisor = 0
             if i_episode % 500 == 0 and not i_episode == 0:
                 plot_durations(x, reward_history)
                 # plot_give(x, given_dic)
