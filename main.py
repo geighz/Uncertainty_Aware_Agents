@@ -1,7 +1,7 @@
 from evaluation import *
 from Miner import *
 from Plotter import *
-import torch
+from ReplayMemory import ReplayMemory
 
 epochs = 1001
 epsilon = 1
@@ -21,21 +21,8 @@ BATCH_SIZE = 10
 memory = ReplayMemory(BUFFER)
 env = Goldmine()
 
-
-def sample():
-    transitions = memory.sample(BATCH_SIZE)
-    batch = Transition(*zip(*transitions))
-    states = Variable(torch.cat(batch.state))
-    actions_a = Variable(torch.LongTensor(batch.action_a)).view(-1, 1)
-    actions_b = Variable(torch.LongTensor(batch.action_b)).view(-1, 1)
-    new_states = Variable(torch.cat(batch.new_state))
-    rewards = Variable(torch.FloatTensor(batch.reward))
-    non_final = Variable(torch.ByteTensor(batch.non_final))
-    return states, actions_a, actions_b, new_states, rewards, non_final
-
-
 def track_progress(episode_number):
-    if i_episode % 25 == 0:
+    if episode_number % 25 == 0:
         x.append(episode_number)
         average_reward = evaluate_agents(agent_a, agent_b)
         reward_history.append(average_reward)
@@ -67,7 +54,7 @@ for i_episode in range(epochs):
                 break
             else:
                 continue
-        states, actions_a, actions_b, new_states, rewards, non_final = sample()
+        states, actions_a, actions_b, new_states, rewards, non_final = memory.sample(BATCH_SIZE)
         agent_a.optimize(states, actions_a, new_states, rewards, non_final)
         agent_b.optimize(states, actions_b, new_states, rewards, non_final)
         if done:
