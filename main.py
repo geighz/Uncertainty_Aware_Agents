@@ -34,10 +34,9 @@ for i_episode in range(epochs):
     step = 0
     # while game still in progress
     while not done:
-        v_state = Variable(torch.from_numpy(state)).view(1, -1)
         # TODO: choose best action seems to return way better results
-        action_a = agent_a.choose_training_action(v_state, epsilon)
-        action_b = agent_b.choose_training_action(v_state, epsilon)
+        action_a = agent_a.choose_training_action(env, epsilon)
+        action_b = agent_b.choose_training_action(env, epsilon)
         # Take action, observe new state S'
         new_state, reward, done, _ = env.step(action_a, action_b)
         step += 1
@@ -47,7 +46,7 @@ for i_episode in range(epochs):
         print("New state:")
         env.render()
         print("\n")
-        memory.push(v_state.data, action_a, action_b, v_new_state.data, reward, not done)
+        memory.push(env.v_state.data, action_a, action_b, v_new_state.data, reward, not done)
         # if buffer not filled, add to it
         if len(memory) < BUFFER:
             state = new_state

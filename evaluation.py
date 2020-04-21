@@ -13,9 +13,8 @@ def evaluate_agents(agent_a, agent_b):
         steps = 0
         done = False
         while not done:
-            state = Variable(torch.from_numpy(state)).view(1, -1)
-            action_a = agent_a.choose_best_action(state)
-            action_b = agent_b.choose_best_action(state)
+            action_a = agent_a.choose_best_action(env.v_state)
+            action_b = agent_b.choose_best_action(env.v_state)
             state, reward, done, _ = env.step(action_a, action_b)
             # env.render()
             reward_sum += reward

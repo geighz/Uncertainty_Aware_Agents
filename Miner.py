@@ -12,7 +12,10 @@ criterion = torch.nn.MSELoss()
 
 
 def hash_state(state):
-    hash_value = list(state[0].numpy().astype(int))
+    if torch.is_tensor(state):
+        hash_value = list(state[0].numpy().astype(int))
+    else:
+        hash_value = state.flatten().astype(int)
     hash_value = bin(int(''.join(map(str, hash_value)), 2) << 1)
     return hash_value
 
@@ -61,15 +64,15 @@ class Miner:
     def set_partner(self, other_agent):
         self.other_agent = other_agent
 
-    def give_advise(self, state):
-        prob_give = self.advising_probability_in_state(state)
+    def give_advise(self, env):
+        prob_give = self.advising_probability_in_state(env.state)
         if np.random.random() > prob_give:
             return None
         # give advise
         # print("give advise")
         self.times_given_advise += 1
-        inv_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
-        action = self.choose_best_action(inv_state)
+        inv_state = get_grid_for_player(env.state, np.array([0, 0, 0, 0, 1]))
+        action = self.choose_best_action(v_state(inv_state))
         return action
 
     def advising_probability_in_state(self, state):
@@ -83,9 +86,9 @@ class Miner:
         psi = psi_visit(number_of_visits)
         return advising_probability(psi)
 
-    def probability_ask_with_state(self, state):
+    def probability_ask_with_state(self, env):
         # TODO: Is it necessary to convert the state to a tensor and back when hasing?
-        hash_of_state = hash_state(state)
+        hash_of_state = hash_state(env.state)
         ypsilon = self.ypsilon_visit(hash_of_state)
         return probability_ask_with_ypsilon(ypsilon)
 
@@ -105,31 +108,31 @@ class Miner:
         else:
             self.state_counter[hash_of_state] = 1
 
-    def exploration_strategy(self, state, epsilon):
+    def exploration_strategy(self, env, epsilon):
         # choose random action
         if np.random.random() < epsilon:
             action = np.random.randint(0, 4)
             # print("A takes random action {}".format(action_a))
         else:  # choose best action from Q(s,a) values
-            action = self.choose_best_action(state)
+            action = self.choose_best_action(env.v_state)
             # print("A takes best action {}".format(action_a))
         return action
 
     # This is choosing an action
-    def choose_training_action(self, state, epsilon):
+    def choose_training_action(self, env, epsilon):
         action = None
-        prob_ask = self.probability_ask_with_state(state)
+        prob_ask = self.probability_ask_with_state(env)
         if np.random.random() < prob_ask*0:
             # ask for advice
             # print("ask for advice")
             self.times_asked_for_advise += 1
-            action = self.other_agent.give_advise(state)
+            action = self.other_agent.give_advise(env)
         if action is None:
-            action = self.exploration_strategy(state, epsilon)
+            action = self.exploration_strategy(env, epsilon)
         return action
 
-    def choose_best_action(self, state):
-        qval = self.policy_net(state)
+    def choose_best_action(self, v_state):
+        qval = self.policy_net(v_state)
         # q-values derived from all heads, compare with
         # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
         # page 5

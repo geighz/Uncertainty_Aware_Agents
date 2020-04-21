@@ -1,4 +1,6 @@
 import numpy as np
+import torch
+from torch.autograd import Variable
 
 player_a = np.array([0, 0, 0, 1, 0])
 player_b = np.array([0, 0, 0, 0, 1])
@@ -17,6 +19,7 @@ class Goldmine:
         if not self.isDone:
             self.state = make_move(self.state, action_a, action_b)
             self.isDone = is_done(self.state)
+            self.update_v_state()
         return self.state, get_reward(self.state), self.isDone, "Info"
 
     def reset(self, state_id=None):
@@ -24,12 +27,19 @@ class Goldmine:
             self.state = init_grid_player()
         else:
             self.state = load_state_with_id(state_id)
+        self.update_v_state()
         self.isDone = False
         return self.state
 
     def render(self, mode='human'):
         render(self.state)
 
+    def update_v_state(self):
+        self.v_state = v_state(self.state)
+
+
+def v_state(state):
+    return Variable(torch.from_numpy(state)).view(1, -1)
 
 def load_state_with_id(state_id):
     return all_states[state_id].reshape((4, 4, 5))
