@@ -21,6 +21,20 @@ given_dic = []
 memory = ReplayMemory(BUFFER)
 env = Goldmine()
 
+
+def track_progress(episode_number):
+    if i_episode % 25 == 0:
+        x.append(episode_number)
+        average_reward = evaluate_agents(agent_a, agent_b)
+        reward_history.append(average_reward)
+        asked_dic.append(agent_a.times_advisee)
+        given_dic.append(agent_a.times_adviser)
+        agent_a.times_advisee = 0
+        agent_a.times_adviser = 0
+    if episode_number % 1000 == 0 and not episode_number == 0:
+        plot(x, reward_history, asked_dic, given_dic)
+
+
 for i_episode in range(epochs):
     print("Game #: %s" % (i_episode,))
     env.reset()
@@ -52,23 +66,12 @@ for i_episode in range(epochs):
         agent_a.optimize(state_batch, action_a_batch, new_state_batch, reward_batch, non_final_mask)
         agent_b.optimize(state_batch, action_b_batch, new_state_batch, reward_batch, non_final_mask)
         if done:
-            if i_episode % 25 == 0:
-                x.append(i_episode)
-                average_reward = evaluate_agents(agent_a, agent_b)
-                reward_history.append(average_reward)
-                asked_dic.append(agent_a.times_advisee)
-                given_dic.append(agent_a.times_advisor)
-                agent_a.times_advisee = 0
-                agent_a.times_advisor = 0
-            if i_episode % 500 == 0 and not i_episode == 0:
-                plot_rewards(x, reward_history)
-                # plot_give(x, given_dic)
-                # plot_ask(x, asked_dic)
+            track_progress(i_episode)
         if step > 20:
             break
     if epsilon > 0.02:
         epsilon -= (1 / epochs)
     if i_episode % TARGET_UPDATE == 0:
         for head_number in range(agent_a.policy_net.number_heads):
-            agent_a.target_net.heads[head_number].load_state_dict(agent_a.policy_net.heads[head_number].state_dict())
-            agent_b.target_net.heads[head_number].load_state_dict(agent_b.policy_net.heads[head_number].state_dict())
+            agent_a.set_target_to_policy_net()
+            agent_b.set_target_to_policy_net()

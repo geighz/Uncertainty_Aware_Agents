@@ -49,7 +49,7 @@ class Miner:
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
         self.times_advisee = 0
-        self.times_advisor = 0
+        self.times_adviser = 0
         self.state_counter = {}
         self.optimizers = []
         # Fuer jeden head gibt es einen optimizer
@@ -70,7 +70,7 @@ class Miner:
             return None
         # give advise
         # print("give advise")
-        self.times_advisor += 1
+        self.times_adviser += 1
         inv_state = get_grid_for_player(env.state, np.array([0, 0, 0, 0, 1]))
         action = self.choose_best_action(v_state(inv_state))
         return action
@@ -122,7 +122,7 @@ class Miner:
     def choose_training_action(self, env, epsilon):
         action = None
         prob_ask = self.probability_ask_with_state(env)
-        if np.random.random() < prob_ask*0:
+        if np.random.random() < prob_ask:
             # ask for advice
             # print("ask for advice")
             self.times_advisee += 1
@@ -182,3 +182,9 @@ class Miner:
                 # update model parameters
                 self.optimizers[a].step()
         self.count_state(state)
+
+    def set_target_to_policy_net(self):
+        for head_number in range(self.number_heads):
+            policy_head = self.policy_net.heads[head_number]
+            target_head = self.target_net.heads[head_number]
+            target_head.load_state_dict(policy_head.state_dict())

@@ -30,3 +30,9 @@ def plot_rewards(x, reward_history):
     plt.ylabel('Reward')
     plt.plot(x, reward_history)
     plt.pause(0.1)
+
+
+def plot(x, reward_history, asked_dic, given_dic):
+    plot_rewards(x, reward_history)
+    plot_ask(x, asked_dic)
+    plot_give(x, given_dic)
