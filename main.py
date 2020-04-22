@@ -3,6 +3,7 @@ from Miner import *
 from Plotter import *
 from ReplayMemory import ReplayMemory
 import numpy as np
+import scipy.stats as st
 
 epochs = 1001
 number_heads = 4
@@ -34,13 +35,14 @@ class Main:
             self.adviser_history = np.append(self.adviser_history, self.agent_a.times_adviser)
             self.agent_a.times_advisee = 0
             self.agent_a.times_adviser = 0
-        if episode_number % 1000 == 0 and not episode_number == 0:
-            plot(self.x, self.reward_history, self.advisee_history, self.adviser_history)
+        # if episode_number % 1000 == 0 and not episode_number == 0:
+        #     plot(self.x, self.reward_history, self.advisee_history, self.adviser_history)
 
     def train_and_evaluate_agent(self):
         for i_episode in range(epochs):
             self.track_progress(i_episode)
-            print("Game #: %s" % (i_episode,))
+            if i_episode % 10 == 0:
+                print("Game #: %s" % (i_episode,))
             self.env.reset()
             done = False
             step = 0
@@ -93,7 +95,14 @@ adviser_histories = np.stack(adviser_histories)
 plot(xs, reward_histories, advisee_histories, adviser_histories)
 
 xs = np.average(xs, axis=0)
-reward_histories = np.average(reward_histories, axis=0)
-advisee_histories = np.average(advisee_histories, axis=0)
-adviser_histories = np.average(adviser_histories, axis=0)
-plot(xs, reward_histories, advisee_histories, adviser_histories)
+mean_reward = np.average(reward_histories, axis=0)
+mean_advisee = np.average(advisee_histories, axis=0)
+mean_adviser = np.average(adviser_histories, axis=0)
+plot(xs, mean_reward, mean_advisee, mean_adviser)
+
+ci = np.array([])
+for data_point_number in range(len(reward_histories[0])):
+    a = reward_histories[:, data_point_number]
+    interval = st.t.interval(0.60, len(a) - 1, loc=np.mean(a), scale=st.sem(a))
+    ci = np.append(ci, interval)
+plot_mean_and_CI(x, mean_reward, ci[0::2], ci[1::2])
