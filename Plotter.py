@@ -33,6 +33,10 @@ def plot_rewards(x, reward_history):
 
 
 def plot(x, reward_history, asked_dic, given_dic):
+    x = x.tolist()
+    reward_history = reward_history.tolist()
+    asked_dic = asked_dic.tolist()
+    given_dic = given_dic.tolist()
     plot_rewards(x, reward_history)
     plot_ask(x, asked_dic)
     plot_give(x, given_dic)
