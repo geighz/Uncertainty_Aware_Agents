@@ -154,8 +154,9 @@ class Miner:
     def optimize(self, state, action, new_state, reward, non_final_mask):
         state_action_values = self.get_state_action_value(state, action)
         maxQ = self.target_net.q_circumflex(new_state).max(1)[0]
-        target = reward.clone().detach()
+        target = reward.clone()
         target[non_final_mask] += GAMMA * maxQ[non_final_mask]
+        target = target.detach()
         loss = []
         for a in range(self.number_heads):
             use_sample = np.random.randint(0, self.number_heads)
