@@ -40,3 +40,17 @@ def plot(x, reward_history, asked_dic, given_dic):
     plot_rewards(x, reward_history)
     plot_ask(x, asked_dic)
     plot_give(x, given_dic)
+
+
+def plot_mean_and_CI(x, mean, lb, ub, color_mean=None, color_shading=None):
+    plt.figure(2)
+    plt.clf()
+    plt.ylim((-16, 6))
+    # plot the shaded range of the confidence intervals
+    plt.title('Training...')
+    plt.xlabel('Episode')
+    plt.ylabel('Reward')
+    plt.fill_between(x, ub, lb, color=color_shading, alpha=.5)
+    # plot the mean on top
+    plt.plot(x, mean)
+    plt.pause(0.1)
