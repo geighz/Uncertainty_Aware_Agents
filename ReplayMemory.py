@@ -32,7 +32,7 @@ class ReplayMemory(object):
         actions_b = Variable(torch.LongTensor(batch.action_b)).view(-1, 1)
         new_states = Variable(torch.cat(batch.new_state))
         rewards = Variable(torch.FloatTensor(batch.reward))
-        non_final = batch.non_final
+        non_final = Variable(torch.ByteTensor(batch.non_final))
         return states, actions_a, actions_b, new_states, rewards, non_final
 
     def __len__(self):

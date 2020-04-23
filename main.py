@@ -41,7 +41,7 @@ class Main:
     def train_and_evaluate_agent(self):
         for i_episode in range(epochs):
             self.track_progress(i_episode)
-            if i_episode % 10 == 0:
+            if i_episode % 50 == 0:
                 print("Game #: %s" % (i_episode,))
             self.env.reset()
             done = False
