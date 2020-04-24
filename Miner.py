@@ -13,7 +13,7 @@ criterion = torch.nn.MSELoss()
 
 def hash_state(state):
     if torch.is_tensor(state):
-        hash_value = list(state[0].numpy().astype(int))
+        hash_value = list(state.cpu().numpy().astype(int))
     else:
         hash_value = state.flatten().astype(int)
     hash_value = bin(int(''.join(map(str, hash_value)), 2) << 1)
@@ -151,10 +151,10 @@ class Miner:
             result.append(qval[i].gather(1, action))
         return result
 
-    def optimize(self, state, action, new_state, reward, non_final_mask):
-        state_action_values = self.get_state_action_value(state, action)
-        maxQ = self.target_net.q_circumflex(new_state).max(1)[0]
-        target = reward.clone()
+    def optimize(self, states, actions, new_states, rewards, non_final_mask):
+        state_action_values = self.get_state_action_value(states, actions)
+        maxQ = self.target_net.q_circumflex(new_states).max(1)[0]
+        target = rewards.clone()
         target[non_final_mask] += GAMMA * maxQ[non_final_mask]
         target = target.detach()
         loss = []
@@ -175,7 +175,8 @@ class Miner:
                 loss[a].backward()
                 # update model parameters
                 self.optimizers[a].step()
-        self.count_state(state)
+        for state in states:
+            self.count_state(state)
 
     def update_target_net(self):
         for head_number in range(self.number_heads):
