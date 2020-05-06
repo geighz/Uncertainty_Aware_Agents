@@ -19,8 +19,8 @@ def plot(x, y, title, xlabel, ylabel, ylim=None, lb=None, ub=None, color_shading
     plt.pause(0.1)
 
 
-def plot_with_confidence_interval(x, mean, lb, ub, color_shading=None):
-    plot(x, mean, *reward_labels, ylim=(-16, 6), lb=lb, ub=ub, color_shading=color_shading)
+def plot_with_confidence_interval(x, y, lb, ub, color_shading=None):
+    plot(x, y, *reward_labels, ylim=(-16, 6), lb=lb, ub=ub, color_shading=color_shading)
 
 
 def plot_give(x, given_dic):
