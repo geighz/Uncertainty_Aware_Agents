@@ -98,11 +98,11 @@ xs = np.average(xs, axis=0)
 mean_reward = np.average(reward_histories, axis=0)
 mean_advisee = np.average(advisee_histories, axis=0)
 mean_adviser = np.average(adviser_histories, axis=0)
-plot(xs, mean_reward, mean_advisee, mean_adviser)
+plot_rew_ask_giv(xs, mean_reward, mean_advisee, mean_adviser)
 
 ci = np.array([])
 for data_point_number in range(len(reward_histories[0])):
     a = reward_histories[:, data_point_number]
     interval = st.t.interval(0.60, len(a) - 1, loc=np.mean(a), scale=st.sem(a))
     ci = np.append(ci, interval)
-plot_mean_and_CI(x, mean_reward, ci[0::2], ci[1::2])
+plot_with_confidence_interval(xs, mean_reward, ci[0::2], ci[1::2])
