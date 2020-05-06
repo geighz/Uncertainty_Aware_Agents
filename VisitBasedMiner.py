@@ -56,3 +56,8 @@ class VisitBasedMiner(Miner):
         # print("visited=%s" % number_of_visits)
         psi = psi_visit(number_of_visits)
         return advising_probability(psi)
+
+    def optimize(self, states, actions, new_states, rewards, non_final_mask):
+        super(VisitBasedMiner, self).optimize(states, actions, new_states, rewards, non_final_mask)
+        for state in states:
+            self.count_state(state)

@@ -133,8 +133,6 @@ class Miner(ABC):
                 loss[a].backward()
                 # update model parameters
                 self.optimizers[a].step()
-        for state in states:
-            self.count_state(state)
 
     def update_target_net(self):
         for head_number in range(self.number_heads):
