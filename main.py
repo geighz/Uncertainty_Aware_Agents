@@ -1,11 +1,11 @@
 from evaluation import *
-from Miner import *
+from VisitBasedMiner import *
 from Plotter import *
 from ReplayMemory import ReplayMemory
 import numpy as np
 import scipy.stats as st
 
-epochs = 1001
+epochs = 501
 number_heads = 4
 TARGET_UPDATE = 5
 BUFFER = 80
@@ -15,8 +15,8 @@ BATCH_SIZE = 10
 class Main:
     def __init__(self):
         self.epsilon = 1
-        self.agent_a = Miner(number_heads)
-        self.agent_b = Miner(number_heads)
+        self.agent_a = VisitBasedMiner(number_heads)
+        self.agent_b = VisitBasedMiner(number_heads)
         self.agent_a.set_partner(self.agent_b)
         self.agent_b.set_partner(self.agent_a)
         self.reward_history = []
@@ -80,7 +80,7 @@ xs = []
 reward_histories = []
 advisee_histories = []
 adviser_histories = []
-for test_number in range(20):
+for test_number in range(5):
     m = Main()
     x, reward_history, advisee_history, adviser_history = m.train_and_evaluate_agent()
     xs.append(x)
@@ -92,7 +92,7 @@ xs = np.stack(xs)
 reward_histories = np.stack(reward_histories)
 advisee_histories = np.stack(advisee_histories)
 adviser_histories = np.stack(adviser_histories)
-plot(xs, reward_histories, advisee_histories, adviser_histories)
+# plot(xs, reward_histories, advisee_histories, adviser_histories)
 
 xs = np.average(xs, axis=0)
 mean_reward = np.average(reward_histories, axis=0)
