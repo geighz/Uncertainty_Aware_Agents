@@ -89,6 +89,6 @@ for test_number in range(3):
     adviser_histories.append(adviser_history)
 
 
-plot_histories_with_confidence_interval(x_histories, reward_histories)
+plot_histories_with_confidence_interval(x_histories, reward_histories, ylim=(-16, 6))
 plot_histories_with_confidence_interval(x_histories, advisee_histories)
 plot_histories_with_confidence_interval(x_histories, adviser_histories)

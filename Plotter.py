@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats as st
 
 give_labels = ('Giving', 'Episode', '#given advise in 25 episodes')
 ask_labels = ('Ask', 'Episode', '#asked for advise in 25 episodes')
@@ -24,7 +25,7 @@ def plot_mean_with_confidence_interval(x, mean, lb, ub, ylim=None, color_shading
     plot(x, mean, *reward_labels, lb=lb, ub=ub, ylim=ylim, color_shading=color_shading)
 
 
-def plot_histories_with_confidence_interval(x, histories):
+def plot_histories_with_confidence_interval(x, histories, ylim=None, color_shading=None):
     x = np.stack(x)
     x = np.average(x, axis=0)
 
@@ -34,9 +35,14 @@ def plot_histories_with_confidence_interval(x, histories):
     ci = np.array([])
     for data_point_number in range(len(histories[0])):
         a = histories[:, data_point_number]
-        interval = st.t.interval(0.60, len(a) - 1, loc=np.mean(a), scale=st.sem(a))
+        standard_error = st.sem(a)
+        mean = np.mean(a)
+        if standard_error != 0:
+            interval = st.t.interval(0.60, len(a) - 1, loc=mean, scale=standard_error)
+        else:
+            interval = (mean, mean)
         ci = np.append(ci, interval)
-    plot_mean_with_confidence_interval(x, avg, ci[0::2], ci[1::2])
+    plot_mean_with_confidence_interval(x, avg, ci[0::2], ci[1::2], ylim=ylim, color_shading=color_shading)
 
 
 def plot_give(x, given_dic):
