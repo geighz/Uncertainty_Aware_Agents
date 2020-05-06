@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 give_labels = ('Giving', 'Episode', '#given advise in 25 episodes')
 ask_labels = ('Ask', 'Episode', '#asked for advise in 25 episodes')
 reward_labels = ('Training', 'Episode', 'Reward')
 
 
-def plot(x, y, title, xlabel, ylabel, ylim=None, lb=None, ub=None, color_shading=None):
+def plot(x, y, title, xlabel, ylabel, lb=None, ub=None, ylim=None, color_shading=None):
     plt.figure(1)
     plt.clf()
     if ylim is not None:
@@ -19,8 +20,23 @@ def plot(x, y, title, xlabel, ylabel, ylim=None, lb=None, ub=None, color_shading
     plt.pause(0.1)
 
 
-def plot_with_confidence_interval(x, y, lb, ub, color_shading=None):
-    plot(x, y, *reward_labels, ylim=(-16, 6), lb=lb, ub=ub, color_shading=color_shading)
+def plot_mean_with_confidence_interval(x, mean, lb, ub, ylim=None, color_shading=None):
+    plot(x, mean, *reward_labels, lb=lb, ub=ub, ylim=ylim, color_shading=color_shading)
+
+
+def plot_histories_with_confidence_interval(x, histories):
+    x = np.stack(x)
+    x = np.average(x, axis=0)
+
+    histories = np.stack(histories)
+    avg = np.average(histories, axis=0)
+
+    ci = np.array([])
+    for data_point_number in range(len(histories[0])):
+        a = histories[:, data_point_number]
+        interval = st.t.interval(0.60, len(a) - 1, loc=np.mean(a), scale=st.sem(a))
+        ci = np.append(ci, interval)
+    plot_mean_with_confidence_interval(x, avg, ci[0::2], ci[1::2])
 
 
 def plot_give(x, given_dic):
@@ -40,6 +56,6 @@ def plot_rew_ask_giv(x, reward_dic, asked_dic, given_dic):
     reward_dic = reward_dic.tolist()
     asked_dic = asked_dic.tolist()
     given_dic = given_dic.tolist()
-    # plot_reward(x, reward_dic)
+    plot_reward(x, reward_dic)
     plot_ask(x, asked_dic)
     plot_give(x, given_dic)

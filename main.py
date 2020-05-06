@@ -76,33 +76,19 @@ class Main:
 
 
 test_results = np.array([])
-xs = []
+x_histories = []
 reward_histories = []
 advisee_histories = []
 adviser_histories = []
-for test_number in range(5):
+for test_number in range(3):
     m = Main()
     x, reward_history, advisee_history, adviser_history = m.train_and_evaluate_agent()
-    xs.append(x)
+    x_histories.append(x)
     reward_histories.append(reward_history)
     advisee_histories.append(advisee_history)
     adviser_histories.append(adviser_history)
 
-xs = np.stack(xs)
-reward_histories = np.stack(reward_histories)
-advisee_histories = np.stack(advisee_histories)
-adviser_histories = np.stack(adviser_histories)
-# plot(xs, reward_histories, advisee_histories, adviser_histories)
 
-xs = np.average(xs, axis=0)
-mean_reward = np.average(reward_histories, axis=0)
-mean_advisee = np.average(advisee_histories, axis=0)
-mean_adviser = np.average(adviser_histories, axis=0)
-plot_rew_ask_giv(xs, mean_reward, mean_advisee, mean_adviser)
-
-ci = np.array([])
-for data_point_number in range(len(reward_histories[0])):
-    a = reward_histories[:, data_point_number]
-    interval = st.t.interval(0.60, len(a) - 1, loc=np.mean(a), scale=st.sem(a))
-    ci = np.append(ci, interval)
-plot_with_confidence_interval(xs, mean_reward, ci[0::2], ci[1::2])
+plot_histories_with_confidence_interval(x_histories, reward_histories)
+plot_histories_with_confidence_interval(x_histories, advisee_histories)
+plot_histories_with_confidence_interval(x_histories, adviser_histories)
