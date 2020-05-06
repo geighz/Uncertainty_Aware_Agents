@@ -33,7 +33,7 @@ class VisitBasedMiner(Miner):
         result = math.sqrt(number_of_visits)
         return result
 
-    def probability_ask_with_state(self, env):
+    def probability_ask_in_state(self, env):
         # TODO: Is it necessary to convert the state to a tensor and back when hasing?
         hash_of_state = hash_state(env.state)
         ypsilon = self.ypsilon_visit(hash_of_state)
@@ -46,7 +46,7 @@ class VisitBasedMiner(Miner):
         else:
             self.state_counter[hash_of_state] = 1
 
-    def advising_probability_in_state(self, state):
+    def probability_advise_in_state(self, state):
         inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
         hash_of_inverse_state = hash_state(inverse_state)
         if hash_of_inverse_state in self.state_counter:

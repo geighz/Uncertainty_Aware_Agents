@@ -48,7 +48,7 @@ class Miner(ABC):
         self.other_agent = other_agent
 
     def give_advise(self, env):
-        prob_give = self.advising_probability_in_state(env.state)
+        prob_give = self.probability_advise_in_state(env.state)
         if np.random.random() > prob_give:
             return None
         # give advise
@@ -59,11 +59,11 @@ class Miner(ABC):
         return action
 
     @abstractmethod
-    def advising_probability_in_state(self, state):
+    def probability_advise_in_state(self, state):
         pass
 
     @abstractmethod
-    def probability_ask_with_state(self, env):
+    def probability_ask_in_state(self, env):
         pass
 
     def exploration_strategy(self, env, epsilon):
@@ -79,7 +79,7 @@ class Miner(ABC):
     # This is choosing an action
     def choose_training_action(self, env, epsilon):
         action = None
-        prob_ask = self.probability_ask_with_state(env)
+        prob_ask = self.probability_ask_in_state(env)
         if np.random.random() < prob_ask:
             # ask for advice
             # print("ask for advice")
