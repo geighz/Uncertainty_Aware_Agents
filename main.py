@@ -15,8 +15,8 @@ BATCH_SIZE = 10
 class Main:
     def __init__(self):
         self.epsilon = 1
-        self.agent_a = VisitBasedMiner(number_heads)
-        self.agent_b = VisitBasedMiner(number_heads)
+        self.agent_a = VisitBasedMiner()
+        self.agent_b = VisitBasedMiner()
         self.agent_a.set_partner(self.agent_b)
         self.agent_b.set_partner(self.agent_a)
         self.reward_history = []
