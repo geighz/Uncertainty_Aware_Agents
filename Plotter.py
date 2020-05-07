@@ -21,11 +21,7 @@ def plot(x, y, title, xlabel, ylabel, lb=None, ub=None, ylim=None, color_shading
     plt.pause(0.1)
 
 
-def plot_mean_with_confidence_interval(x, mean, lb, ub, ylim=None, color_shading=None):
-    plot(x, mean, *reward_labels, lb=lb, ub=ub, ylim=ylim, color_shading=color_shading)
-
-
-def plot_histories_with_confidence_interval(x, histories, ylim=None, color_shading=None):
+def plot_histories_with_confidence_interval(x, histories, title, xlabel, ylabel, ylim=None, color_shading=None):
     x = np.stack(x)
     x = np.average(x, axis=0)
 
@@ -42,7 +38,7 @@ def plot_histories_with_confidence_interval(x, histories, ylim=None, color_shadi
         else:
             interval = (mean, mean)
         ci = np.append(ci, interval)
-    plot_mean_with_confidence_interval(x, avg, ci[0::2], ci[1::2], ylim=ylim, color_shading=color_shading)
+    plot(x, avg, title, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim, color_shading=color_shading)
 
 
 def plot_give(x, given_dic):
