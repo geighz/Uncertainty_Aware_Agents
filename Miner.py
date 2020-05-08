@@ -25,7 +25,7 @@ def variance(predictions):
 
 
 class Miner(ABC):
-
+    # TODO: number of heads belongs to the subclass not the parent class
     def __init__(self, number_heads):
         self.number_heads = number_heads
         self.policy_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
@@ -136,6 +136,6 @@ class Miner(ABC):
 
     def update_target_net(self):
         for head_number in range(self.number_heads):
-            policy_head = self.policy_net.heads[head_number]
-            target_head = self.target_net.heads[head_number]
+            policy_head = self.policy_net.nets[head_number]
+            target_head = self.target_net.nets[head_number]
             target_head.load_state_dict(policy_head.state_dict())
