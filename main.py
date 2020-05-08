@@ -1,9 +1,9 @@
 from evaluation import *
 from VisitBasedMiner import *
+from UncertaintyAwareMiner import *
 from Plotter import *
 from ReplayMemory import ReplayMemory
 import numpy as np
-import scipy.stats as st
 
 epochs = 501
 number_heads = 4
@@ -15,8 +15,8 @@ BATCH_SIZE = 10
 class Main:
     def __init__(self):
         self.epsilon = 1
-        self.agent_a = VisitBasedMiner()
-        self.agent_b = VisitBasedMiner()
+        self.agent_a = UncertaintyAwareMiner(number_heads)
+        self.agent_b = UncertaintyAwareMiner(number_heads)
         self.agent_a.set_partner(self.agent_b)
         self.agent_b.set_partner(self.agent_a)
         self.reward_history = []

@@ -19,11 +19,6 @@ def hash_state(state):
     return hash_value
 
 
-def variance(predictions):
-    predictions = torch.stack(predictions)
-    return predictions.var(dim=0)
-
-
 class Miner(ABC):
     # TODO: number of heads belongs to the subclass not the parent class
     def __init__(self, number_heads):
