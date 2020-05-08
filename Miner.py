@@ -37,7 +37,7 @@ class Miner(ABC):
         self.optimizers = []
         # Fuer jeden head gibt es einen optimizer
         for head_number in range(self.policy_net.number_heads):
-            self.optimizers.append(optim.Adam(self.policy_net.heads[head_number].parameters()))
+            self.optimizers.append(optim.Adam(self.policy_net.nets[head_number].parameters()))
             # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
             # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
 
@@ -49,7 +49,7 @@ class Miner(ABC):
 
     def give_advise(self, env):
         prob_give = self.probability_advise_in_state(env.state)
-        if np.random.random() > prob_give:
+        if np.random.random() < prob_give:
             return None
         # give advise
         # print("give advise")

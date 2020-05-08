@@ -36,18 +36,24 @@ class Body_net(nn.Module):
         return out
 
 
-class DQN_from_net(nn.Module):
-    def __init__(self, net, out_channels):
-        super(DQN_from_net, self).__init__()
+class Head_net(nn.Module):
+    def __init__(self, net, final_layers, out_channels, unit=hidden_unit, activation=F.relu):
+        super(Head_net, self).__init__()
         self.net = net
         self.final_units = nn.ModuleList()
         last_index = len(self.net.hidden_units) - 1
         self.in_channels = self.net.hidden_units[last_index].nn.out_features
+        prev_layer = self.in_channels
+        for layer in final_layers:
+            self.final_units.append(unit(prev_layer, layer, activation))
+            prev_layer = layer
+        self.final_unit = nn.Linear(prev_layer, out_channels)
         nn.init.normal_(self.final_unit.weight, std=0.07)
 
     def forward(self, x):
-        # out = x.view(-1, self.in_channels).float()
         out = self.net(x)
+        for unit in self.final_units:
+            out = unit(out)
         out = self.final_unit(out)
         return out
 
@@ -57,15 +63,16 @@ class Bootstrapped_DQN(nn.Module):
         super(Bootstrapped_DQN, self).__init__()
         self.number_heads = number_heads
         hidden_layer_out = hidden_layers.pop()
+        hidden_head = []#hidden_layers.pop()]
         body = Body_net(in_channels, hidden_layers, hidden_layer_out, unit, activation)
-        self.heads = []
+        self.nets = []
         for i in range(self.number_heads):
-            self.heads.append(DQN_from_net(body, out_channels))
+            self.nets.append(Head_net(body, hidden_head, out_channels))
 
     def forward(self, x):
         result = []
         for i in range(self.number_heads):
-            result.append(self.heads[i](x))
+            result.append(self.nets[i](x))
         return result
 
     def q_circumflex(self, x):
