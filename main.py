@@ -17,8 +17,8 @@ for test in test_setups:
 
 for test_result in test_results:
     label, epoch_ids, rewards, times_advisee, times_adviser = test_result
-    plot_histories_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
-    plot_histories_with_confidence_interval(label, epoch_ids, times_advisee, *ask_labels)
-    plot_histories_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
+    plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
+    plot_results_with_confidence_interval(label, epoch_ids, times_advisee, *ask_labels)
+    plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
 
 plot_show()
