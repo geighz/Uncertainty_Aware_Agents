@@ -7,7 +7,7 @@ ask_labels = ('Ask', 'Episode', '#asked for advise in 25 episodes')
 reward_labels = ('Training', 'Episode', 'Reward')
 
 
-def plot(x, y, title, xlabel, ylabel, lb=None, ub=None, ylim=None, color_shading=None):
+def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None, color_shading=None):
     plt.figure(title)
     # plt.clf()
     if ylim is not None:
@@ -17,26 +17,26 @@ def plot(x, y, title, xlabel, ylabel, lb=None, ub=None, ylim=None, color_shading
     plt.ylabel(ylabel)
     if ub is not None and lb is not None:
         plt.fill_between(x, ub, lb, color=color_shading, alpha=.5)
-    plt.plot(x, y)
+    plt.plot(x, y, label=linelabel)
+    plt.legend()
     # plt.pause(0.1)
 
 
-def show_plot(title):
-    plt.figure(title)
+def plot_show():
     plt.show()
 
 
-def plot_histories_with_confidence_interval(x, histories, title, xlabel, ylabel, ylim=None, color_shading=None):
+def plot_histories_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel, ylim=None, color_shading=None):
     x = np.stack(x)
     x = np.average(x, axis=0)
 
-    histories = np.stack(histories)
-    averages = np.average(histories, axis=0)
-    standard_errors = st.sem(histories, axis=0)
+    y = np.stack(y)
+    averages = np.average(y, axis=0)
+    standard_errors = st.sem(y, axis=0)
 
     ci = np.array([])
-    for index in range(len(histories[0])):
-        a = histories[:, index]
+    for index in range(len(y[0])):
+        a = y[:, index]
         standard_error = standard_errors[index]
         average = averages[index]
         if standard_error != 0:
@@ -46,7 +46,7 @@ def plot_histories_with_confidence_interval(x, histories, title, xlabel, ylabel,
         else:
             interval = (average, average)
         ci = np.append(ci, interval)
-    plot(x, averages, title, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim, color_shading=color_shading)
+    plot(x, averages, title, linelabel, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim, color_shading=color_shading)
 
 
 def plot_give(x, given_dic):

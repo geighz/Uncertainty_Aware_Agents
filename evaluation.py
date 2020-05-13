@@ -3,7 +3,7 @@ from gridworld import Goldmine
 from torch.autograd import Variable
 import torch
 
-total_number_of_eval_games = 10
+total_number_of_eval_games = 25
 
 
 def evaluate_agents(agent_a, agent_b):
