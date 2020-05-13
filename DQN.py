@@ -8,7 +8,7 @@ class hidden_unit(nn.Module):
         self.activation = activation
         # linear transformation to the incoming data
         self.nn = nn.Linear(in_channels, out_channels)
-        nn.init.normal_(self.nn.weight, std=0.07)
+        nn.init.normal_(self.nn.weight, std=0.15)
 
     def forward(self, x):
         out = self.nn(x)
@@ -48,7 +48,7 @@ class Head_net(nn.Module):
             self.final_units.append(unit(prev_layer, layer, activation))
             prev_layer = layer
         self.final_unit = nn.Linear(prev_layer, out_channels)
-        nn.init.normal_(self.final_unit.weight, std=0.07)
+        nn.init.normal_(self.final_unit.weight, std=0.15)
 
     def forward(self, x):
         out = self.net(x)
@@ -80,5 +80,5 @@ class Bootstrapped_DQN(nn.Module):
         # mean = torch.mean(torch.stack(qval))
         sum = qval[0]
         for i in range(self.number_heads - 1):
-            sum += qval[i+1]
-        return sum/self.number_heads
+            sum += qval[i + 1]
+        return sum / self.number_heads

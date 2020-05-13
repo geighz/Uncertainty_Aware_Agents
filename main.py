@@ -80,7 +80,7 @@ x_histories = []
 reward_histories = []
 advisee_histories = []
 adviser_histories = []
-for test_number in range(3):
+for test_number in range(10):
     m = Main()
     x, reward_history, advisee_history, adviser_history = m.train_and_evaluate_agent()
     x_histories.append(x)
