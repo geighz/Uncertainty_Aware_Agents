@@ -21,7 +21,7 @@ def advising_probability(psi):
 
 class VisitBasedMiner(Miner):
     def __init__(self):
-        super(VisitBasedMiner, self).__init__(1)
+        super(VisitBasedMiner, self).__init__(number_heads=1)
         self.state_counter = {}
 
     def ypsilon_visit(self, hash_of_state):
