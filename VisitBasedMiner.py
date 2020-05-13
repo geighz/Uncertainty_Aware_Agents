@@ -2,6 +2,7 @@ from Miner import *
 import math
 
 va = 0.6
+# kleiner --> weniger advice
 vg = 0.25
 
 

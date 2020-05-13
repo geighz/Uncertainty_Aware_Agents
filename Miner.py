@@ -44,7 +44,7 @@ class Miner(ABC):
 
     def give_advise(self, env):
         prob_give = self.probability_advise_in_state(env.state)
-        if np.random.random() < prob_give:
+        if np.random.random() > prob_give:
             return None
         # give advise
         # print("give advise")
