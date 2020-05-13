@@ -1,4 +1,3 @@
-from VisitBasedMiner import *
 from ReplayMemory import ReplayMemory
 from evaluation import *
 from VisitBasedMiner import *
@@ -81,6 +80,7 @@ Test_setup = namedtuple('Test_setup',
 
 
 def execute_test(test):
+    print(test)
     EPOCH_IDS = []
     rewards = []
     times_advisee = []
@@ -88,6 +88,8 @@ def execute_test(test):
     agenttype, number_heads, epochs, buffer, batch_size, target_update = test
     # TODO rename test_number
     for test_number in range(10):
+        print("agenttype: %s" % agenttype)
+        print("test#: %s" % test_number)
         m = TestExecuter(number_heads, buffer, agenttype)
         x, reward_history, advisee_history, adviser_history = m.train_and_evaluate_agent(epochs, target_update,
                                                                                          batch_size)

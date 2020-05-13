@@ -9,7 +9,6 @@ reward_labels = ('Training', 'Episode', 'Reward')
 
 def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None, color_shading=None):
     plt.figure(title)
-    # plt.clf()
     if ylim is not None:
         plt.ylim(ylim)
     plt.title(title)
@@ -19,7 +18,6 @@ def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None, co
         plt.fill_between(x, ub, lb, color=color_shading, alpha=.5)
     plt.plot(x, y, label=linelabel)
     plt.legend()
-    # plt.pause(0.1)
 
 
 def plot_show():
@@ -48,24 +46,3 @@ def plot_histories_with_confidence_interval(linelabel, x, y, title, xlabel, ylab
         ci = np.append(ci, interval)
     plot(x, averages, title, linelabel, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim, color_shading=color_shading)
 
-
-def plot_give(x, given_dic):
-    plot(x, given_dic, *give_labels)
-
-
-def plot_ask(x, asked_dic):
-    plot(x, asked_dic, *ask_labels)
-
-
-def plot_reward(x, reward_dic):
-    plot(x, reward_dic, *reward_labels, ylim=(-16, 6))
-
-
-def plot_rew_ask_giv(x, reward_dic, asked_dic, given_dic):
-    x = x.tolist()
-    reward_dic = reward_dic.tolist()
-    asked_dic = asked_dic.tolist()
-    given_dic = given_dic.tolist()
-    plot_reward(x, reward_dic)
-    plot_ask(x, asked_dic)
-    plot_give(x, given_dic)

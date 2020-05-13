@@ -1,7 +1,4 @@
-# Here is the test of AI
 from gridworld import Goldmine
-from torch.autograd import Variable
-import torch
 
 total_number_of_eval_games = 25
 
