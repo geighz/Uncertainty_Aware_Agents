@@ -1,4 +1,4 @@
-from TestExecuter import *
+from TestExecutor import *
 from Plotter import *
 
 EPOCHS = 501

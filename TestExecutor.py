@@ -6,7 +6,7 @@ from collections import namedtuple
 import numpy as np
 
 
-class TestExecuter:
+class TestExecutor:
     def __init__(self, number_heads, buffer, agent):
         self.epsilon = 1
         if agent is VisitBasedMiner:
@@ -88,10 +88,9 @@ def execute_test(test, number_executions):
     agenttype, number_heads, epochs, buffer, batch_size, target_update = test
     # TODO rename test_number
     for test_number in range(number_executions):
-        print("agenttype: %s" % agenttype)
         print("test#: %s" % test_number)
-        m = TestExecuter(number_heads, buffer, agenttype)
-        x, reward_history, advisee_history, adviser_history = m.train_and_evaluate_agent(epochs, target_update,
+        executor = TestExecutor(number_heads, buffer, agenttype)
+        x, reward_history, advisee_history, adviser_history = executor.train_and_evaluate_agent(epochs, target_update,
                                                                                          batch_size)
         EPOCH_IDS.append(x)
         rewards.append(reward_history)
