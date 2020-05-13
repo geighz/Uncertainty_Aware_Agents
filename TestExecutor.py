@@ -89,12 +89,14 @@ def execute_test(test, number_executions):
     agenttype, number_heads, epochs, buffer, batch_size, target_update = test
     # TODO rename test_number
     for test_number in range(number_executions):
-        print("test#: %s" % test_number)
+        print("test #: %s" % test_number)
         executor = TestExecutor(number_heads, buffer, agenttype)
         x, reward_history, advisee_history, adviser_history = executor.train_and_evaluate_agent(epochs, target_update,
                                                                                          batch_size)
+        print()
         EPOCH_IDS.append(x)
         rewards.append(reward_history)
         times_advisee.append(advisee_history)
         times_adviser.append(adviser_history)
+    print()
     return Test_result(agenttype.__name__, EPOCH_IDS, rewards, times_advisee, times_adviser)
