@@ -2,6 +2,7 @@ from ReplayMemory import ReplayMemory
 from evaluation import *
 from VisitBasedMiner import *
 from UncertaintyAwareMiner import *
+from NoAdviceMiner import *
 from collections import namedtuple
 import numpy as np
 
@@ -9,12 +10,12 @@ import numpy as np
 class TestExecutor:
     def __init__(self, number_heads, buffer, agent):
         self.epsilon = 1
-        if agent is VisitBasedMiner:
-            self.agent_b = agent()
-            self.agent_a = agent()
-        else:
+        if agent is UncertaintyAwareMiner:
             self.agent_b = agent(number_heads)
             self.agent_a = agent(number_heads)
+        else:
+            self.agent_b = agent()
+            self.agent_a = agent()
         self.agent_a.set_partner(self.agent_b)
         self.agent_b.set_partner(self.agent_a)
         self.reward_history = []
