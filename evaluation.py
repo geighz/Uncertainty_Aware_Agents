@@ -8,10 +8,9 @@ total_number_of_eval_games = 10
 
 def evaluate_agents(agent_a, agent_b):
     reward_sum = 0
-    # TODO: do we load the sates multiple times from disk?
     env = Goldmine()
     for state_id in range(total_number_of_eval_games):
-        state = env.reset(state_id)
+        env.reset(state_id)
         # env.render()
         steps = 0
         done = False

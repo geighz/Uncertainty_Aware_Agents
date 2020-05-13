@@ -8,8 +8,8 @@ reward_labels = ('Training', 'Episode', 'Reward')
 
 
 def plot(x, y, title, xlabel, ylabel, lb=None, ub=None, ylim=None, color_shading=None):
-    plt.figure(1)
-    plt.clf()
+    plt.figure(title)
+    # plt.clf()
     if ylim is not None:
         plt.ylim(ylim)
     plt.title(title)
@@ -18,7 +18,12 @@ def plot(x, y, title, xlabel, ylabel, lb=None, ub=None, ylim=None, color_shading
     if ub is not None and lb is not None:
         plt.fill_between(x, ub, lb, color=color_shading, alpha=.5)
     plt.plot(x, y)
-    plt.pause(0.1)
+    # plt.pause(0.1)
+
+
+def show_plot(title):
+    plt.figure(title)
+    plt.show()
 
 
 def plot_histories_with_confidence_interval(x, histories, title, xlabel, ylabel, ylim=None, color_shading=None):
