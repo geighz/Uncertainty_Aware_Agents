@@ -26,19 +26,22 @@ def plot_histories_with_confidence_interval(x, histories, title, xlabel, ylabel,
     x = np.average(x, axis=0)
 
     histories = np.stack(histories)
-    avg = np.average(histories, axis=0)
+    averages = np.average(histories, axis=0)
+    standard_errors = st.sem(histories, axis=0)
 
     ci = np.array([])
-    for data_point_number in range(len(histories[0])):
-        a = histories[:, data_point_number]
-        standard_error = st.sem(a)
-        mean = np.mean(a)
+    for index in range(len(histories[0])):
+        a = histories[:, index]
+        standard_error = standard_errors[index]
+        average = averages[index]
         if standard_error != 0:
-            interval = st.t.interval(0.60, len(a) - 1, loc=mean, scale=standard_error)
+            # TODO: Can the confidence interval be calculated with equal areas around the median?
+            # TODO: Can we assume normal distribution?
+            interval = st.t.interval(0.60, len(a) - 1, loc=average, scale=standard_error)
         else:
-            interval = (mean, mean)
+            interval = (average, average)
         ci = np.append(ci, interval)
-    plot(x, avg, title, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim, color_shading=color_shading)
+    plot(x, averages, title, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim, color_shading=color_shading)
 
 
 def plot_give(x, given_dic):
