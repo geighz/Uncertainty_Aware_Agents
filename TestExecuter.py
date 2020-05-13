@@ -79,7 +79,7 @@ Test_setup = namedtuple('Test_setup',
                         ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE'))
 
 
-def execute_test(test):
+def execute_test(test, number_executions):
     print(test)
     EPOCH_IDS = []
     rewards = []
@@ -87,7 +87,7 @@ def execute_test(test):
     times_adviser = []
     agenttype, number_heads, epochs, buffer, batch_size, target_update = test
     # TODO rename test_number
-    for test_number in range(10):
+    for test_number in range(number_executions):
         print("agenttype: %s" % agenttype)
         print("test#: %s" % test_number)
         m = TestExecuter(number_heads, buffer, agenttype)
