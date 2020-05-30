@@ -26,7 +26,7 @@ class TestExecutor:
         self.env = Goldmine()
 
     def track_progress(self, episode_number):
-        if episode_number % 25 == 0:
+        if episode_number % 250 == 0:
             self.x = np.append(self.x, episode_number)
             average_reward = evaluate_agents(self.agent_a, self.agent_b)
             self.reward_history = np.append(self.reward_history, average_reward)

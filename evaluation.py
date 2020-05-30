@@ -1,6 +1,6 @@
 from gridworld import Goldmine
 
-total_number_of_eval_games = 25
+total_number_of_eval_games = 15
 
 
 def evaluate_agents(agent_a, agent_b):
