@@ -1,7 +1,9 @@
 from TestExecutor import *
 from Plotter import *
+import time
 
 EPOCHS = 10001
+start_time = time.time()
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
@@ -22,3 +24,6 @@ for test_result in test_results:
     plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
 
 plot_show()
+
+duration = time.time() - start_time
+print(f"Duration {duration} seconds")
