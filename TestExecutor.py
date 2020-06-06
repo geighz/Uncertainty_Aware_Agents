@@ -1,6 +1,5 @@
 from ReplayMemory import ReplayMemory
 from evaluation import *
-from VisitBasedMiner import *
 from UncertaintyAwareMinerNormalised import *
 from NoAdviceMiner import *
 from collections import namedtuple
@@ -10,7 +9,7 @@ import numpy as np
 class TestExecutor:
     def __init__(self, number_heads, buffer, agent):
         self.epsilon = 1
-        if agent is UncertaintyAwareMiner:
+        if agent is UncertaintyAwareMiner or agent is UncertaintyAwareMinerNormalised:
             self.agent_b = agent(number_heads)
             self.agent_a = agent(number_heads)
         else:
