@@ -1,5 +1,4 @@
-from Miner import *
-from gridworld import v_state
+from UncertaintyAwareMiner import *
 
 UncertaintyThreshold = 0.11
 
@@ -11,22 +10,7 @@ def normalized_variance(predictions):
     return var/mean
 
 
-class UncertaintyAwareMiner(Miner):
-    def probability_advise_in_state(self, state):
-        # TODO: should get_grid_for_player be a function call higher?
-        inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
-        uncertainty = self.calculate_uncertainty(v_state(inverse_state))
-        if uncertainty < UncertaintyThreshold:
-            return 1
-        else:
-            return 0
-
-    def probability_ask_in_state(self, env):
-        uncertainty = self.calculate_uncertainty(env.v_state)
-        if uncertainty > UncertaintyThreshold:
-            return 1
-        else:
-            return 0
+class UncertaintyAwareMinerNormalised(UncertaintyAwareMiner):
 
     # This is the estimated uncertainty, uncertainty can never be calculated otherwise it wouldn't be uncertainty
     def calculate_uncertainty(self, v_state):
@@ -39,5 +23,5 @@ class UncertaintyAwareMiner(Miner):
             for i in range(self.number_heads):
                 state_action_value = qval[i][0][action].data
                 predictions.append(state_action_value)
-            sum_variance += normalized_variance(predictions)
+            sum_variance += variance(predictions)
         return sum_variance / 4

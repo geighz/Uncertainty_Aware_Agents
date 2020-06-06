@@ -4,15 +4,16 @@ import multiprocessing
 import time
 
 start_time = time.time()
-EPOCHS = 251
+EPOCHS = 1001
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
 NUMBER_EXECUTIONS = 1
 
-test_setups = [Test_setup(VisitBasedMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE),
+test_setups = [#Test_setup(VisitBasedMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE),
                Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE),
-               Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE)]
+               Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE)]
+               #Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE)]
 test_results = []
 
 def a_func(t):

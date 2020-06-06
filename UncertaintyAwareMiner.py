@@ -4,7 +4,7 @@ from gridworld import v_state
 UncertaintyThreshold = 0.11
 
 
-def normalized_variance(predictions):
+def variance(predictions):
     predictions = torch.stack(predictions)
     var = predictions.var(dim=0)
     return var
@@ -38,5 +38,5 @@ class UncertaintyAwareMiner(Miner):
             for i in range(self.number_heads):
                 state_action_value = qval[i][0][action].data
                 predictions.append(state_action_value)
-            sum_variance += normalized_variance(predictions)
+            sum_variance += variance(predictions)
         return sum_variance / 4
