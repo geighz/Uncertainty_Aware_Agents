@@ -20,10 +20,6 @@ def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None):
     plt.legend()
 
 
-def plot_show():
-    plt.show()
-
-
 def plot_results_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel, ylim=None):
     x = np.stack(x)
     x = np.average(x, axis=0)
@@ -46,3 +42,22 @@ def plot_results_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel
         ci = np.append(ci, interval)
     plot(x, averages, title, linelabel, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim)
 
+
+def plot(test_results):
+    # Sort the test results by type
+    test_results = test_results.values()
+    agentTypes = set(map(lambda tr: tr.AgentType, test_results))
+    test_results_by_setup = [[tr for tr in test_results if tr.AgentType == aT] for aT in agentTypes]
+
+    for results in test_results_by_setup:
+        label = results[0].AgentType
+        epoch_ids = [test_run.EPOCH_ID for test_run in results]
+        rewards = [test_run.REWARDS for test_run in results]
+        times_advisee = [test_run.TIMES_ADVISEE for test_run in results]
+        times_adviser = [test_run.TIMES_ADVISER for test_run in results]
+
+        plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
+        plot_results_with_confidence_interval(label, epoch_ids, times_advisee, *ask_labels)
+        plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
+
+    plt.show()
