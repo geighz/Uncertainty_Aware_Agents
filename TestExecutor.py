@@ -12,7 +12,7 @@ class TestExecutor:
         self.agent_a.set_partner(self.agent_b)
         self.agent_b.set_partner(self.agent_a)
         self.reward_history = []
-        self.x = np.array([])
+        self.episode_ids = np.array([])
         self.advisee_history = np.array([])
         self.adviser_history = np.array([])
         self.memory = ReplayMemory(buffer)
@@ -20,7 +20,7 @@ class TestExecutor:
 
     def track_progress(self, episode_number):
         if episode_number % 250 == 0:
-            self.x = np.append(self.x, episode_number)
+            self.episode_ids = np.append(self.episode_ids, episode_number)
             average_reward = evaluate_agents(self.agent_a, self.agent_b)
             self.reward_history = np.append(self.reward_history, average_reward)
             self.advisee_history = np.append(self.advisee_history, self.agent_a.times_advisee)
@@ -64,7 +64,7 @@ class TestExecutor:
                 for head_number in range(self.agent_a.policy_net.number_heads):
                     self.agent_a.update_target_net()
                     self.agent_b.update_target_net()
-        return self.x, self.reward_history, self.advisee_history, self.adviser_history
+        return self.episode_ids, self.reward_history, self.advisee_history, self.adviser_history
 
 
 Test_result = namedtuple('Test_result',
@@ -79,7 +79,7 @@ def execute_test(test_id, test, return_dict):
     # TODO rename test_number
     print("test #: %s" % test_id)
     executor = TestExecutor(number_heads, buffer, agenttype)
-    epoch_ids, reward_history, advisee_history, adviser_history = executor.train_and_evaluate_agent(epochs, target_update,
+    episode_ids, reward_history, advisee_history, adviser_history = executor.train_and_evaluate_agent(epochs, target_update,
                                                                                      batch_size)
-    test_result = Test_result(agenttype.__name__, epoch_ids, reward_history, advisee_history, adviser_history)
+    test_result = Test_result(agenttype.__name__, episode_ids, reward_history, advisee_history, adviser_history)
     return_dict[test_id] = test_result
