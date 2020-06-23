@@ -1,8 +1,12 @@
 from TestExecutor import *
-from VisitBasedMiner import VisitBasedMiner
 from Plotter import *
 import multiprocessing
 import time
+
+from NoAdviceMiner import NoAdviceMiner
+from VisitBasedMiner import VisitBasedMiner
+from UncertaintyAwareMiner import UncertaintyAwareMiner
+from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
 
 start_time = time.time()
 EPOCHS = 1001
@@ -11,10 +15,12 @@ BATCH_SIZE = 10
 TARGET_UPDATE = 5
 NUMBER_EXECUTIONS = 1
 
-test_setups = [#Test_setup(VisitBasedMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE),
-               Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE),
-               Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE)]
-               #Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE)]
+test_setups = [
+    # Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE),
+    # Test_setup(VisitBasedMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE),
+    # Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE),
+    Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE)
+]
 
 manager = multiprocessing.Manager()
 test_results = manager.dict()
@@ -31,7 +37,7 @@ for process in testProcesses:
     process.join()
 
 test_results = test_results.values()
-agentTypes = set(map(lambda x: x.AgentType, test_results))
+agentTypes = set(map(lambda tr: tr.AgentType, test_results))
 test_results = [[tr for tr in test_results if tr.AgentType == aT] for aT in agentTypes]
 
 for test_results_of_type in test_results:
