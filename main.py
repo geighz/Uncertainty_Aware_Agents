@@ -1,12 +1,11 @@
-from TestExecutor import *
-from Plotter import *
-import multiprocessing
-import time
-
 from NoAdviceMiner import NoAdviceMiner
 from VisitBasedMiner import VisitBasedMiner
 from UncertaintyAwareMiner import UncertaintyAwareMiner
 from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
+from TestExecutor import *
+from Plotter import *
+import multiprocessing
+import time
 
 start_time = time.time()
 EPOCHS = 1001
@@ -26,16 +25,17 @@ manager = multiprocessing.Manager()
 test_results = manager.dict()
 testProcesses = []
 id = 0
-for test_setup, test_number in (test_setups, range(NUMBER_EXECUTIONS)):
-    id += 1
-    testProcess = multiprocessing.Process(target=execute_test, args=(test_setup, id, test_results))
-    testProcesses.append(testProcess)
-    testProcess.start()
+for test_setup in test_setups:
+    for test_number in range(NUMBER_EXECUTIONS):
+        id += 1
+        testProcess = multiprocessing.Process(target=execute_test, args=(id, test_setup, test_results))
+        testProcesses.append(testProcess)
+        testProcess.start()
 
 for process in testProcesses:
     process.join()
 
-plot(test_results)
+plot_test(test_results)
 
 duration = int(time.time() - start_time)
 print(f"Duration {duration} seconds")

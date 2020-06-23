@@ -73,7 +73,7 @@ Test_setup = namedtuple('Test_setup',
                         ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE'))
 
 
-def execute_test(test, test_id, return_dict):
+def execute_test(test_id, test, return_dict):
     print(test)
     agenttype, number_heads, epochs, buffer, batch_size, target_update = test
     # TODO rename test_number

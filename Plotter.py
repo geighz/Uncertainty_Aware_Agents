@@ -43,7 +43,7 @@ def plot_results_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel
     plot(x, averages, title, linelabel, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim)
 
 
-def plot(test_results):
+def plot_test(test_results):
     # Sort the test results by type
     test_results = test_results.values()
     agentTypes = set(map(lambda tr: tr.AgentType, test_results))
