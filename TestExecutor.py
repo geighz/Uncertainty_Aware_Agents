@@ -74,12 +74,12 @@ class TestExecutor:
 
 
 Test_result = namedtuple('Test_result',
-                         ('LINE_LABEL', 'EPOCH_ID', 'REWARDS', 'TIMES_ADVISEE', 'TIMES_ADVISER'))
+                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ADVISEE', 'TIMES_ADVISER'))
 Test_setup = namedtuple('Test_setup',
                         ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE'))
 
 
-def execute_test(test, number_executions):
+def execute_test(test, number_executions, return_index, return_dict):
     print(test)
     EPOCH_IDS = []
     rewards = []
@@ -92,10 +92,9 @@ def execute_test(test, number_executions):
         executor = TestExecutor(number_heads, buffer, agenttype)
         x, reward_history, advisee_history, adviser_history = executor.train_and_evaluate_agent(epochs, target_update,
                                                                                          batch_size)
-        print()
         EPOCH_IDS.append(x)
         rewards.append(reward_history)
         times_advisee.append(advisee_history)
         times_adviser.append(adviser_history)
-    print()
-    return Test_result(agenttype.__name__, EPOCH_IDS, rewards, times_advisee, times_adviser)
+    test_result = Test_result(agenttype.__name__, EPOCH_IDS, rewards, times_advisee, times_adviser)
+    return_dict[return_index] = test_result

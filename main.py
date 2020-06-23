@@ -1,4 +1,5 @@
 from TestExecutor import *
+from VisitBasedMiner import VisitBasedMiner
 from Plotter import *
 import multiprocessing
 import time
@@ -14,26 +15,38 @@ test_setups = [#Test_setup(VisitBasedMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGE
                Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE),
                Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE)]
                #Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE)]
-test_results = []
 
-def a_func(t):
-  test_results.append(execute_test(t, NUMBER_EXECUTIONS))
+manager = multiprocessing.Manager()
+test_results = manager.dict()
+jobs = []
+test_id = 0
+for test_setup in test_setups:
+    for execution_number in range(NUMBER_EXECUTIONS):
+        test_id += 1
+        p = multiprocessing.Process(target=execute_test, args=(test_setup, 1, test_id, test_results))
+        jobs.append(p)
+        p.start()
 
-#for test in test_setups:
-    #test_results.append(execute_test(test, NUMBER_EXECUTIONS))
+for proc in jobs:
+    proc.join()
 
-p=multiprocessing.Pool(3)
-p.map(a_func, test_setups)
-#p.join()
+values = set(map(lambda x: x[0], test_results.values()))
+print(values)
+newlist = [[y for y in test_results.values() if y[0] == x] for x in values]
+print(newlist)
 
-#with multiprocessing.Pool() as pool:
-    #pool.map(a_func, test_setups)
-#reader_process = multiprocessing.Process(target=a_func, args=test_setups)
-#reader_process.start()
-#reader_process.join()
-
-for test_result in test_results:
-    label, epoch_ids, rewards, times_advisee, times_adviser = test_result
+for test_result in newlist:
+    label = None
+    epoch_ids = []
+    rewards = []
+    times_advisee = []
+    times_adviser = []
+    for tmp in test_result:
+        label = tmp[0]
+        epoch_ids.append(tmp[1][0])
+        rewards.append(tmp[2][0])
+        times_advisee.append(tmp[3][0])
+        times_adviser.append(tmp[4][0])
     plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
     plot_results_with_confidence_interval(label, epoch_ids, times_advisee, *ask_labels)
     plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
