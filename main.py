@@ -18,24 +18,22 @@ test_setups = [#Test_setup(VisitBasedMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGE
 
 manager = multiprocessing.Manager()
 test_results = manager.dict()
-jobs = []
-test_id = 0
+testProcesses = []
+id = 0
 for test_setup in test_setups:
-    for execution_number in range(NUMBER_EXECUTIONS):
-        test_id += 1
-        p = multiprocessing.Process(target=execute_test, args=(test_setup, 1, test_id, test_results))
-        jobs.append(p)
-        p.start()
+    for test_number in range(NUMBER_EXECUTIONS):
+        id += 1
+        testProcess = multiprocessing.Process(target=execute_test, args=(test_setup, id, test_results))
+        testProcesses.append(testProcess)
+        testProcess.start()
 
-for proc in jobs:
-    proc.join()
+for process in testProcesses:
+    process.join()
 
-values = set(map(lambda x: x[0], test_results.values()))
-print(values)
-newlist = [[y for y in test_results.values() if y[0] == x] for x in values]
-print(newlist)
+agentTypes = set(map(lambda x: x[0], test_results.values()))
+test_results = [[y for y in test_results.values() if y[0] == x] for x in agentTypes]
 
-for test_result in newlist:
+for test_result in test_results:
     label = None
     epoch_ids = []
     rewards = []
@@ -43,10 +41,10 @@ for test_result in newlist:
     times_adviser = []
     for tmp in test_result:
         label = tmp[0]
-        epoch_ids.append(tmp[1][0])
-        rewards.append(tmp[2][0])
-        times_advisee.append(tmp[3][0])
-        times_adviser.append(tmp[4][0])
+        epoch_ids.append(tmp[1])
+        rewards.append(tmp[2])
+        times_advisee.append(tmp[3])
+        times_adviser.append(tmp[4])
     plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
     plot_results_with_confidence_interval(label, epoch_ids, times_advisee, *ask_labels)
     plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)

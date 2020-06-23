@@ -79,22 +79,13 @@ Test_setup = namedtuple('Test_setup',
                         ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE'))
 
 
-def execute_test(test, number_executions, return_index, return_dict):
+def execute_test(test, test_id, return_dict):
     print(test)
-    EPOCH_IDS = []
-    rewards = []
-    times_advisee = []
-    times_adviser = []
     agenttype, number_heads, epochs, buffer, batch_size, target_update = test
     # TODO rename test_number
-    for test_number in range(number_executions):
-        print("test #: %s" % test_number)
-        executor = TestExecutor(number_heads, buffer, agenttype)
-        x, reward_history, advisee_history, adviser_history = executor.train_and_evaluate_agent(epochs, target_update,
-                                                                                         batch_size)
-        EPOCH_IDS.append(x)
-        rewards.append(reward_history)
-        times_advisee.append(advisee_history)
-        times_adviser.append(adviser_history)
-    test_result = Test_result(agenttype.__name__, EPOCH_IDS, rewards, times_advisee, times_adviser)
-    return_dict[return_index] = test_result
+    print("test #: %s" % test_id)
+    executor = TestExecutor(number_heads, buffer, agenttype)
+    epoch_ids, reward_history, advisee_history, adviser_history = executor.train_and_evaluate_agent(epochs, target_update,
+                                                                                     batch_size)
+    test_result = Test_result(agenttype.__name__, epoch_ids, reward_history, advisee_history, adviser_history)
+    return_dict[test_id] = test_result
