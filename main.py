@@ -30,21 +30,22 @@ for test_setup in test_setups:
 for process in testProcesses:
     process.join()
 
-agentTypes = set(map(lambda x: x[0], test_results.values()))
-test_results = [[y for y in test_results.values() if y[0] == x] for x in agentTypes]
+test_results = test_results.values()
+agentTypes = set(map(lambda x: x.AgentType, test_results))
+test_results = [[tr for tr in test_results if tr.AgentType == aT] for aT in agentTypes]
 
-for test_result in test_results:
+for test_results_of_type in test_results:
     label = None
     epoch_ids = []
     rewards = []
     times_advisee = []
     times_adviser = []
-    for tmp in test_result:
-        label = tmp[0]
-        epoch_ids.append(tmp[1])
-        rewards.append(tmp[2])
-        times_advisee.append(tmp[3])
-        times_adviser.append(tmp[4])
+    for test_result in test_results_of_type:
+        label = test_result.AgentType
+        epoch_ids.append(test_result.EPOCH_ID)
+        rewards.append(test_result.REWARDS)
+        times_advisee.append(test_result.TIMES_ADVISEE)
+        times_adviser.append(test_result.TIMES_ADVISER)
     plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
     plot_results_with_confidence_interval(label, epoch_ids, times_advisee, *ask_labels)
     plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
