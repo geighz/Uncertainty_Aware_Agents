@@ -5,10 +5,10 @@ import numpy as np
 
 
 class TestExecutor:
-    def __init__(self, number_heads, buffer, agent):
+    def __init__(self, number_heads, buffer, agent, budget):
         self.epsilon = 1
-        self.agent_b = agent(number_heads)
-        self.agent_a = agent(number_heads)
+        self.agent_b = agent(number_heads, budget)
+        self.agent_a = agent(number_heads, budget)
         self.agent_a.set_partner(self.agent_b)
         self.agent_b.set_partner(self.agent_a)
         self.reward_history = []
@@ -25,8 +25,6 @@ class TestExecutor:
             self.reward_history = np.append(self.reward_history, average_reward)
             self.advisee_history = np.append(self.advisee_history, self.agent_a.times_advisee)
             self.adviser_history = np.append(self.adviser_history, self.agent_a.times_adviser)
-            self.agent_a.times_advisee = 0
-            self.agent_a.times_adviser = 0
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs):
@@ -68,15 +66,15 @@ class TestExecutor:
 Test_result = namedtuple('Test_result',
                          ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ADVISEE', 'TIMES_ADVISER'))
 Test_setup = namedtuple('Test_setup',
-                        ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE'))
+                        ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE', 'BUDGET'))
 
 
 def execute_test(test_id, test, return_dict):
     print(test)
-    agenttype, number_heads, epochs, buffer, batch_size, target_update = test
+    agenttype, number_heads, epochs, buffer, batch_size, target_update, budget = test
     # TODO rename test_number
     print("test #: %s" % test_id)
-    executor = TestExecutor(number_heads, buffer, agenttype)
+    executor = TestExecutor(number_heads, buffer, agenttype, budget)
     episode_ids, reward_history, advisee_history, adviser_history = executor.train_and_evaluate_agent(epochs, target_update,
                                                                                      batch_size)
     test_result = Test_result(agenttype.__name__, episode_ids, reward_history, advisee_history, adviser_history)
