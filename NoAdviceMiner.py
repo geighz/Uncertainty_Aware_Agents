@@ -2,8 +2,8 @@ from Miner import *
 
 
 class NoAdviceMiner(Miner):
-    def __init__(self, number_heads):
-        super(NoAdviceMiner, self).__init__(number_heads=number_heads)
+    def __init__(self, number_heads, budget=0):
+        super(NoAdviceMiner, self).__init__(number_heads, budget)
 
     def probability_advise_in_state(self, state):
         return 0

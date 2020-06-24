@@ -20,9 +20,9 @@ def hash_state(state):
 
 
 class Miner(ABC):
-    # TODO: number of heads belongs to the subclass not the parent class
-    def __init__(self, number_heads):
+    def __init__(self, number_heads, budget=0):
         self.number_heads = number_heads
+        self.budget = budget
         self.policy_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -43,11 +43,11 @@ class Miner(ABC):
         self.other_agent = other_agent
 
     def give_advise(self, env):
+        if self.times_adviser >= self.budget:
+            return None
         prob_give = self.probability_advise_in_state(env.state)
         if np.random.random() > prob_give:
             return None
-        # give advise
-        # print("give advise")
         self.times_adviser += 1
         inv_state = get_grid_for_player(env.state, np.array([0, 0, 0, 0, 1]))
         action = self.choose_best_action(v_state(inv_state))
@@ -74,12 +74,11 @@ class Miner(ABC):
     # This is choosing an action
     def choose_training_action(self, env, epsilon):
         action = None
-        prob_ask = self.probability_ask_in_state(env)
-        if np.random.random() < prob_ask:
-            # ask for advice
-            # print("ask for advice")
-            self.times_advisee += 1
-            action = self.other_agent.give_advise(env)
+        if self.times_advisee < self.budget:
+            prob_ask = self.probability_ask_in_state(env)
+            if np.random.random() < prob_ask:
+                self.times_advisee += 1
+                action = self.other_agent.give_advise(env)
         if action is None:
             action = self.exploration_strategy(env, epsilon)
         return action

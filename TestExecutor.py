@@ -27,8 +27,6 @@ class TestExecutor:
             self.adviser_history = np.append(self.adviser_history, self.agent_a.times_adviser)
             self.agent_a.times_advisee = 0
             self.agent_a.times_adviser = 0
-        # if episode_number % 1000 == 0 and not episode_number == 0:
-        #     plot(self.x, self.reward_history, self.advisee_history, self.adviser_history)
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs):
