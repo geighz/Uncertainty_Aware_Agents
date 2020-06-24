@@ -14,7 +14,6 @@ class TestExecutor:
         self.reward_history = []
         self.episode_ids = np.array([])
         self.asked_history = np.array([])
-        self.advisee_history = np.array([])
         self.adviser_history = np.array([])
         self.memory = ReplayMemory(buffer)
         self.env = Goldmine()
@@ -26,8 +25,6 @@ class TestExecutor:
             self.reward_history = np.append(self.reward_history, average_reward)
             times_asked = (self.agent_a.times_asked + self.agent_b.times_asked) / 2
             self.asked_history = np.append(self.asked_history, times_asked)
-            times_advisee = (self.agent_a.times_advisee + self.agent_b.times_advisee) / 2
-            self.advisee_history = np.append(self.advisee_history, times_advisee)
             times_adviser = (self.agent_a.times_adviser + self.agent_b.times_adviser) / 2
             self.adviser_history = np.append(self.adviser_history, times_adviser)
 
@@ -65,12 +62,12 @@ class TestExecutor:
                 for head_number in range(self.agent_a.policy_net.number_heads):
                     self.agent_a.update_target_net()
                     self.agent_b.update_target_net()
-        test_result = Test_result(type(self.agent_a).__name__, self.episode_ids, self.reward_history, self.asked_history, self.advisee_history, self.adviser_history)
+        test_result = Test_result(type(self.agent_a).__name__, self.episode_ids, self.reward_history, self.asked_history, self.adviser_history)
         return test_result
 
 
 Test_result = namedtuple('Test_result',
-                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_ADVISEE', 'TIMES_ADVISER'))
+                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_GIVEN'))
 Test_setup = namedtuple('Test_setup',
                         ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE', 'BUDGET'))
 
