@@ -13,6 +13,7 @@ class TestExecutor:
         self.agent_b.set_partner(self.agent_a)
         self.reward_history = []
         self.episode_ids = np.array([])
+        self.asked_history = np.array([])
         self.advisee_history = np.array([])
         self.adviser_history = np.array([])
         self.memory = ReplayMemory(buffer)
@@ -23,8 +24,12 @@ class TestExecutor:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             average_reward = evaluate_agents(self.agent_a, self.agent_b)
             self.reward_history = np.append(self.reward_history, average_reward)
-            self.advisee_history = np.append(self.advisee_history, self.agent_a.times_advisee)
-            self.adviser_history = np.append(self.adviser_history, self.agent_a.times_adviser)
+            times_asked = (self.agent_a.times_asked + self.agent_b.times_asked) / 2
+            self.asked_history = np.append(self.asked_history, times_asked)
+            times_advisee = (self.agent_a.times_advisee + self.agent_b.times_advisee) / 2
+            self.advisee_history = np.append(self.advisee_history, times_advisee)
+            times_adviser = (self.agent_a.times_adviser + self.agent_b.times_adviser) / 2
+            self.adviser_history = np.append(self.adviser_history, times_adviser)
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs):
@@ -60,11 +65,12 @@ class TestExecutor:
                 for head_number in range(self.agent_a.policy_net.number_heads):
                     self.agent_a.update_target_net()
                     self.agent_b.update_target_net()
-        return self.episode_ids, self.reward_history, self.advisee_history, self.adviser_history
+        test_result = Test_result(type(self.agent_a).__name__, self.episode_ids, self.reward_history, self.asked_history, self.advisee_history, self.adviser_history)
+        return test_result
 
 
 Test_result = namedtuple('Test_result',
-                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ADVISEE', 'TIMES_ADVISER'))
+                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_ADVISEE', 'TIMES_ADVISER'))
 Test_setup = namedtuple('Test_setup',
                         ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE', 'BUDGET'))
 
@@ -75,7 +81,4 @@ def execute_test(test_id, test, return_dict):
     # TODO rename test_number
     print("test #: %s" % test_id)
     executor = TestExecutor(number_heads, buffer, agenttype, budget)
-    episode_ids, reward_history, advisee_history, adviser_history = executor.train_and_evaluate_agent(epochs, target_update,
-                                                                                     batch_size)
-    test_result = Test_result(agenttype.__name__, episode_ids, reward_history, advisee_history, adviser_history)
-    return_dict[test_id] = test_result
+    return_dict[test_id] = executor.train_and_evaluate_agent(epochs, target_update, batch_size)

@@ -27,6 +27,7 @@ class Miner(ABC):
         self.target_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
+        self.times_asked = 0
         self.times_advisee = 0
         self.times_adviser = 0
         self.optimizers = []
@@ -77,8 +78,10 @@ class Miner(ABC):
         if self.times_advisee < self.budget:
             prob_ask = self.probability_ask_in_state(env)
             if np.random.random() < prob_ask:
-                self.times_advisee += 1
+                self.times_asked += 1
                 action = self.other_agent.give_advise(env)
+                if action is not None:
+                    self.times_advisee += 1
         if action is None:
             action = self.exploration_strategy(env, epsilon)
         return action

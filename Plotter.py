@@ -2,8 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
 
-give_labels = ('Giving', 'Episode', '#given advise in 25 episodes')
-ask_labels = ('Ask', 'Episode', '#asked for advise in 25 episodes')
+give_labels = ('Giving', 'Episode', 'times as adviser')
+advisee_labels = ('Advisee', 'Episode', 'times as advisee')
+ask_labels = ('Ask', 'Episode', 'times asked for advise')
 reward_labels = ('Training', 'Episode', 'Reward')
 
 
@@ -53,11 +54,13 @@ def plot_test(test_results):
         label = results[0].AgentType
         epoch_ids = [test_run.EPOCH_ID for test_run in results]
         rewards = [test_run.REWARDS for test_run in results]
+        times_asked = [test_run.TIMES_ASKED for test_run in results]
         times_advisee = [test_run.TIMES_ADVISEE for test_run in results]
         times_adviser = [test_run.TIMES_ADVISER for test_run in results]
 
         plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
-        plot_results_with_confidence_interval(label, epoch_ids, times_advisee, *ask_labels)
+        plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
+        plot_results_with_confidence_interval(label, epoch_ids, times_advisee, *advisee_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
 
     plt.show()
