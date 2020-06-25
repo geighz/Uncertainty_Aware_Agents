@@ -4,7 +4,7 @@ from UncertaintyAwareMiner import UncertaintyAwareMiner
 from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
 from TestExecutor import *
 from Plotter import *
-from multiprocessing import Pool, Manager
+from torch.multiprocessing import Pool, Manager
 import psutil
 import os
 import time
