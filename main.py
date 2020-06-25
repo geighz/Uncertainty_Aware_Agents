@@ -4,23 +4,23 @@ from UncertaintyAwareMiner import UncertaintyAwareMiner
 from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
 from TestExecutor import *
 from Plotter import *
-from multiprocessing import Pool, cpu_count, Manager
+from multiprocessing import Pool, Manager
 import psutil
 import os
 import time
 
 start_time = time.time()
-EPOCHS = 51
+EPOCHS = 150000
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
-NUMBER_EXECUTIONS = 1
+NUMBER_EXECUTIONS = 5
 BUDGET = 250
 
 test_setups = [
-    # Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
-    # Test_setup(VisitBasedMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
-    # Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
+    Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
+    Test_setup(VisitBasedMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
+    Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
     Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET)
 ]
 
