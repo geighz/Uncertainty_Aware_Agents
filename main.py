@@ -35,7 +35,7 @@ test_results = manager.dict()
 def limit_cpu():
     p = psutil.Process(os.getpid())
     # second lowest priority
-    p.nice(19)
+    p.nice(15)
 
 
 testProcesses = []
