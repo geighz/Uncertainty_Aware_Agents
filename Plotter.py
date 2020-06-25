@@ -60,4 +60,10 @@ def plot_test(test_results):
         plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
 
+    plt.figure(reward_labels[0])
+    plt.savefig(f"{reward_labels[0]}.pdf")
+    plt.figure(ask_labels[0])
+    plt.savefig(f"{ask_labels[0]}.pdf")
+    plt.figure(give_labels[0])
+    plt.savefig(f"{give_labels[0]}.pdf")
     plt.show()
