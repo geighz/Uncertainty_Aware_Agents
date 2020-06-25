@@ -35,14 +35,14 @@ test_results = manager.dict()
 def limit_cpu():
     p = psutil.Process(os.getpid())
     # second lowest priority
-    p.nice(15)
+    p.nice(18)
 
 
 testProcesses = []
 id = 0
 print(psutil.cpu_count(logical=False))
 print(psutil.cpu_count(logical=True))
-pool = Pool(processes=12, initializer=limit_cpu())
+pool = Pool(processes=2, initializer=limit_cpu())
 for test_setup in test_setups:
     for test_number in range(NUMBER_EXECUTIONS):
         id += 1
