@@ -5,9 +5,9 @@ import scipy.stats as st
 import os
 from time import strftime
 
-give_labels = ('Give Advice', 'Episode', 'times as adviser')
-ask_labels = ('Ask for Advice', 'Episode', 'times asked for advise')
-reward_labels = ('Evaluation during Training', 'Episode', 'Reward')
+give_labels = ('Give_Advice', 'Episode', 'times as adviser')
+ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
+reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
 out_folder = os.path.join('out', strftime("%Y%m%d-%H%M%S"))
 
 
