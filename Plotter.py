@@ -1,11 +1,14 @@
+import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
 import os
+from time import strftime
 
 give_labels = ('Give Advice', 'Episode', 'times as adviser')
 ask_labels = ('Ask for Advice', 'Episode', 'times asked for advise')
 reward_labels = ('Evaluation during Training', 'Episode', 'Reward')
+out_folder = os.path.join('out', strftime("%Y%m%d-%H%M%S"))
 
 
 def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None):
@@ -44,26 +47,29 @@ def plot_results_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel
     plot(x, averages, title, linelabel, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim)
 
 
+def create_folder():
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder)
+
+
 def save(test_results):
-    if not os.path.exists('out'):
-        os.mkdir('out')
-    with open('out/test.results', 'wb') as config_dictionary_file:
-        os.pickle.dump(test_results, config_dictionary_file)
-    with open('out/test.results', 'rb') as config_dictionary_file:
-        test_results = os.pickle.load(config_dictionary_file)
+    with open(os.path.join(out_folder, 'test.results'), 'wb') as config_dictionary_file:
+        pickle.dump(test_results, config_dictionary_file)
+    # with open(out_folder + '/test.results', 'rb') as config_dictionary_file:
+    #     test_results = pickle.load(config_dictionary_file)
 
 
 def save_plots():
     plt.figure(reward_labels[0])
-    plt.savefig(os.path.join('out', f"{reward_labels[0]}.pdf"))
-    plt.savefig(f"{reward_labels[0]}.pdf")
+    plt.savefig(os.path.join(out_folder, f"{reward_labels[0]}.pdf"))
     plt.figure(ask_labels[0])
-    plt.savefig(f"{ask_labels[0]}.pdf")
+    plt.savefig(os.path.join(out_folder, f"{ask_labels[0]}.pdf"))
     plt.figure(give_labels[0])
-    plt.savefig(f"{give_labels[0]}.pdf")
+    plt.savefig(os.path.join(out_folder, f"{give_labels[0]}.pdf"))
 
 
 def plot_test(test_results):
+    create_folder()
     save(test_results)
     # Sort the test results by type
     test_results = test_results.values()
