@@ -10,11 +10,11 @@ import os
 import time
 
 start_time = time.time()
-EPOCHS = 251
+EPOCHS = 350000
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
-NUMBER_EXECUTIONS = 3
+NUMBER_EXECUTIONS = 1
 BUDGET = 250
 
 test_setups = [
@@ -35,14 +35,14 @@ test_results = manager.dict()
 def limit_cpu():
     p = psutil.Process(os.getpid())
     # second lowest priority
-    p.nice(18)
+    p.nice(19)
 
 
 testProcesses = []
 id = 0
 print(psutil.cpu_count(logical=False))
 print(psutil.cpu_count(logical=True))
-pool = Pool(processes=2, initializer=limit_cpu())
+pool = Pool(processes=12, initializer=limit_cpu())
 for test_setup in test_setups:
     for test_number in range(NUMBER_EXECUTIONS):
         id += 1
