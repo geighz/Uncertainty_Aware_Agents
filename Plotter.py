@@ -53,10 +53,13 @@ def create_folder():
 
 
 def save(test_results):
-    with open(os.path.join(out_folder, 'test.results'), 'wb') as config_dictionary_file:
-        pickle.dump(test_results, config_dictionary_file)
-    # with open(out_folder + '/test.results', 'rb') as config_dictionary_file:
-    #     test_results = pickle.load(config_dictionary_file)
+    with open(os.path.join(out_folder, 'test.results'), 'wb') as input:
+        pickle.dump(test_results, input)
+
+
+def load_from():
+    with open(os.path.join(out_folder, 'test.results'), 'rb') as input:
+        return pickle.load(input)
 
 
 def save_plots():
@@ -71,6 +74,7 @@ def save_plots():
 def plot_test(test_results):
     create_folder()
     save(test_results)
+    test_results = load_from()
     # Sort the test results by type
     test_results = test_results.values()
     agentTypes = set(map(lambda tr: tr.AgentType, test_results))
