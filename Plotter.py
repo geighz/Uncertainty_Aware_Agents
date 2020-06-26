@@ -1,10 +1,14 @@
+import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
+import os
+from time import strftime
 
-give_labels = ('Give Advice', 'Episode', 'times as adviser')
-ask_labels = ('Ask for Advice', 'Episode', 'times asked for advise')
-reward_labels = ('Evaluation during Training', 'Episode', 'Reward')
+give_labels = ('Give_Advice', 'Episode', 'times as adviser')
+ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
+reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
+out_folder = os.path.join('out', strftime("%Y%m%d-%H%M%S"))
 
 
 def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None):
@@ -43,7 +47,34 @@ def plot_results_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel
     plot(x, averages, title, linelabel, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim)
 
 
+def create_folder():
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder)
+
+
+def save_plots():
+    plt.figure(reward_labels[0])
+    plt.savefig(os.path.join(out_folder, f"{reward_labels[0]}.pdf"))
+    plt.figure(ask_labels[0])
+    plt.savefig(os.path.join(out_folder, f"{ask_labels[0]}.pdf"))
+    plt.figure(give_labels[0])
+    plt.savefig(os.path.join(out_folder, f"{give_labels[0]}.pdf"))
+
+
+def save(test_results):
+    with open(os.path.join(out_folder, 'test.results'), 'wb') as input:
+        pickle.dump(dict(test_results), input)
+
+
+def load_from(date_time):
+    with open(os.path.join('out', date_time, 'test.results'), 'rb') as input:
+        return pickle.load(input)
+
+    
 def plot_test(test_results):
+    create_folder()
+    save(test_results)
+    # test_results = load_from('20200626-164138')
     # Sort the test results by type
     test_results = test_results.values()
     agentTypes = set(map(lambda tr: tr.AgentType, test_results))
@@ -59,5 +90,6 @@ def plot_test(test_results):
         plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
         plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
-
+    create_folder()
+    save_plots()
     plt.show()

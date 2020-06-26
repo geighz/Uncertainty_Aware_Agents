@@ -2,6 +2,7 @@ from ReplayMemory import ReplayMemory
 from evaluation import *
 from collections import namedtuple
 import numpy as np
+import os
 
 
 class TestExecutor:
@@ -31,8 +32,8 @@ class TestExecutor:
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs):
             self.track_progress(i_episode)
-            if i_episode % 50 == 0:
-                print("Game #: %s" % (i_episode,))
+            if i_episode % 250 == 0:
+                print("%s Game #: %s" % (os.getpid(), i_episode))
             self.env.reset()
             done = False
             step = 0
