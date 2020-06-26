@@ -61,7 +61,20 @@ def save_plots():
     plt.savefig(os.path.join(out_folder, f"{give_labels[0]}.pdf"))
 
 
+def save(test_results):
+    with open(os.path.join(out_folder, 'test.results'), 'wb') as input:
+        pickle.dump(dict(test_results), input)
+
+
+def load_from(date_time):
+    with open(os.path.join('out', date_time, 'test.results'), 'rb') as input:
+        return pickle.load(input)
+
+    
 def plot_test(test_results):
+    create_folder()
+    save(test_results)
+    # test_results = load_from('20200626-164138')
     # Sort the test results by type
     test_results = test_results.values()
     agentTypes = set(map(lambda tr: tr.AgentType, test_results))
