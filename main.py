@@ -9,6 +9,7 @@ import psutil
 import os
 import time
 
+print(strftime("%d.%m.%Y-%H:%M:%S"))
 start_time = time.time()
 EPOCHS = 350000
 BUFFER = 80
