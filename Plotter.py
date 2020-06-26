@@ -52,16 +52,6 @@ def create_folder():
         os.makedirs(out_folder)
 
 
-def save(test_results):
-    with open(os.path.join(out_folder, 'test.results'), 'wb') as input:
-        pickle.dump(test_results, input)
-
-
-def load_from():
-    with open(os.path.join(out_folder, 'test.results'), 'rb') as input:
-        return pickle.load(input)
-
-
 def save_plots():
     plt.figure(reward_labels[0])
     plt.savefig(os.path.join(out_folder, f"{reward_labels[0]}.pdf"))
@@ -72,9 +62,6 @@ def save_plots():
 
 
 def plot_test(test_results):
-    create_folder()
-    save(test_results)
-    test_results = load_from()
     # Sort the test results by type
     test_results = test_results.values()
     agentTypes = set(map(lambda tr: tr.AgentType, test_results))
@@ -90,5 +77,6 @@ def plot_test(test_results):
         plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
         plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
+    create_folder()
     save_plots()
     plt.show()
