@@ -1,7 +1,8 @@
-import NoAdviceMiner
-import VisitBasedMiner
-import UncertaintyAwareMiner
-import UncertaintyAwareMinerNormalised
+from NoAdviceMiner import NoAdviceMiner
+from VisitBasedMiner import VisitBasedMiner
+from UncertaintyAwareMiner import UncertaintyAwareMiner
+from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
+from TDMiner import TDMiner
 from psutil import Process
 from os import getpid
 from time import strftime, time
