@@ -1,13 +1,13 @@
-from NoAdviceMiner import NoAdviceMiner
-from VisitBasedMiner import VisitBasedMiner
-from UncertaintyAwareMiner import UncertaintyAwareMiner
-from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
-from TestExecutor import *
-from Plotter import *
+import NoAdviceMiner
+import VisitBasedMiner
+import UncertaintyAwareMiner
+import UncertaintyAwareMinerNormalised
+from psutil import Process
+from os import getpid
+from time import strftime, time
+from TestExecutor import Test_setup, execute_test
+from Plotter import plot_test
 from torch.multiprocessing import Pool, Manager
-import psutil
-import os
-import time
 
 print(strftime("%d.%m.%Y-%H:%M:%S"))
 start_time = time.time()
@@ -34,15 +34,13 @@ test_results = manager.dict()
 
 
 def limit_cpu():
-    p = psutil.Process(os.getpid())
+    p = Process(getpid())
     # second lowest priority
     p.nice(19)
 
 
 testProcesses = []
 id = 0
-print(psutil.cpu_count(logical=False))
-print(psutil.cpu_count(logical=True))
 pool = Pool(processes=12, initializer=limit_cpu())
 for test_setup in test_setups:
     for test_number in range(NUMBER_EXECUTIONS):
