@@ -12,7 +12,7 @@ from torch.multiprocessing import Pool, Manager
 
 print(strftime("%d.%m.%Y-%H:%M:%S"))
 start_time = time()
-EPOCHS = 1001
+EPOCHS = 1000
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
@@ -56,5 +56,5 @@ for process in testProcesses:
 
 plot_test(test_results)
 
-duration = int(time.time() - start_time)
+duration = int(time() - start_time)
 print(f"Duration {duration} seconds")

@@ -30,7 +30,7 @@ class TestExecutor:
             self.adviser_history = np.append(self.adviser_history, times_adviser)
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
-        for i_episode in range(epochs):
+        for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
             if i_episode % 250 == 0:
                 print("%s Game #: %s" % (os.getpid(), i_episode))
