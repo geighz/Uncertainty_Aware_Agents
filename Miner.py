@@ -108,6 +108,8 @@ class Miner(ABC):
 
     def optimize(self, states, actions, new_states, rewards, non_final_mask):
         state_action_values = self.get_state_action_value(states, actions)
+        # TODO: Importantly, each one of these value function function heads Q (s,a;θ) is trained against its own
+        #  target network Q (s,a;θ−).
         maxQ = self.target_net.q_circumflex(new_states).max(1)[0]
         target = rewards.clone()
         target[non_final_mask] += GAMMA * maxQ[non_final_mask]
