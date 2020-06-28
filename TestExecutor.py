@@ -63,7 +63,7 @@ class TestExecutor:
                 for head_number in range(self.agent_a.policy_net.number_heads):
                     self.agent_a.update_target_net()
                     self.agent_b.update_target_net()
-        test_result = Test_result(type(self.agent_a).__name__, self.episode_ids, self.reward_history, self.asked_history, self.adviser_history)
+        test_result = Test_result(type(self.agent_a).__name__ + self.agent_a.number_heads, self.episode_ids, self.reward_history, self.asked_history, self.adviser_history)
         return test_result
 
 
