@@ -10,7 +10,7 @@ from Plotter import plot_test
 from torch.multiprocessing import Pool, Manager
 
 print(strftime("%d.%m.%Y-%H:%M:%S"))
-start_time = time.time()
+start_time = time()
 EPOCHS = 1001
 BUFFER = 80
 BATCH_SIZE = 10
