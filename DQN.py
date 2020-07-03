@@ -23,11 +23,10 @@ class Body_net(nn.Module):
         self.hidden_units = nn.ModuleList()
         self.in_channels = in_channels
         self.activation = activation
-        prev_layer = in_channels
         hidden_layers = hidden_layers + [out_channels]
-        for hidden in hidden_layers:
-            self.hidden_units.append(unit(prev_layer, hidden, activation))
-            prev_layer = hidden
+        for out_channels in hidden_layers:
+            self.hidden_units.append(unit(in_channels, out_channels, activation))
+            in_channels = out_channels
 
     def forward(self, x):
         out = x.view(-1, self.in_channels).float()
@@ -64,11 +63,12 @@ class Bootstrapped_DQN(nn.Module):
         self.number_heads = number_heads
         out_body = hidden_layers.pop()
         # TODO: make NN architecture more flexible to inits
-        hidden_head = [hidden_layers.pop()]
+        # bc I pop a layer from the hidden layers into the head, I have more diversity across heads
+        head_hidden_layers = [hidden_layers.pop()]
         body = Body_net(in_channels, hidden_layers, out_body, unit, activation)
         self.nets = []
         for i in range(self.number_heads):
-            self.nets.append(Head_net(body, hidden_head, out_channels))
+            self.nets.append(Head_net(body, head_hidden_layers, out_channels))
 
     def forward(self, x):
         result = []
