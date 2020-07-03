@@ -1,22 +1,14 @@
 from Miner import *
 import math
 
-# higher va --> lower asking for advice
-va = 0.6
-# "while a higher vg results in a higher probability of giving advice"
-# lower vg --> give fewer advice
-vg = 0.25
-
-
-def asking_probability(ypsilon):
-    return (1 + va) ** -ypsilon
-
-
-def advising_probability(psi):
-    return 1 - (1 + vg) ** -psi
-
 
 class VisitBasedMiner(Miner):
+    # higher va --> lower asking for advice
+    va = 0.6
+    # "while a higher vg results in a higher probability of giving advice"
+    # lower vg --> give fewer advice
+    vg = 0.25
+
     def __init__(self, number_heads, budget):
         super(VisitBasedMiner, self).__init__(number_heads, budget)
         self.state_counter = {}
@@ -35,13 +27,20 @@ class VisitBasedMiner(Miner):
         else:
             return 0
 
+    def asking_probability(self, ypsilon):
+        print(self.va)
+        return (1 + self.va) ** -ypsilon
+
     def ypsilon(self, state):
         n = self.times_visited(state)
         return math.sqrt(n)
 
     def probability_ask_in_state(self, env):
         ypsilon = self.ypsilon(env.state)
-        return asking_probability(ypsilon)
+        return self.asking_probability(ypsilon)
+
+    def advising_probability(self, psi):
+        return 1 - (1 + self.vg) ** -psi
 
     def psi(self, state):
         number_of_visits = self.times_visited(state)
@@ -52,7 +51,7 @@ class VisitBasedMiner(Miner):
     def probability_advise_in_state(self, state):
         inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
         psi = self.psi(inverse_state)
-        return advising_probability(psi)
+        return self.advising_probability(psi)
 
     def optimize(self, states, actions, new_states, rewards, non_final_mask):
         super(VisitBasedMiner, self).optimize(states, actions, new_states, rewards, non_final_mask)

@@ -1,10 +1,10 @@
 from VisitBasedMiner import *
 
-va = 0.6
-vg = 0.25
-
 
 class TDMiner(VisitBasedMiner):
+    va = 0.6
+    vg = 0.25
+
     def psi(self, state):
         ypsilon = self.ypsilon(state)
         state = v_state(state)
