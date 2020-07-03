@@ -1,8 +1,10 @@
 from Miner import *
 import math
 
+# higher va --> lower asking for advice
 va = 0.6
-# kleiner --> weniger advice
+# "while a higher vg results in a higher probability of giving advice"
+# lower vg --> give fewer advice
 vg = 0.25
 
 
