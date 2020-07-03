@@ -62,10 +62,10 @@ class Bootstrapped_DQN(nn.Module):
     def __init__(self, number_heads, in_channels, hidden_layers, out_channels, unit=hidden_unit, activation=F.relu):
         super(Bootstrapped_DQN, self).__init__()
         self.number_heads = number_heads
-        hidden_layer_out = hidden_layers.pop()
+        out_body = hidden_layers.pop()
         # TODO: make NN architecture more flexible to inits
         hidden_head = [hidden_layers.pop()]
-        body = Body_net(in_channels, hidden_layers, hidden_layer_out, unit, activation)
+        body = Body_net(in_channels, hidden_layers, out_body, unit, activation)
         self.nets = []
         for i in range(self.number_heads):
             self.nets.append(Head_net(body, hidden_head, out_channels))
