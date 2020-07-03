@@ -1,16 +1,15 @@
 from UncertaintyAwareMiner import *
 
-UncertaintyThreshold = 0.11
-
 
 def normalized_variance(predictions):
     predictions = torch.stack(predictions)
     var = predictions.var(dim=0)
     mean = predictions.mean()
-    return var/mean
+    return var / mean
 
 
 class UncertaintyAwareMinerNormalised(UncertaintyAwareMiner):
+    UncertaintyThreshold = 0.11
 
     # This is the estimated uncertainty, uncertainty can never be calculated otherwise it wouldn't be uncertainty
     def calculate_uncertainty(self, v_state):
