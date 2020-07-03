@@ -9,20 +9,21 @@ def variance(predictions):
 
 
 class UncertaintyAwareMiner(Miner):
-    UncertaintyThreshold = 0.11
+    va = 0.11
+    vg = 0.11
 
     def probability_advise_in_state(self, state):
         # TODO: should get_grid_for_player be a function call higher?
         inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
         uncertainty = self.calculate_uncertainty(v_state(inverse_state))
-        if uncertainty < self.UncertaintyThreshold:
+        if uncertainty < self.vg:
             return 1
         else:
             return 0
 
     def probability_ask_in_state(self, env):
         uncertainty = self.calculate_uncertainty(env.v_state)
-        if uncertainty > self.UncertaintyThreshold:
+        if uncertainty > self.va:
             return 1
         else:
             return 0

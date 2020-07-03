@@ -5,7 +5,7 @@ import math
 class VisitBasedMiner(Miner):
     # higher va --> lower asking for advice
     va = 0.6
-    # "while a higher vg results in a higher probability of giving advice"
+    # "a higher vg results in a higher probability of giving advice"
     # lower vg --> give fewer advice
     vg = 0.25
 
