@@ -9,9 +9,6 @@ def normalized_variance(predictions):
 
 
 class UncertaintyAwareMinerNormalised(UncertaintyAwareMiner):
-    va = 0.11
-    vg = 0.11
-
     # This is the estimated uncertainty, uncertainty can never be calculated otherwise it wouldn't be uncertainty
     def calculate_uncertainty(self, v_state):
         qval = self.policy_net(v_state)

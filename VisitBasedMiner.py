@@ -4,12 +4,10 @@ import math
 
 class VisitBasedMiner(Miner):
     # higher va --> lower asking for advice
-    va = 0.6
     # "a higher vg results in a higher probability of giving advice"
     # lower vg --> give fewer advice
-    vg = 0.25
 
-    def __init__(self, number_heads, budget):
+    def __init__(self, number_heads, budget, va=0.6, vg=0.25):
         super(VisitBasedMiner, self).__init__(number_heads, budget)
         self.state_counter = {}
 

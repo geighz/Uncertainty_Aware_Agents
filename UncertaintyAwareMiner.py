@@ -9,8 +9,10 @@ def variance(predictions):
 
 
 class UncertaintyAwareMiner(Miner):
-    va = 0.11
-    vg = 0.11
+    def __init__(self, number_heads, budget, va=0.61, vg=0.66):
+        super(UncertaintyAwareMiner, self).__init__(number_heads, budget)
+        self.va = va
+        self.vg = vg
 
     def probability_advise_in_state(self, state):
         # TODO: should get_grid_for_player be a function call higher?
