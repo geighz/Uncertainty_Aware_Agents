@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
 import os
+import matplotlib
+import matplotlib.cm as cmx
+from mpl_toolkits.mplot3d import Axes3D
 from time import strftime
 
 give_labels = ('Give_Advice', 'Episode', 'times as adviser')
@@ -93,3 +96,47 @@ def plot_test(test_results):
     create_folder()
     save_plots()
     plt.show()
+
+
+def get_scalar_map(cs, colors_map='jet'):
+    cmap = plt.get_cmap(colors_map)
+    cNorm = matplotlib.colors.Normalize(vmin=min(cs), vmax=max(cs))
+    scalar_map = cmx.ScalarMappable(norm=cNorm, cmap=cmap)
+    return scalar_map
+
+
+def scatter3d(x, y, z):
+    cs = np.asarray(z)
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    scalar_map = get_scalar_map(cs)
+    ax.scatter(x, y, z, c=scalar_map.to_rgba(cs))
+    scalar_map.set_array(cs)
+    fig.colorbar(scalar_map)
+    ax.set_xlabel('va')
+    ax.set_ylabel('vg')
+    ax.set_zlabel('reward')
+    create_folder()
+    plt.savefig(os.path.join(out_folder, "scatter3D.pdf"))
+    plt.show()
+
+
+def scatter2d(x, y, z):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cs = np.asarray(z)
+    scalar_map = get_scalar_map(cs)
+    ax.scatter(x, y, c=scalar_map.to_rgba(cs), marker='o')
+    ax.set_xlabel('va')
+    ax.set_ylabel('vg')
+    create_folder()
+    plt.savefig(os.path.join(out_folder, "scatter2D.pdf"))
+    plt.show()
+
+
+def write_to_file(*args):
+    create_folder()
+    file = open(os.path.join(out_folder, "Test_notes.txt"), mode="w", encoding="utf-8")
+    text = '\n'.join(args)
+    file.write(text)
+    file.close()
