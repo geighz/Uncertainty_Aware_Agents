@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -69,6 +70,19 @@ class Bootstrapped_DQN(nn.Module):
         self.nets = []
         for i in range(self.number_heads):
             self.nets.append(Head_net(body, head_hidden_layers, out_channels))
+
+    def load_weights(self, filename):
+        for i in range(len(self.nets)):
+            self.nets[i].load_state_dict(torch.load(f"{filename}.{i}"))
+            self.nets[i].eval()
+
+    def save_weights(self, filename):
+        for i in range(len(self.nets)):
+            torch.save(self.nets[i].state_dict(), f"{filename}.{i}")
+
+    def print_weights(self):
+        for net in self.nets:
+            print(list(net.parameters()))
 
     def forward(self, x):
         result = []
