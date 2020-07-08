@@ -20,9 +20,13 @@ def hash_state(state):
 
 
 class Miner(ABC):
-    def __init__(self, number_heads, budget=0):
+    def __init__(self, number_heads, budget, va, vg):
         self.number_heads = number_heads
         self.budget = budget
+        self.va = va
+        self.vg = vg
+        self.va_history = []
+        self.vg_history = []
         self.policy_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -138,3 +142,14 @@ class Miner(ABC):
             policy_head = self.policy_net.nets[head_number]
             target_head = self.target_net.nets[head_number]
             target_head.load_state_dict(policy_head.state_dict())
+
+    def get_va(self):
+        va_history = self.va_history
+        self.va_history = []
+        return va_history
+
+    def get_vg(self):
+        vg_history = self.vg_history
+        self.vg_history = []
+        return vg_history
+

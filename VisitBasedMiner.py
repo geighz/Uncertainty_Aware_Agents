@@ -7,8 +7,8 @@ class VisitBasedMiner(Miner):
     # "a higher vg results in a higher probability of giving advice"
     # lower vg --> give fewer advice
 
-    def __init__(self, number_heads, budget, va=0.6, vg=0.25):
-        super(VisitBasedMiner, self).__init__(number_heads, budget)
+    def __init__(self, number_heads, budget, va, vg):
+        super(VisitBasedMiner, self).__init__(number_heads, budget, va, vg)
         self.state_counter = {}
 
     def count_state(self, state):
@@ -26,7 +26,6 @@ class VisitBasedMiner(Miner):
             return 0
 
     def asking_probability(self, ypsilon):
-        print(self.va)
         return (1 + self.va) ** -ypsilon
 
     def ypsilon(self, state):

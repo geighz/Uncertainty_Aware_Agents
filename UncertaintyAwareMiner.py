@@ -9,10 +9,8 @@ def variance(predictions):
 
 
 class UncertaintyAwareMiner(Miner):
-    def __init__(self, number_heads, budget, va=0.61, vg=0.66):
-        super(UncertaintyAwareMiner, self).__init__(number_heads, budget)
-        self.va = va
-        self.vg = vg
+    def __init__(self, number_heads, budget, va, vg):
+        super(UncertaintyAwareMiner, self).__init__(number_heads, budget, va, vg)
         self.va_history = []
         self.vg_history = []
 
@@ -47,13 +45,3 @@ class UncertaintyAwareMiner(Miner):
                 predictions.append(state_action_value)
             sum_variance += variance(predictions)
         return sum_variance / 4
-
-    def get_va(self):
-        va_history = self.va_history
-        self.va_history = []
-        return va_history
-
-    def get_vg(self):
-        vg_history = self.vg_history
-        self.vg_history = []
-        return vg_history

@@ -6,10 +6,10 @@ import os
 
 
 class TestExecutor:
-    def __init__(self, number_heads, buffer, agent, budget):
+    def __init__(self, number_heads, buffer, agent, budget, va, vg):
         self.epsilon = 1
-        self.agent_b = agent(number_heads, budget)
-        self.agent_a = agent(number_heads, budget)
+        self.agent_b = agent(number_heads, budget, va, vg)
+        self.agent_a = agent(number_heads, budget, va, vg)
         self.agent_a.set_partner(self.agent_b)
         self.agent_b.set_partner(self.agent_a)
         self.reward_history = []
@@ -80,15 +80,16 @@ class TestExecutor:
 Test_result = namedtuple('Test_result',
                          ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_GIVEN', 'VA', 'VG'))
 Test_setup = namedtuple('Test_setup',
-                        ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE', 'BUDGET'))
+                        ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE', 'BUDGET', 'VA',
+                         'VG'))
 
 
 def execute_test(test_id, test, return_dict):
     print(test)
-    agenttype, number_heads, epochs, buffer, batch_size, target_update, budget = test
+    agenttype, number_heads, epochs, buffer, batch_size, target_update, budget, va, vg = test
     # TODO rename test_number
     print("test #: %s" % test_id)
-    executor = TestExecutor(number_heads, buffer, agenttype, budget)
+    executor = TestExecutor(number_heads, buffer, agenttype, budget, va, vg)
     return_dict[test_id] = executor.train_and_evaluate_agent(epochs, target_update, batch_size)
 
 

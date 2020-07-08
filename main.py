@@ -5,13 +5,12 @@ from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
 from TDMiner import TDMiner
 from psutil import Process
 from os import getpid
-from time import strftime, time
 from TestExecutor import Test_setup, execute_test
-from Plotter import plot_test
+from Plotter import plot_test, print_time, get_time
 from torch.multiprocessing import Pool, Manager
 
-print(strftime("%d.%m.%Y-%H:%M:%S"))
-start_time = time()
+print_time()
+start_time = get_time().timestamp()
 EPOCHS = 1000
 BUFFER = 80
 BATCH_SIZE = 10
@@ -20,15 +19,14 @@ NUMBER_EXECUTIONS = 1
 BUDGET = 250
 
 test_setups = [
-    # Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
-    Test_setup(VisitBasedMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
-    Test_setup(TDMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
-    Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET),
-    Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET)
+    # Test_setup(NoAdviceMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0, 0),
+    # Test_setup(VisitBasedMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.61, 0.6),
+    # Test_setup(TDMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.61, 0.6),
+    # Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.61, 0.6),
+    Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.61, 0.6)
 ]
 
-manager = Manager()
-test_results = manager.dict()
+test_results = Manager().dict()
 
 # for test_setup in test_setups:
 #     for test_number in range(NUMBER_EXECUTIONS):
@@ -56,5 +54,5 @@ for process in testProcesses:
 
 plot_test(test_results)
 
-duration = int(time() - start_time)
+duration = int(get_time().timestamp() - start_time)
 print(f"Duration {duration} seconds")

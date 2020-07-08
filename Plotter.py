@@ -7,6 +7,8 @@ import matplotlib
 import matplotlib.cm as cmx
 from mpl_toolkits.mplot3d import Axes3D
 from time import strftime
+import pytz
+from datetime import datetime
 
 va_labels = ('VA', 'Episode', 'va values', (0, 2))
 vg_labels = ('VG', 'Episode', 'vg values', (0, 2))
@@ -14,6 +16,8 @@ give_labels = ('Give_Advice', 'Episode', 'times as adviser')
 ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
 reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
 out_folder = os.path.join('out', strftime("%Y%m%d-%H%M%S"))
+timezone_berlin = pytz.timezone('Europe/Berlin')
+date_format = '%d.%m.%Y-%H:%M:%S %Z%z'
 
 
 def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None):
@@ -146,3 +150,13 @@ def write_to_file(*args):
     text = '\n'.join(args)
     file.write(text)
     file.close()
+
+
+def get_time():
+    return datetime.now(timezone_berlin)
+
+
+def print_time():
+    time_str = get_time().strftime(date_format)
+    print(time_str)
+    return time_str
