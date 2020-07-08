@@ -8,6 +8,8 @@ import matplotlib.cm as cmx
 from mpl_toolkits.mplot3d import Axes3D
 from time import strftime
 
+va_labels = ('VA', 'Episode', 'va values', (0, 2))
+vg_labels = ('VG', 'Episode', 'vg values', (0, 2))
 give_labels = ('Give_Advice', 'Episode', 'times as adviser')
 ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
 reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
@@ -89,10 +91,14 @@ def plot_test(test_results):
         rewards = [test_run.REWARDS for test_run in results]
         times_asked = [test_run.TIMES_ASKED for test_run in results]
         times_adviser = [test_run.TIMES_GIVEN for test_run in results]
+        va = [test_run.VA for test_run in results]
+        vg = [test_run.VG for test_run in results]
 
         plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
         plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
+        plot_results_with_confidence_interval(label, epoch_ids, va, *va_labels)
+        plot_results_with_confidence_interval(label, epoch_ids, vg, *vg_labels)
     create_folder()
     save_plots()
     plt.show()

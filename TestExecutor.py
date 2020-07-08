@@ -18,16 +18,24 @@ class TestExecutor:
         self.adviser_history = np.array([])
         self.memory = ReplayMemory(buffer)
         self.env = Goldmine()
+        self.va_history = np.array([])
+        self.vg_history = np.array([])
 
     def track_progress(self, episode_number):
         if episode_number % 250 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
-            average_reward = evaluate_agents(self.agent_a, self.agent_b)
+            agent_a = self.agent_a
+            agent_b = self.agent_b
+            average_reward = evaluate_agents(agent_a, agent_b)
             self.reward_history = np.append(self.reward_history, average_reward)
-            times_asked = (self.agent_a.times_asked + self.agent_b.times_asked) / 2
+            times_asked = (agent_a.times_asked + agent_b.times_asked) / 2
             self.asked_history = np.append(self.asked_history, times_asked)
-            times_adviser = (self.agent_a.times_adviser + self.agent_b.times_adviser) / 2
+            times_adviser = (agent_a.times_adviser + agent_b.times_adviser) / 2
             self.adviser_history = np.append(self.adviser_history, times_adviser)
+            va_mean = mean(agent_a.get_va(), agent_b.get_va())
+            self.va_history = np.append(self.va_history, va_mean)
+            vg_mean = mean(agent_a.get_vg(), agent_b.get_vg())
+            self.vg_history = np.append(self.vg_history, vg_mean)
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs + 1):
@@ -64,12 +72,13 @@ class TestExecutor:
                     self.agent_a.update_target_net()
                     self.agent_b.update_target_net()
         agentType = type(self.agent_a).__name__ + str(self.agent_a.number_heads)
-        test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.asked_history, self.adviser_history)
+        test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.asked_history,
+                                  self.adviser_history, self.va_history, self.vg_history)
         return test_result
 
 
 Test_result = namedtuple('Test_result',
-                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_GIVEN'))
+                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_GIVEN', 'VA', 'VG'))
 Test_setup = namedtuple('Test_setup',
                         ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE', 'BUDGET'))
 
@@ -81,3 +90,13 @@ def execute_test(test_id, test, return_dict):
     print("test #: %s" % test_id)
     executor = TestExecutor(number_heads, buffer, agenttype, budget)
     return_dict[test_id] = executor.train_and_evaluate_agent(epochs, target_update, batch_size)
+
+
+def mean(*vas):
+    array = np.array([])
+    for va in vas:
+        array = np.append(array, np.asarray(va, dtype=np.float32))
+    if len(array) > 0:
+        return np.average(array, axis=0)
+    else:
+        return 0

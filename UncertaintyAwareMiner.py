@@ -13,11 +13,14 @@ class UncertaintyAwareMiner(Miner):
         super(UncertaintyAwareMiner, self).__init__(number_heads, budget)
         self.va = va
         self.vg = vg
+        self.va_history = []
+        self.vg_history = []
 
     def probability_advise_in_state(self, state):
         # TODO: should get_grid_for_player be a function call higher?
         inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
         uncertainty = self.calculate_uncertainty(v_state(inverse_state))
+        self.vg_history.append(uncertainty)
         if uncertainty < self.vg:
             return 1
         else:
@@ -25,6 +28,7 @@ class UncertaintyAwareMiner(Miner):
 
     def probability_ask_in_state(self, env):
         uncertainty = self.calculate_uncertainty(env.v_state)
+        self.va_history.append(uncertainty)
         if uncertainty > self.va:
             return 1
         else:
@@ -43,3 +47,13 @@ class UncertaintyAwareMiner(Miner):
                 predictions.append(state_action_value)
             sum_variance += variance(predictions)
         return sum_variance / 4
+
+    def get_va(self):
+        va_history = self.va_history
+        self.va_history = []
+        return va_history
+
+    def get_vg(self):
+        vg_history = self.vg_history
+        self.vg_history = []
+        return vg_history
