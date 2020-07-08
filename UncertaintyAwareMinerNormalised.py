@@ -4,7 +4,7 @@ from UncertaintyAwareMiner import *
 def normalized_variance(predictions):
     predictions = torch.stack(predictions)
     var = predictions.var(dim=0)
-    mean = predictions.mean()
+    mean = abs(predictions.mean())
     return var / mean
 
 
