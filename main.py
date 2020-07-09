@@ -6,27 +6,27 @@ from TDMiner import TDMiner
 from psutil import Process
 from os import getpid
 from TestExecutor import Test_setup, execute_test
-from Plotter import plot_test, print_time, get_time
+from Plotter import plot_test, print_time, get_time, write_to_file
 from torch.multiprocessing import Pool, Manager
+import os
 
-print_time()
+
+start_time_str = print_time()
 start_time = get_time().timestamp()
-EPOCHS = 150000
+EPOCHS = 350000
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
-NUMBER_EXECUTIONS = 1
-BUDGET = 250
+NUMBER_EXECUTIONS = 15
+BUDGET = 350000
+NUMBER_OF_HEADS = 5
 
 test_setups = [
-    # Test_setup(NoAdviceMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0, 0),
-    # Test_setup(VisitBasedMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.9348589998939789, 2.3376882973907214),
-    # Test_setup(TDMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.109463093924938, 1.3107259352052203),
-    Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, 5000, 0.15314463016769106, 0.9588518836533564),
-    Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, 50000, 0.15314463016769106, 0.9588518836533564),
-    Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, 100000, 0.15314463016769106, 0.9588518836533564),
-    Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, 150000, 0.15314463016769106, 0.9588518836533564)
-    # Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.2399574277016787, 2.330334547014672)
+    Test_setup(NoAdviceMiner, NUMBER_OF_HEADS, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0, 0),
+    Test_setup(VisitBasedMiner, NUMBER_OF_HEADS, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.9348589998939789, 2.3376882973907214),
+    Test_setup(TDMiner, NUMBER_OF_HEADS, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.109463093924938, 1.3107259352052203),
+    Test_setup(UncertaintyAwareMiner, NUMBER_OF_HEADS, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.15314463016769106, 0.9588518836533564),
+    Test_setup(UncertaintyAwareMinerNormalised, NUMBER_OF_HEADS, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.2399574277016787, 2.330334547014672)
 ]
 
 test_results = Manager().dict()
@@ -44,7 +44,7 @@ def limit_cpu():
 
 testProcesses = []
 id = 0
-pool = Pool(processes=12, initializer=limit_cpu())
+pool = Pool(processes=20, initializer=limit_cpu())
 for test_setup in test_setups:
     for test_number in range(NUMBER_EXECUTIONS):
         id += 1
@@ -56,6 +56,10 @@ for process in testProcesses:
     process.join()
 
 plot_test(test_results)
-
+stream = os.popen('git rev-parse --verify HEAD')
+git_hash = stream.read()
+write_to_file(start_time_str, git_hash, f"EPOCHS: {EPOCHS}", f"BUFFER: {BUFFER}", f"BATCH_SIZE: {BATCH_SIZE}",
+              f"TARGET_UPDATE: {TARGET_UPDATE}", f"NUMBER_EXECUTIONS: {NUMBER_EXECUTIONS}", f"BUDGET: {BUDGET}",
+              f"test_setups: {test_setups}")
 duration = int(get_time().timestamp() - start_time)
 print(f"Duration {duration} seconds")

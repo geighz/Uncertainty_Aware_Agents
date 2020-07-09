@@ -68,7 +68,7 @@ print(len(study.trials))
 end_time = get_time().timestamp()
 end_time_str = print_time()
 write_to_file(miner.__name__, f"NUMBER_EXECUTIONS: {NUMBER_EXECUTIONS}", f"n_trials: {n_trials}",
-              json.dumps(study.best_params), str(study.best_value), f"{study.best_trial}", start_time_str, end_time_str)
+              study.best_params, study.best_value, study.best_trial, start_time_str, end_time_str)
 scatter2d(x, y, z)
 scatter3d(x, y, z)
 

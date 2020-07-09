@@ -151,7 +151,7 @@ def scatter2d(x, y, z):
 def write_to_file(*args):
     create_folder()
     file = open(os.path.join(out_folder, "Test_notes.txt"), mode="w", encoding="utf-8")
-    text = '\n'.join(args)
+    text = '\n'.join(str(x) for x in args)
     file.write(text)
     file.close()
 
