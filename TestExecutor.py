@@ -22,7 +22,7 @@ class TestExecutor:
         self.vg_history = np.array([])
 
     def track_progress(self, episode_number):
-        if episode_number % 1000 == 0:
+        if episode_number % 500 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
