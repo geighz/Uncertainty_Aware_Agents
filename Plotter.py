@@ -68,6 +68,10 @@ def save_plots():
     plt.savefig(os.path.join(out_folder, f"{ask_labels[0]}.pdf"))
     plt.figure(give_labels[0])
     plt.savefig(os.path.join(out_folder, f"{give_labels[0]}.pdf"))
+    plt.figure(va_labels[0])
+    plt.savefig(os.path.join(out_folder, f"{va_labels[0]}.pdf"))
+    plt.figure(vg_labels[0])
+    plt.savefig(os.path.join(out_folder, f"{vg_labels[0]}.pdf"))
 
 
 def save(test_results):
