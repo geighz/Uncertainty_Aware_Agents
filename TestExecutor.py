@@ -22,7 +22,7 @@ class TestExecutor:
         self.vg_history = np.array([])
 
     def track_progress(self, episode_number):
-        if episode_number % 250 == 0:
+        if episode_number % 100 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -40,7 +40,7 @@ class TestExecutor:
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
-            if i_episode % 250 == 0:
+            if i_episode % 100 == 0:
                 print("%s Game #: %s" % (os.getpid(), i_episode))
             self.env.reset()
             done = False

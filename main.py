@@ -11,7 +11,7 @@ from torch.multiprocessing import Pool, Manager
 
 print_time()
 start_time = get_time().timestamp()
-EPOCHS = 1000
+EPOCHS = 500
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
