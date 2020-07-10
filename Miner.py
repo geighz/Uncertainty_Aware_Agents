@@ -90,17 +90,10 @@ class Miner(ABC):
             action = self.exploration_strategy(env, epsilon)
         return action
 
-    def choose_best_action(self, v_state):
-        qval = self.policy_net(v_state)
-        # q-values derived from all heads, compare with
-        # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
-        # page 5
-        final_q_function = qval[0]
-        for i in range(self.number_heads - 1):
-            final_q_function += qval[i + 1]
-        # print(qval)
-        # take action with highest Q-value
-        final_q_function = final_q_function.data / self.number_heads
+    def choose_best_action(self, v_state, net=None):
+        if net is None:
+            net = self.policy_net
+        final_q_function = net.q_circumflex(v_state)
         return np.argmax(final_q_function.data)
 
     def get_state_action_value(self, state, action):
@@ -123,19 +116,15 @@ class Miner(ABC):
             use_sample = np.random.randint(0, self.number_heads)
             if use_sample == 0:
                 loss.append(criterion(state_action_values[a].view(10), target))
-            else:
-                loss.append(None)
 
         # Optimize the model
-        # Clear gradients of all optimized torch.Tensor s.
-        for a in range(self.number_heads):
-            if loss[a] is not None:
-                # clear gradient
-                self.optimizers[a].zero_grad()
-                # compute gradients
-                loss[a].backward()
-                # update model parameters
-                self.optimizers[a].step()
+        for a in range(len(loss)):
+            # clear gradient
+            self.optimizers[a].zero_grad()
+            # compute gradients
+            loss[a].backward()
+            # update model parameters
+            self.optimizers[a].step()
 
     def update_target_net(self):
         for head_number in range(self.number_heads):

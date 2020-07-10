@@ -92,6 +92,9 @@ class Bootstrapped_DQN(nn.Module):
 
     def q_circumflex(self, x):
         qval = self.__call__(x)
+        # q-values derived from all heads, compare with
+        # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
+        # page 5
         # mean = torch.mean(torch.stack(qval))
         sum = qval[0]
         for i in range(self.number_heads - 1):
