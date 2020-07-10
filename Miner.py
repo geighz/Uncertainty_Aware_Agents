@@ -84,10 +84,10 @@ class Miner(ABC):
             if np.random.random() < prob_ask:
                 self.times_asked += 1
                 action = self.other_agent.give_advise(env)
-                if action is not None:
-                    self.times_advisee += 1
         if action is None:
             action = self.exploration_strategy(env, epsilon)
+        else:
+            self.times_advisee += 1
         return action
 
     def choose_best_action(self, v_state, net=None):
@@ -113,6 +113,9 @@ class Miner(ABC):
         target = target.detach()
         loss = []
         for a in range(self.number_heads):
+            # TODO: we only decide whether to use the entire batch not each sample separately
+            #  compare to "Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents":
+            #  implementation friendly description
             use_sample = np.random.randint(0, self.number_heads)
             if use_sample == 0:
                 loss.append(criterion(state_action_values[a].view(10), target))
