@@ -100,12 +100,13 @@ class Miner(ABC):
 
     def optimize(self, states, actions, new_states, rewards, non_final_mask):
         state_action_values = self.get_state_action_value(states, actions)
-        # TODO: Importantly, each one of these value function function heads Q (s,a;θ) is trained against its own
-        #  target network Q (s,a;θ−).
-        maxQ = self.target_net.q_circumflex(new_states).max(1)[0]
-        target = rewards.clone()
-        target[non_final_mask] += GAMMA * maxQ[non_final_mask]
-        target = target.detach()
+        value_next_state_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
+        target = []
+        for value_next_state in value_next_state_per_head:
+            target_head = rewards.clone()
+            target_head[non_final_mask] += GAMMA * value_next_state[non_final_mask]
+            target_head = target_head.detach()
+            target.append(target_head)
         loss = []
         for a in range(self.number_heads):
             # TODO: we only decide whether to use the entire batch not each sample separately
@@ -113,7 +114,7 @@ class Miner(ABC):
             #  implementation friendly description
             use_sample = np.random.randint(0, self.number_heads)
             if use_sample == 0:
-                loss.append(criterion(state_action_values[a].view(10), target))
+                loss.append(criterion(state_action_values[a].view(10), target[a].view(10)))
 
         # Optimize the model
         for a in range(len(loss)):
