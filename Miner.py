@@ -100,9 +100,9 @@ class Miner(ABC):
 
     def optimize(self, states, actions, new_states, rewards, non_final_mask):
         state_action_values = self.get_state_action_value(states, actions)
-        value_next_state_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
+        next_state_value_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
         target = []
-        for value_next_state in value_next_state_per_head:
+        for value_next_state in next_state_value_per_head:
             target_head = rewards.clone()
             target_head[non_final_mask] += GAMMA * value_next_state[non_final_mask]
             target_head = target_head.detach()
