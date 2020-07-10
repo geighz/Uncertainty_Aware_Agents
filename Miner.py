@@ -25,8 +25,8 @@ class Miner(ABC):
         self.budget = budget
         self.va = va
         self.vg = vg
-        self.va_history = []
-        self.vg_history = []
+        self.uncertainty_ask = []
+        self.uncertainty_give = []
         self.policy_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -132,12 +132,12 @@ class Miner(ABC):
             target_head.load_state_dict(policy_head.state_dict())
 
     def get_va(self):
-        va_history = self.va_history
-        self.va_history = []
-        return va_history
+        uncertainty_ask = self.uncertainty_ask
+        self.uncertainty_ask = []
+        return uncertainty_ask
 
     def get_vg(self):
-        vg_history = self.vg_history
-        self.vg_history = []
-        return vg_history
+        uncertainty_give = self.uncertainty_give
+        self.uncertainty_give = []
+        return uncertainty_give
 

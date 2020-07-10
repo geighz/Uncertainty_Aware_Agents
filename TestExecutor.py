@@ -18,8 +18,8 @@ class TestExecutor:
         self.adviser_history = np.array([])
         self.memory = ReplayMemory(buffer)
         self.env = Goldmine()
-        self.va_history = np.array([])
-        self.vg_history = np.array([])
+        self.uncertainty_ask = np.array([])
+        self.uncertainty_give = np.array([])
 
     def track_progress(self, episode_number):
         if episode_number % 250 == 0:
@@ -33,14 +33,14 @@ class TestExecutor:
             times_adviser = (agent_a.times_adviser + agent_b.times_adviser) / 2
             self.adviser_history = np.append(self.adviser_history, times_adviser)
             va_mean = mean(agent_a.get_va(), agent_b.get_va())
-            self.va_history = np.append(self.va_history, va_mean)
+            self.uncertainty_ask = np.append(self.uncertainty_ask, va_mean)
             vg_mean = mean(agent_a.get_vg(), agent_b.get_vg())
-            self.vg_history = np.append(self.vg_history, vg_mean)
+            self.uncertainty_give = np.append(self.uncertainty_give, vg_mean)
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
-            if i_episode % 250 == 0:
+            if i_episode % 25 == 0:
                 print("%s Game #: %s" % (os.getpid(), i_episode))
             self.env.reset()
             done = False
@@ -73,7 +73,7 @@ class TestExecutor:
                     self.agent_b.update_target_net()
         agentType = type(self.agent_a).__name__ + str(self.agent_a.number_heads)
         test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.asked_history,
-                                  self.adviser_history, self.va_history, self.vg_history)
+                                  self.adviser_history, self.uncertainty_ask, self.uncertainty_give)
         return test_result
 
 
