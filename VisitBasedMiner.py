@@ -34,6 +34,7 @@ class VisitBasedMiner(Miner):
 
     def probability_ask_in_state(self, env):
         ypsilon = self.ypsilon(env.state)
+        self.uncertainty_ask.append(ypsilon)
         return self.asking_probability(ypsilon)
 
     def advising_probability(self, psi):
@@ -48,6 +49,7 @@ class VisitBasedMiner(Miner):
     def probability_advise_in_state(self, state):
         inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
         psi = self.psi(inverse_state)
+        self.uncertainty_give.append(psi)
         return self.advising_probability(psi)
 
     def optimize(self, states, actions, new_states, rewards, non_final_mask):
