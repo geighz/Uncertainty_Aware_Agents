@@ -90,20 +90,13 @@ class Miner(ABC):
             self.times_advisee += 1
         return action
 
-    def choose_best_action(self, v_state, net=None):
-        if net is None:
-            net = self.policy_net
-        final_q_function = net.q_circumflex(v_state)
-        return np.argmax(final_q_function.data)
+    def choose_best_action(self, v_state):
+        state_action_values_joint = self.policy_net.q_circumflex(v_state)
+        return np.argmax(state_action_values_joint.data)
 
-    def get_state_action_value(self, state, action, net=None):
-        if net is None:
-            net = net
+    def get_state_action_value(self, state, action):
         qval = self.policy_net(state)
-        result = []
-        for i in range(self.number_heads):
-            result.append(qval[i].gather(1, action))
-        return result
+        return [qval_head.gather(1, action) for qval_head in qval]
 
     def optimize(self, states, actions, new_states, rewards, non_final_mask):
         state_action_values = self.get_state_action_value(states, actions)
