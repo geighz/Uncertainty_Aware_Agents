@@ -96,7 +96,9 @@ class Miner(ABC):
         final_q_function = net.q_circumflex(v_state)
         return np.argmax(final_q_function.data)
 
-    def get_state_action_value(self, state, action):
+    def get_state_action_value(self, state, action, net=None):
+        if net is None:
+            net = net
         qval = self.policy_net(state)
         result = []
         for i in range(self.number_heads):
