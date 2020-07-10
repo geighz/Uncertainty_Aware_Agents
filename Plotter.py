@@ -10,8 +10,8 @@ from time import strftime
 import pytz
 from datetime import datetime
 
-va_labels = ('VA', 'Episode', 'va values', (0, 2))
-vg_labels = ('VG', 'Episode', 'vg values', (0, 2))
+va_labels = ('Average Uncertainty (Ask)', 'Episode', 'va values', (0, 2))
+vg_labels = ('Average Uncertainty (Advice)', 'Episode', 'vg values', (0, 2))
 give_labels = ('Give_Advice', 'Episode', 'times as adviser')
 ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
 reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
