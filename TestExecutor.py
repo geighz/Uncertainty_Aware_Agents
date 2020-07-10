@@ -40,7 +40,7 @@ class TestExecutor:
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
-            if i_episode % 25 == 0:
+            if i_episode % 250 == 0:
                 print("%s Game #: %s" % (os.getpid(), i_episode))
             self.env.reset()
             done = False
