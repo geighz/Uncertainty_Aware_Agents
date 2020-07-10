@@ -13,12 +13,12 @@ import os
 
 start_time_str = print_time()
 start_time = get_time().timestamp()
-EPOCHS = 1000
+EPOCHS = 200000
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
 NUMBER_EXECUTIONS = 1
-BUDGET = 250
+BUDGET = 100000
 
 test_setups = [
     Test_setup(NoAdviceMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0, 0),
