@@ -91,7 +91,6 @@ def init_grid():
 
 # Initialize player in random location, but keep wall, goal and pit stationary
 def init_grid_player():
-    # TODO Do I want to use int as a type, so far I used the default
     state = np.zeros((4, 4, 5))
     # place player a
     state[randPair(0, 4)] = player_a.copy()

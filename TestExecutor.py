@@ -22,7 +22,7 @@ class TestExecutor:
         self.uncertainty_give = np.array([])
 
     def track_progress(self, episode_number):
-        if episode_number % 250 == 0:
+        if episode_number % 25 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -87,7 +87,6 @@ Test_setup = namedtuple('Test_setup',
 def execute_test(test_id, test, return_dict):
     print(test)
     agenttype, number_heads, epochs, buffer, batch_size, target_update, budget, va, vg = test
-    # TODO rename test_number
     print("test #: %s" % test_id)
     executor = TestExecutor(number_heads, buffer, agenttype, budget, va, vg)
     return_dict[test_id] = executor.train_and_evaluate_agent(epochs, target_update, batch_size)
