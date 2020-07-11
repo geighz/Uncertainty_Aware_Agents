@@ -10,13 +10,13 @@ from torch.multiprocessing import Manager
 from Plotter import scatter2d, scatter3d, write_to_file, get_time, print_time
 import json
 
-EPOCHS = 400
+EPOCHS = 150
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
 NUMBER_EXECUTIONS = 9
 n_trials = 100
-BUDGET = 250
+BUDGET = 150
 miner = UncertaintyAwareMiner
 x = []
 y = []
