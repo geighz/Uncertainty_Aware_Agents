@@ -99,31 +99,32 @@ class Miner(ABC):
         return [qval_head.gather(1, action) for qval_head in qval]
 
     def optimize(self, states, actions, new_states, rewards, non_final_mask):
+        value_next_state_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
+        targ_per_head = []
+        for value_next_state in value_next_state_per_head:
+            target = rewards.clone()
+            target[non_final_mask] += GAMMA * value_next_state[non_final_mask]
+            target = target.detach()
+            targ_per_head.append(target)
+
         state_action_values = self.get_state_action_value(states, actions)
-        next_state_value_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
-        target = []
-        for value_next_state in next_state_value_per_head:
-            target_head = rewards.clone()
-            target_head[non_final_mask] += GAMMA * value_next_state[non_final_mask]
-            target_head = target_head.detach()
-            target.append(target_head)
         loss = []
-        for a in range(self.number_heads):
-            # TODO: we only decide whether to use the entire batch not each sample separately
-            #  compare to "Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents":
-            #  implementation friendly description
-            use_sample = np.random.randint(0, self.number_heads)
-            if use_sample == 0:
-                loss.append(criterion(state_action_values[a].view(10), target[a].view(10)))
+        for head in range(self.number_heads):
+            inp = state_action_values[head].view(10)
+            target = targ_per_head[head].view(10)
+            use_sample = np.random.randint(self.number_heads, size=10) != 0
+            inp[use_sample] *= 0
+            target[use_sample] *= 0
+            loss.append(criterion(inp, target))
 
         # Optimize the model
-        for a in range(len(loss)):
+        for head in range(self.number_heads):
             # clear gradient
-            self.optimizers[a].zero_grad()
+            self.optimizers[head].zero_grad()
             # compute gradients
-            loss[a].backward()
+            loss[head].backward()
             # update model parameters
-            self.optimizers[a].step()
+            self.optimizers[head].step()
 
     def update_target_net(self):
         for head_number in range(self.number_heads):
