@@ -13,19 +13,19 @@ import os
 
 start_time_str = print_time()
 start_time = get_time().timestamp()
-EPOCHS = 30000
+EPOCHS = 500
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
-NUMBER_EXECUTIONS = 3
-BUDGET = 100000
+NUMBER_EXECUTIONS = 10
+BUDGET = 1000
 
 test_setups = [
     # Test_setup(NoAdviceMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0, 0),
     # Test_setup(VisitBasedMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.9, 2.3),
     # Test_setup(TDMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.1, 1.3),
-    Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.15, 0.9),
-    Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.2, 2.3)
+    Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.15, 0.9)
+    # Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.2, 2.3)
 ]
 
 test_results = Manager().dict()
