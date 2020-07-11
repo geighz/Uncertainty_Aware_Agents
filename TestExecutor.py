@@ -87,7 +87,6 @@ Test_setup = namedtuple('Test_setup',
 def execute_test(test_id, test, return_dict):
     print(test)
     agenttype, number_heads, epochs, buffer, batch_size, target_update, budget, va, vg = test
-    # TODO rename test_number
     print("test #: %s" % test_id)
     executor = TestExecutor(number_heads, buffer, agenttype, budget, va, vg)
     return_dict[test_id] = executor.train_and_evaluate_agent(epochs, target_update, batch_size)
