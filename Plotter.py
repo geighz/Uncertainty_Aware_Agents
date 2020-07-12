@@ -17,6 +17,7 @@ reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
 out_folder = os.path.join('out', strftime("%Y%m%d-%H%M%S"))
 timezone_berlin = pytz.timezone('Europe/Berlin')
 date_format = '%d.%m.%Y-%H:%M:%S %Z%z'
+start_time_str = datetime.now(timezone_berlin).strftime(date_format)
 
 
 def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None):
@@ -147,7 +148,8 @@ def write_to_file(*args):
     text = '\n'.join(str(x) for x in args)
     stream = os.popen('git rev-parse --verify HEAD')
     git_hash = stream.read()
-    text = '\n'.join(str(x) for x in [text, git_hash])
+    end_time_str = print_time()
+    text = '\n'.join(str(x) for x in [text, git_hash, start_time_str, end_time_str])
     create_folder()
     file = open(os.path.join(out_folder, "Test_notes.txt"), mode="w", encoding="utf-8")
     file.write(text)
