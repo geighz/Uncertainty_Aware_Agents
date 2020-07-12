@@ -6,12 +6,10 @@ from TDMiner import TDMiner
 from psutil import Process
 from os import getpid
 from TestExecutor import Test_setup, execute_test
-from Plotter import plot_test, print_time, get_time, write_to_file
+from Plotter import plot_test, print_time, get_time, write_to_file, zip_out_folder
 from torch.multiprocessing import Pool, Manager
-import os
 
-
-start_time_str = print_time()
+print_time()
 start_time = get_time().timestamp()
 EPOCHS = 200000
 BUFFER = 80
@@ -55,8 +53,9 @@ for process in testProcesses:
     process.join()
 
 plot_test(test_results)
-write_to_file(start_time_str, f"EPOCHS: {EPOCHS}", f"BUFFER: {BUFFER}", f"BATCH_SIZE: {BATCH_SIZE}",
+write_to_file(f"EPOCHS: {EPOCHS}", f"BUFFER: {BUFFER}", f"BATCH_SIZE: {BATCH_SIZE}",
               f"TARGET_UPDATE: {TARGET_UPDATE}", f"NUMBER_EXECUTIONS: {NUMBER_EXECUTIONS}", f"BUDGET: {BUDGET}",
               f"test_setups: {test_setups}")
 duration = int(get_time().timestamp() - start_time)
 print(f"Duration {duration} seconds")
+zip_out_folder()

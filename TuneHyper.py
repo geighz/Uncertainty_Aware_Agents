@@ -23,7 +23,7 @@ y = []
 z = []
 
 start_time = get_time().timestamp()
-start_time_str = print_time()
+print_time()
 
 
 def run(test_setup):
@@ -66,9 +66,8 @@ print(study.best_trial)
 print(len(study.trials))
 
 end_time = get_time().timestamp()
-end_time_str = print_time()
 write_to_file(miner.__name__, f"NUMBER_EXECUTIONS: {NUMBER_EXECUTIONS}", f"n_trials: {n_trials}",
-              study.best_params, study.best_value, study.best_trial, start_time_str, end_time_str)
+              study.best_params, study.best_value, study.best_trial)
 scatter2d(x, y, z)
 scatter3d(x, y, z)
 
