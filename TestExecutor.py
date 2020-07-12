@@ -25,7 +25,7 @@ class TestExecutor:
         self.uncertainty_give = np.array([])
 
     def track_progress(self, episode_number):
-        if episode_number % 250 == 0:
+        if episode_number % 2000 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -43,7 +43,7 @@ class TestExecutor:
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
-            if i_episode % 25 == 0:
+            if i_episode % 1500 == 0:
                 print("%s Game #: %s" % (os.getpid(), i_episode))
             self.env.reset()
             done = False
@@ -74,7 +74,7 @@ class TestExecutor:
                 for head_number in range(self.agent_a.policy_net.number_heads):
                     self.agent_a.update_target_net()
                     self.agent_b.update_target_net()
-        agentType = type(self.agent_a).__name__ + str(self.agent_a.number_heads)
+        agentType = type(self.agent_a).__name__
         test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.asked_history,
                                   self.adviser_history, self.uncertainty_ask, self.uncertainty_give)
         return test_result
