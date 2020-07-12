@@ -27,8 +27,7 @@ class Miner(ABC):
         self.uncertainty = []
         self.policy_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
-        self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.target_net.eval()
+        self.update_target_net()
         self.times_asked = 0
         self.times_advisee = 0
         self.times_adviser = 0
@@ -125,10 +124,11 @@ class Miner(ABC):
             self.optimizers[head].step()
 
     def update_target_net(self):
-        for head_number in range(self.number_heads):
-            policy_head = self.policy_net.nets[head_number]
-            target_head = self.target_net.nets[head_number]
+        for head in range(self.number_heads):
+            policy_head = self.policy_net.nets[head]
+            target_head = self.target_net.nets[head]
             target_head.load_state_dict(policy_head.state_dict())
+        self.target_net.eval()
 
     def get_uncertainty(self):
         return self.uncertainty
