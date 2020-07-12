@@ -3,10 +3,13 @@ from evaluation import *
 from collections import namedtuple
 import numpy as np
 import os
+import torch
 
 
 class TestExecutor:
     def __init__(self, number_heads, buffer, agent, budget, va, vg):
+        np.random.seed()
+        torch.random.seed()
         self.epsilon = 1
         self.agent_b = agent(number_heads, budget, va, vg)
         self.agent_a = agent(number_heads, budget, va, vg)
