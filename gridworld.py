@@ -37,6 +37,9 @@ class Goldmine:
     def update_v_state(self):
         self.v_state = v_state(self.state)
 
+    def save_states(self, np_array):
+        np.savetxt("states.csv", np_array, delimiter=",", fmt='%d')
+
 
 def v_state(state):
     return Variable(torch.from_numpy(state)).view(1, -1)
