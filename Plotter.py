@@ -149,9 +149,12 @@ def scatter2d(x, y, z):
 
 
 def write_to_file(*args):
+    text = '\n'.join(str(x) for x in args)
+    stream = os.popen('git rev-parse --verify HEAD')
+    git_hash = stream.read()
+    text = '\n'.join(str(x) for x in [text, git_hash])
     create_folder()
     file = open(os.path.join(out_folder, "Test_notes.txt"), mode="w", encoding="utf-8")
-    text = '\n'.join(str(x) for x in args)
     file.write(text)
     file.close()
 
