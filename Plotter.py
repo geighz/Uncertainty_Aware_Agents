@@ -14,7 +14,8 @@ uncertainty_labels = ('Average Uncertainty', 'Episode', 'Uncertainty \u03BC', (0
 give_labels = ('Give_Advice', 'Episode', 'times as adviser')
 ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
 reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
-out_folder = os.path.join('out', strftime("%Y%m%d-%H%M%S"))
+start_time = strftime("%Y%m%d-%H%M%S")
+out_folder = os.path.join('out', start_time)
 timezone_berlin = pytz.timezone('Europe/Berlin')
 date_format = '%d.%m.%Y-%H:%M:%S %Z%z'
 start_time_str = datetime.now(timezone_berlin).strftime(date_format)
@@ -154,6 +155,12 @@ def write_to_file(*args):
     file = open(os.path.join(out_folder, "Test_notes.txt"), mode="w", encoding="utf-8")
     file.write(text)
     file.close()
+
+
+def zip_out_folder():
+    stream = os.popen(f'zip -r out/{start_time} {out_folder}')
+    output = stream.read()
+    print(output)
 
 
 def get_time():
