@@ -10,8 +10,7 @@ from time import strftime
 import pytz
 from datetime import datetime
 
-va_labels = ('Average Uncertainty (Ask)', 'Episode', 'Uncertainty \u03BC', (0, 3))
-vg_labels = ('Average Uncertainty (Advice)', 'Episode', 'Uncertainty \u03BC', (0, 3))
+uncertainty_labels = ('Average Uncertainty', 'Episode', 'Uncertainty \u03BC', (0, 3))
 give_labels = ('Give_Advice', 'Episode', 'times as adviser')
 ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
 reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
@@ -68,10 +67,8 @@ def save_plots():
     plt.savefig(os.path.join(out_folder, f"{ask_labels[0]}.pdf"))
     plt.figure(give_labels[0])
     plt.savefig(os.path.join(out_folder, f"{give_labels[0]}.pdf"))
-    plt.figure(va_labels[0])
-    plt.savefig(os.path.join(out_folder, f"{va_labels[0]}.pdf"))
-    plt.figure(vg_labels[0])
-    plt.savefig(os.path.join(out_folder, f"{vg_labels[0]}.pdf"))
+    plt.figure(uncertainty_labels[0])
+    plt.savefig(os.path.join(out_folder, f"{uncertainty_labels[0]}.pdf"))
 
 
 def save(test_results):
@@ -99,14 +96,12 @@ def plot_test(test_results):
         rewards = [test_run.REWARDS for test_run in results]
         times_asked = [test_run.TIMES_ASKED for test_run in results]
         times_adviser = [test_run.TIMES_GIVEN for test_run in results]
-        va = [test_run.VA for test_run in results]
-        vg = [test_run.VG for test_run in results]
+        uncertainty = [test_run.UNCERTAINTY for test_run in results]
 
         plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
         plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
-        plot_results_with_confidence_interval(label, epoch_ids, va, *va_labels)
-        plot_results_with_confidence_interval(label, epoch_ids, vg, *vg_labels)
+        plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)
     create_folder()
     save_plots()
     plt.show()

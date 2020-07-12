@@ -21,24 +21,20 @@ class TestExecutor:
         self.adviser_history = np.array([])
         self.memory = ReplayMemory(buffer)
         self.env = Goldmine()
-        self.uncertainty_ask = np.array([])
-        self.uncertainty_give = np.array([])
+        self.uncertainty = np.array([])
 
     def track_progress(self, episode_number):
         if episode_number % 250 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
-            average_reward = evaluate_agents(agent_a, agent_b)
-            self.reward_history = np.append(self.reward_history, average_reward)
+            mean_reward, uncertainty_mean = evaluate_agents(agent_a, agent_b)
+            self.reward_history = np.append(self.reward_history, mean_reward)
             times_asked = (agent_a.times_asked + agent_b.times_asked) / 2
             self.asked_history = np.append(self.asked_history, times_asked)
             times_adviser = (agent_a.times_adviser + agent_b.times_adviser) / 2
             self.adviser_history = np.append(self.adviser_history, times_adviser)
-            va_mean = mean(agent_a.get_va(), agent_b.get_va())
-            self.uncertainty_ask = np.append(self.uncertainty_ask, va_mean)
-            vg_mean = mean(agent_a.get_vg(), agent_b.get_vg())
-            self.uncertainty_give = np.append(self.uncertainty_give, vg_mean)
+            self.uncertainty = np.append(self.uncertainty, uncertainty_mean)
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs + 1):
@@ -76,12 +72,12 @@ class TestExecutor:
                     self.agent_b.update_target_net()
         agentType = type(self.agent_a).__name__
         test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.asked_history,
-                                  self.adviser_history, self.uncertainty_ask, self.uncertainty_give)
+                                  self.adviser_history, self.uncertainty)
         return test_result
 
 
 Test_result = namedtuple('Test_result',
-                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_GIVEN', 'VA', 'VG'))
+                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_GIVEN', 'UNCERTAINTY'))
 Test_setup = namedtuple('Test_setup',
                         ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE', 'BUDGET', 'VA',
                          'VG'))
