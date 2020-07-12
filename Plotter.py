@@ -10,8 +10,8 @@ from time import strftime
 import pytz
 from datetime import datetime
 
-va_labels = ('Average Uncertainty (Ask)', 'Episode', 'va values', (0, 2))
-vg_labels = ('Average Uncertainty (Advice)', 'Episode', 'vg values', (0, 2))
+va_labels = ('Average Uncertainty (Ask)', 'Episode', 'Uncertainty \u03BC', (0, 3))
+vg_labels = ('Average Uncertainty (Advice)', 'Episode', 'Uncertainty \u03BC', (0, 3))
 give_labels = ('Give_Advice', 'Episode', 'times as adviser')
 ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
 reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
@@ -36,16 +36,16 @@ def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None):
 def plot_results_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel, ylim=None):
     x = np.stack(x)
     x = np.average(x, axis=0)
-
     y = np.stack(y)
-    averages = np.average(y, axis=0)
-    standard_errors = st.sem(y, axis=0)
-
+    y[y == 0] = np.nan
+    mean = np.nanmean(y, axis=0)
+    mean[np.isnan(mean)] = 0
+    standard_errors = st.sem(y, axis=0, nan_policy='omit')
     ci = np.array([])
     for index in range(len(y[0])):
         a = y[:, index]
         standard_error = standard_errors[index]
-        average = averages[index]
+        average = mean[index]
         if standard_error != 0:
             # TODO: Can the confidence interval be calculated with equal areas around the median?
             # TODO: Can we assume normal distribution?
@@ -53,7 +53,7 @@ def plot_results_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel
         else:
             interval = (average, average)
         ci = np.append(ci, interval)
-    plot(x, averages, title, linelabel, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim)
+    plot(x, mean, title, linelabel, xlabel, ylabel, ci[0::2], ci[1::2], ylim=ylim)
 
 
 def create_folder():
