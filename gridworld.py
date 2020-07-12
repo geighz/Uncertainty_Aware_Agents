@@ -24,7 +24,7 @@ class Goldmine:
 
     def reset(self, state_id=None):
         if state_id is None:
-            self.state = init_grid_player()
+            self.state = init_grid_rand()
         else:
             self.state = load_state_with_id(state_id)
         self.update_v_state()
