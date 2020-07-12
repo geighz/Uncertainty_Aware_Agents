@@ -4,7 +4,6 @@ import torch
 import torch.optim as optim
 from abc import ABC, abstractmethod
 
-
 # since it may take several moves to goal, making gamma high
 GAMMA = 0.9
 criterion = torch.nn.MSELoss()
@@ -25,8 +24,7 @@ class Miner(ABC):
         self.budget = budget
         self.va = va
         self.vg = vg
-        self.uncertainty_ask = []
-        self.uncertainty_give = []
+        self.uncertainty = []
         self.policy_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -132,13 +130,8 @@ class Miner(ABC):
             target_head = self.target_net.nets[head_number]
             target_head.load_state_dict(policy_head.state_dict())
 
-    def get_va(self):
-        uncertainty_ask = self.uncertainty_ask
-        self.uncertainty_ask = []
-        return uncertainty_ask
+    def get_uncertainty(self):
+        return self.uncertainty
 
-    def get_vg(self):
-        uncertainty_give = self.uncertainty_give
-        self.uncertainty_give = []
-        return uncertainty_give
-
+    def reset_uncertainty(self):
+        self.uncertainty = []
