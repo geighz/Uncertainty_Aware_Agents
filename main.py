@@ -55,9 +55,7 @@ for process in testProcesses:
     process.join()
 
 plot_test(test_results)
-stream = os.popen('git rev-parse --verify HEAD')
-git_hash = stream.read()
-write_to_file(start_time_str, git_hash, f"EPOCHS: {EPOCHS}", f"BUFFER: {BUFFER}", f"BATCH_SIZE: {BATCH_SIZE}",
+write_to_file(start_time_str, f"EPOCHS: {EPOCHS}", f"BUFFER: {BUFFER}", f"BATCH_SIZE: {BATCH_SIZE}",
               f"TARGET_UPDATE: {TARGET_UPDATE}", f"NUMBER_EXECUTIONS: {NUMBER_EXECUTIONS}", f"BUDGET: {BUDGET}",
               f"test_setups: {test_setups}")
 duration = int(get_time().timestamp() - start_time)
