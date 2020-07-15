@@ -10,7 +10,7 @@ from time import strftime
 import pytz
 from datetime import datetime
 
-uncertainty_labels = ('Average Uncertainty', 'Episode', 'Uncertainty \u03BC', (0, 3))
+uncertainty_labels = ('Average Uncertainty', 'Episode', 'Uncertainty \u03BC', (0, 4))
 give_labels = ('Give_Advice', 'Episode', 'times as adviser')
 ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
 reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
@@ -100,7 +100,7 @@ def plot_test(test_results):
         times_adviser = [test_run.TIMES_GIVEN for test_run in results]
         uncertainty = [test_run.UNCERTAINTY for test_run in results]
 
-        plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
+        plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 8))
         plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
         plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)
