@@ -50,7 +50,7 @@ def plot_results_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel
         if standard_error != 0:
             # TODO: Can the confidence interval be calculated with equal areas around the median?
             # TODO: Can we assume normal distribution?
-            interval = st.t.interval(0.60, len(a) - 1, loc=average, scale=standard_error)
+            interval = st.t.interval(0.90, len(a) - 1, loc=average, scale=standard_error)
         else:
             interval = (average, average)
         ci = np.append(ci, interval)
