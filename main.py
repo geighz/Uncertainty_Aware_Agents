@@ -8,6 +8,7 @@ from os import getpid
 from TestExecutor import Test_setup, execute_test
 from Plotter import plot_test, print_time, get_time, write_to_file, zip_out_folder
 from torch.multiprocessing import Pool, Manager
+from torch import multiprocessing
 
 print_time()
 start_time = get_time().timestamp()
@@ -23,7 +24,7 @@ test_setups = [
     # Test_setup(VisitBasedMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.41, 2.2),
     # Test_setup(TDMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.21, 1.51)
     Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.14, 1.61),
-    Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.77, 2.45)
+    # Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.77, 2.45)
 ]
 
 test_results = Manager().dict()
@@ -42,10 +43,11 @@ def limit_cpu():
 testProcesses = []
 id = 0
 pool = Pool(processes=12, initializer=limit_cpu())
+context = multiprocessing.get_context('fork')
 for test_setup in test_setups:
     for test_number in range(NUMBER_EXECUTIONS):
         id += 1
-        testProcess = pool.Process(target=execute_test, args=(id, test_setup, test_results))
+        testProcess = pool.Process(ctx=context, target=execute_test, args=(id, test_setup, test_results))
         testProcesses.append(testProcess)
         testProcess.start()
 

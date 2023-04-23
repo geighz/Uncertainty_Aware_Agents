@@ -112,6 +112,7 @@ class Miner(ABC):
             use_sample = np.random.randint(self.number_heads, size=10) != 0
             inp[use_sample] *= 0
             target[use_sample] *= 0
+            check = criterion(inp, target)
             loss.append(criterion(inp, target))
 
         # Optimize the model
