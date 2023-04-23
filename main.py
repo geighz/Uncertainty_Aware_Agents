@@ -2,17 +2,19 @@ from NoAdviceMiner import NoAdviceMiner
 from VisitBasedMiner import VisitBasedMiner
 from UncertaintyAwareMiner import UncertaintyAwareMiner
 from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
+from BayesAwareMiner import BayesAwareMiner
 from TDMiner import TDMiner
 from psutil import Process
 from os import getpid
-from TestExecutor import Test_setup, execute_test
+#from TestExecutor import Test_setup, execute_test
+from BayesTestExecutor import Test_setup, execute_test
 from Plotter import plot_test, print_time, get_time, write_to_file, zip_out_folder
 from torch.multiprocessing import Pool, Manager
 from torch import multiprocessing
 
 print_time()
 start_time = get_time().timestamp()
-EPOCHS = 6000
+EPOCHS = 12000
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE = 5
@@ -21,10 +23,12 @@ BUDGET = 100000
 
 test_setups = [
     #Test_setup(NoAdviceMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0, 0)
-    Test_setup(VisitBasedMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.41, 2.2),
-    # Test_setup(TDMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.21, 1.51)
-    # Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.14, 1.61),
-    # Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.77, 2.45)
+    #Test_setup(VisitBasedMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.41, 2.2),
+    #Test_setup(TDMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.21, 1.51)
+    #Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.14, 1.61),
+    #Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.77, 2.45)
+    #Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.14, 1.61),
+    Test_setup(BayesAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.14, 1.61)
 ]
 
 test_results = Manager().dict()
