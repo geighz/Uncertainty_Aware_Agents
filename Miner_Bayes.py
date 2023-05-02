@@ -5,19 +5,24 @@ import torch
 import torch.optim as optim
 from abc import ABC, abstractmethod
 from time import time 
+# from math import
 
 # since it may take several moves to goal, making gamma high
 GAMMA = 0.9
-criterion = torch.nn.MSELoss()
+#criterion = torch.nn.MSELoss()
+criterion = torch.nn.GaussianNLLLoss()
 
 
 def loss_expected_log_likelihood(target,input):
-    average = 0
-    for i,element in enumerate(input):
-        mean,std = element[0],element[1]
-        check = target[i]
-        average += torch.mean(torch.log(std**2)/2+(target[i]-mean)**2/(2*std**2))
-    return average/(len(input))
+
+    mean = input.T[:][0]
+
+    var = input.T[:][1]**2 
+
+    loss = torch.log(var)/2+(target - mean)**2/(2*var)+0.5*torch.log(2*torch.tensor(torch.pi))
+
+    return torch.mean(torch.log(var)/2+(target - mean)**2/(2*var)+0.5*torch.log(2*torch.tensor(torch.pi)))
+   
 
 
 
@@ -44,12 +49,13 @@ class Miner_Bayes(ABC):
         self.times_advisee = 0
         self.times_adviser = 0
         self.optimizers = []
+        self.vars = []
         # Fuer jeden head gibt es einen optimizer
         #there is one for every head optimizer
         for head_number in range(self.policy_net.number_heads):
             self.optimizers.append(optim.Adam(self.policy_net.nets[head_number].parameters()))
             # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
-            # optimizers_b.append(optim.SGD(agent_b.model.heads[i].parameters(), lr=0.002))
+            # optimizers_b.append(optim.SGD(agent_bQVAL = self.policy_net(states).model.heads[i].parameters(), lr=0.002))
 
     # model.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth'))
     # model.eval()
@@ -103,82 +109,84 @@ class Miner_Bayes(ABC):
     #GOOD
     def choose_best_action(self, v_state):
         state_action_values_joint = self.policy_net.q_circumflex(v_state)
-        action_selected = torch.argmax(state_action_values_joint)
+        #action_selected = torch.argmax(state_action_values_joint)
         return torch.argmax(state_action_values_joint)
     #NEEDS TO BE CHANGED
-    def get_state_action_value(self, state, action):
-        #qval: for each head retrieve the qvals for the state
-        qval = self.policy_net(state)
-        # Each head has [mean_1, std_1,,mean_2,std_2...]
+    # def get_state_action_value(self, state, action):
+    #     #qval: for each head retrieve the qvals for the state
+    #     qval = self.policy_net(state)
+    #     # Each head has [mean_1, std_1,,mean_2,std_2...]
         
-        #gathers = [qval_head.gather(1, action) for qval_head in qval]
+    #     #gathers = [qval_head.gather(1, action) for qval_head in qval]
         
-        # for qval_head in qval:
-        #     showme= qval_head
-        #     means = qval_head[:,::2]
-        #     stds = qval_head[:,1::2]
-        #     samples = torch.normal(mean = means,std =stds )
-        #     gather_samp = samples.gather(1, action)
-        #     gathers.append(gather_samp)
-        #     #gathers = [ for qval_head in qval]
-        
-        # qval_head gets the q_vals per head, extract means per head with [:,::2] and stds with [:,1::2] 
-        return [torch.normal(mean=qval_head[:,::2],std=qval_head[:,1::2]).gather(1,action) for qval_head in qval]
+    #     # qval_head gets the q_vals per head, extract means per head with [:,::2] and stds with [:,1::2] 
+    #     #return [torch.normal(mean=qval_head[:,::2],std=qval_head[:,1::2]).gather(1,action) for qval_head in qval]
+    #     return [torch.normal(mean=qval_head[0],std=qval_head[1]).gather(1,action) for qval_head in qval]
     def get_state_action_value_distributions(self, state, action):
         #qval: for each head retrieve the qvals for the state
         qval = self.policy_net(state)
         # for each head, stack the mean and variance of the action for each batch
         # Don't worry about the squeeze 
-        
-        return  [torch.stack((qval_head[:,::2].gather(1, action),qval_head[:,1::2].gather(1, action)),-1).squeeze(1)    for qval_head in qval]
+        check =1
+        return  [torch.stack((qval_head[0].gather(1, action),qval_head[1].gather(1, action)),-1).squeeze(1)    for qval_head in qval]
     #NOT DONE
     def optimize(self, states, actions, new_states, rewards, non_final_mask):
-        # #Now each state has two values, one for for mean and one for standard deviation.
-        # gaussian_state_action_values = self.target_net(new_states)
+        # #Now each state has two values, one for for mean and one for  standard deviation.
+        #gaussian_state_action_values = self.target_net(new_states)
         #Original value: 
-        #value_next_state_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
+        # mean + one std
+        qval_heads = self.target_net(new_states)
+        #Obtain the mean for the largest mean+std
+        value_next_state_per_head = [qval[0][np.arange(len(qval[0])),[(qval[0]+qval[1]).argmax(1)][0]] for qval in qval_heads]
+       
 
         targ_per_head = []
 
-        value_next_state_per_head = self.max_gaussian_targets(new_states)
-
-        for value_next_state in value_next_state_per_head: 
-
-            # Set up target, transpose to get in correct shape, non_final_mask makes some terms 0 for the terminal state.
-
-            target = rewards.clone().unsqueeze(-1)+ GAMMA*value_next_state*(non_final_mask.long().unsqueeze(-1))# +rewards2
-
+        
+        for value_next_state in value_next_state_per_head:
+            target = rewards.clone()
+            target[non_final_mask] += GAMMA * value_next_state[non_final_mask]
             target = target.detach()
-            
             targ_per_head.append(target)
-        # Get the mean and variance for each (state,action)
-        # satete_action_values =  per  [head,batch,[mean,std]]
         state_action_values = self.get_state_action_value_distributions(states, actions)
-
+        
         
         loss = []
         for head in range(self.number_heads):
+            
             use_sample = np.random.randint(self.number_heads, size=10) == 0
+            while True not in use_sample:
+                use_sample = np.random.randint(self.number_heads, size=10) == 0
             # print(state)
             # view reshapes, 10 batches \times 2 (mean,std)
             inp = state_action_values[head]
-            check = targ_per_head[head]
+            # check = targ_per_head[head]
             # num batches \times num_samples 
             target = targ_per_head[head]            
             inp =inp[use_sample] 
             target = target[use_sample] 
-            
-            loss.append(loss_expected_log_likelihood(target,inp))
+            # check = criterion(inp,inp)
+            loss.append(loss_expected_log_likelihood(target, inp))
+            #loss.append(criterion(target,inp.T[:][0],inp.T[:][1]))
+            # loss.append(check)
+        # print(loss)
 
         # Optimize the model
         for head in range(self.number_heads):
             # clear gradient
+           
             self.optimizers[head].zero_grad()
             # compute gradients
+            # torch.autograd.set_detect_anomaly(True)
             loss[head].backward()
             # update model parameters
             self.optimizers[head].step()
-    #GOOD
+        #print("Loss",loss)
+        check = state_action_values[:][:][1]
+        
+
+        return torch.var_mean(state_action_values[:][:][1]) 
+        #GOOD
     def update_target_net(self):
         for head in range(self.number_heads):
             policy_head = self.policy_net.nets[head]
@@ -186,23 +194,24 @@ class Miner_Bayes(ABC):
             #COPY OVER WEIGHTS
             target_head.load_state_dict(policy_head.state_dict())
         self.target_net.eval()
-    #GOOD
+    #GOODqval_head[:,::2]
     def get_uncertainty(self):
         return self.uncertainty
     #MAYBE CHANGE
     def reset_uncertainty(self):
         self.uncertainty = []
-    def max_gaussian_targets(self, new_states):
-        # This function is to replace 
-        # value_next_state_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
-        #Number of samples for the maximum
-        number_samples = int(5*10e2)
-        # First: get values from target net
-        qval= self.target_net(new_states)
+        
+    # def max_gaussian_targets(self, new_states):
+    #     # This function is to replace 
+    #     # value_next_state_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
+    #     #Number of samples for the maximum
+    #     number_samples = int(5*10e2)
+    #     # First: get values from target net
+    #     qval= self.target_net(new_states)
 
 
-        # Per head, obtain main and variance of qvals. 
-        # Sample from each qval for each badge and get the maximum for each badge
-        return  [torch.stack([torch.normal(mean=qval_head[:,::2],std=qval_head[:,1::2]).max(1)[0]  for i in range(number_samples)  ]).T  for qval_head in qval]
+    #     # Per head, obtain main and variance of qvals. 
+    #     # Sample from each qval for each badge and get the maximum for each badge
+    #     return  [torch.stack([torch.normal(mean=qval_head[:,::2],std=qval_head[:,1::2]).max(1)[0]  for i in range(number_samples)  ]).T  for qval_head in qval]
 
     # def wasserstein_loss(self,)

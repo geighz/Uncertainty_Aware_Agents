@@ -22,9 +22,10 @@ class TestExecutor:
         self.memory = ReplayMemory(buffer)
         self.env = Goldmine()
         self.uncertainty = np.array([])
+        # self.var 
 
     def track_progress(self, episode_number):
-        if episode_number % 2000 == 0:
+        if episode_number % 250 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -35,12 +36,15 @@ class TestExecutor:
             times_adviser = (agent_a.times_adviser + agent_b.times_adviser) / 2
             self.adviser_history = np.append(self.adviser_history, times_adviser)
             self.uncertainty = np.append(self.uncertainty, uncertainty_mean)
+            self.vars = []
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
-            if i_episode % 1500 == 0:
-                print("%s Game #: %s" % (os.getpid(), i_episode))
+            if i_episode % 500 == 0:
+                #check = self.reward_history
+                print("%s Game #: %s, %f, %f" % (os.getpid(), i_episode,self.reward_history[-1],self.uncertainty[-1]))
+                # print("%s Game #: %s" % (os.getpid(), i_episode))
             self.env.reset()
             done = False
             step = 0
@@ -60,8 +64,12 @@ class TestExecutor:
                     else:
                         continue
                 states, actions_a, actions_b, new_states, reward, non_final = self.memory.sample(batch_size)
-                self.agent_a.optimize(states, actions_a, new_states, reward, non_final)
-                self.agent_b.optimize(states, actions_b, new_states, reward, non_final)
+                var_std_a,mean_std_a = self.agent_a.optimize(states, actions_a, new_states, reward, non_final)
+                var_std_b,mean_std_b = self.agent_b.optimize(states, actions_b, new_states, reward, non_final)
+                # if i_episode % 100 == 0:
+                #     #check = self.reward_history
+                #     print("agent a %s Game #:  %d,  %f, %f" % (os.getpid(),i_episode,var_std_a,mean_std_a))
+                #     print("agent b %s Game #: %d,  %f, %f" % (os.getpid(),i_episode,var_std_b,mean_std_b))
                 if step > 20:
                     break
             if self.epsilon > 0.02:

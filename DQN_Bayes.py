@@ -17,6 +17,7 @@ class hidden_unit(nn.Module):
         return out
 
 
+
 class Body_net(nn.Module):
     def __init__(self, in_channels, hidden_layers, out_channels, unit=hidden_unit, activation=F.relu):
         super(Body_net, self).__init__()
@@ -42,25 +43,36 @@ class Head_net(nn.Module):
         self.net = net
         self.final_units = nn.ModuleList()
         self.soft = nn.Softplus()
+        self.sig = nn.Sigmoid()
         last_index = len(self.net.hidden_units) - 1
         self.in_channels = self.net.hidden_units[last_index].nn.out_features
         prev_layer = self.in_channels
         for layer in final_layers:
             self.final_units.append(unit(prev_layer, layer, activation))
             prev_layer = layer
-        self.final_unit = nn.Linear(prev_layer, out_channels*2)
-        
-        nn.init.normal_(self.final_unit.weight, std=0.15)
+        # self.final_unit = nn.Linear(prev_layer, out_channels*2)
+        self.mu = nn.Linear(prev_layer, out_channels)
+        self.std = nn.Linear(prev_layer, out_channels)
+        # nn.init.normal_(self.final_unit.weight, std=0.15)
+        nn.init.normal_(self.mu.weight,std=0.15)
+        nn.init.normal_(self.std.weight,std=0.15)
 
     def forward(self, x):
+        # torch.autograd.set_detect_anomaly(True)
         out = self.net(x)
         for unit in self.final_units:
             out = unit(out)
-        out = self.final_unit(out)
-        # Apply softplus to ensure possitve std
-        out[:,1::2] = self.soft(out[:,1::2])+10e-6
+        # out = self.final_unit(out)
+        mu = self.mu(out)
+        std = self.std(out)
+        std = 10e-6+ self.soft(std)
         
-        return out
+        # Apply softplus to ensure possitve std
+
+        # out = out+10e-6
+        
+        
+        return mu,std
 
 
 class Bootstrapped_DQN(nn.Module):
@@ -109,15 +121,28 @@ class Bootstrapped_DQN(nn.Module):
             
         all_mu_and_sigs = torch.zeros([2, self.out_channels], dtype=torch.float)
         #Each action gets a mu and a variance
-        for action in range(self.out_channels):
-           mixed_mu = torch.sum(qval[:][action])/self.number_heads
-           mixed_std = torch.sqrt(torch.sum((qval[:][action+1]**2))/(self.number_heads**2))
-           all_mu_and_sigs[0,action] = mixed_mu
-           all_mu_and_sigs[1,action] = mixed_std
+        mean_sum = torch.zeros([self.out_channels])
+        var_sum = torch.zeros([self.out_channels])
+        for head in qval:
+            mean_sum += head[0][0][:]
+            var_sum += head[1][0][:]**2+head[0][0][:]**2
+
+        all_mu_and_sigs[0] = mean_sum/self.number_heads
+        std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0])
+        all_mu_and_sigs[1] = std_sum
         
-        samples = torch.normal(mean=all_mu_and_sigs[0],std=all_mu_and_sigs[1])
+           #mean = [ head[1][0][action] for head in qval]
+           #mean = qval[:][0][0][action]
+        #    check1 =qval[1]
 
+           #mixed_mu = torch.sum(qval[:][0][action])/self.number_heads
+           #mixed_std = torch.sqrt(torch.sum((qval[:][1][action]**2))/(self.number_heads**2))
+           #all_mu_and_sigs[0,action] = mixed_mu
+           #all_mu_and_sigs[1,action] = mixed_std
+        
+        # Return mean+std
+        
 
-        return samples
+        return all_mu_and_sigs[0]+all_mu_and_sigs[1]
 
         #return sum / self.number_heads
