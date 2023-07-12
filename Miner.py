@@ -1,5 +1,6 @@
 from DQN import *
-from gridworld import *
+#from gridworld import *
+from two_goalworld import *
 import torch
 import torch.optim as optim
 from abc import ABC, abstractmethod
@@ -21,12 +22,14 @@ def hash_state(state):
 class Miner(ABC):
     def __init__(self, number_heads, budget, va, vg):
         self.number_heads = number_heads
+        #CHANGE TO 80
+        self.state_size = 125
         self.budget = budget
         self.va = va
         self.vg = vg
         self.uncertainty = []
-        self.policy_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
-        self.target_net = Bootstrapped_DQN(number_heads, 80, [164, 150], 4, hidden_unit)
+        self.policy_net = Bootstrapped_DQN(number_heads, self.state_size, [164, 150], 4, hidden_unit)
+        self.target_net = Bootstrapped_DQN(number_heads, self.state_size, [164, 150], 4, hidden_unit)
         self.update_target_net()
         self.times_asked = 0
         self.times_advisee = 0

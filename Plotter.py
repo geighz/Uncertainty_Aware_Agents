@@ -100,7 +100,8 @@ def plot_test(test_results):
         times_adviser = [test_run.TIMES_GIVEN for test_run in results]
         uncertainty = [test_run.UNCERTAINTY for test_run in results]
 
-        plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
+        #plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
+        plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
         plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)

@@ -3,21 +3,24 @@ from NoAdviceMiner import NoAdviceMiner
 from VisitBasedMiner import VisitBasedMiner
 from UncertaintyAwareMiner import UncertaintyAwareMiner
 from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
+from BayesAwareMiner import BayesAwareMiner
 from TDMiner import TDMiner
 from time import strftime, time
-from TestExecutor import Test_setup, execute_test
+#from TestExecutor import Test_setup, execute_test
+from BayesTestExecutor import Test_setup, execute_test
 from torch.multiprocessing import Manager
 from Plotter import scatter2d, scatter3d, write_to_file, get_time, print_time
 import json
 
-EPOCHS = 150
+EPOCHS = 1000
 BUFFER = 80
 BATCH_SIZE = 10
-TARGET_UPDATE = 5
+TARGET_UPDATE = 30 #5
 NUMBER_EXECUTIONS = 9
 n_trials = 100
-BUDGET = 150
-miner = UncertaintyAwareMiner
+BUDGET = 150000
+#miner = UncertaintyAwareMiner
+miner = BayesAwareMiner
 x = []
 y = []
 z = []
@@ -31,6 +34,7 @@ def run(test_setup):
     execute_test(0, test_setup, test_results)
     result = 0
     for ev in test_results[0].REWARDS:
+
         result += ev
     result -= test_results[0].REWARDS[0]
     print('result:', result)
@@ -38,11 +42,12 @@ def run(test_setup):
 
 
 def objective(trial):
-    va = trial.suggest_uniform('va', 0, 3)
-    vg = trial.suggest_uniform('vg', 0, 3)
+    va = trial.suggest_uniform('va', 0, 10)
+    vg = trial.suggest_uniform('vg', 0, 10)
     test_setup = Test_setup(miner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, va, vg)
     results = []
     for i in range(NUMBER_EXECUTIONS):
+        print(results)
         results.append(run(test_setup))
     results = sorted(results)
     result = 0

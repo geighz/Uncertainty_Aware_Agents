@@ -1,5 +1,6 @@
 from Miner import *
-from gridworld import v_state
+#from gridworld import v_state
+from two_goalworld import v_state
 
 
 class UncertaintyAwareMiner(Miner):

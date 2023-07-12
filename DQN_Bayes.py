@@ -81,6 +81,7 @@ class Bootstrapped_DQN(nn.Module):
         self.number_heads = number_heads
         out_body = hidden_layers.pop()
         self.out_channels = out_channels
+        self.safe = True
         # TODO: make NN architecture more flexible to inits
         # bc I pop a layer from the hidden layers into the head, I have more diversity across heads
         head_hidden_layers = [hidden_layers.pop()]
@@ -142,7 +143,9 @@ class Bootstrapped_DQN(nn.Module):
         
         # Return mean+std
         
-
-        return all_mu_and_sigs[0]+all_mu_and_sigs[1]
+        if self.safe:
+            return all_mu_and_sigs[0]-all_mu_and_sigs[1] 
+        else:
+            return all_mu_and_sigs[0]+all_mu_and_sigs[1]
 
         #return sum / self.number_heads
