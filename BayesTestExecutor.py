@@ -7,6 +7,7 @@ import torch
 import time
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import os.path
 
 
 class TestExecutor:
@@ -31,10 +32,16 @@ class TestExecutor:
         #self.env.render()
 
     def track_progress(self, episode_number):
-        if episode_number % 250 == 0:
+        if episode_number % 150 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
+            if episode_number==  0 : 
+                self.reward_history = np.append(self.reward_history,0)
+                self.asked_history = np.append(self.asked_history, 0)
+                self.uncertainty = np.append(self.uncertainty,0)
+                self.adviser_history = np.append(self.adviser_history, 0)
+                return
             mean_reward, uncertainty_mean = evaluate_agents(agent_a, agent_b)
             self.reward_history = np.append(self.reward_history, mean_reward)
             times_asked = (agent_a.times_asked + agent_b.times_asked) / 2
@@ -51,7 +58,7 @@ class TestExecutor:
         
         for i_episode in tqdm(range(epochs),desc='Training'):
             self.track_progress(i_episode)
-            tracking_time = 100
+            tracking_time = 150
             if i_episode % tracking_time == 0 and i_episode:
                 #check = self.reward_history
                
@@ -72,7 +79,12 @@ class TestExecutor:
                 _, reward, done, _ = self.env.step(action_a, action_b)
                 step += 1
                 #print("Agent a =",action_a,"Agent b =",action_b)
-                #self.env.render()
+                # print('-----------------------------------')
+                # check = old_v_state.data
+                # self.env.render_state(check.reshape((5,5,5)).detach().numpy())
+                # self.env.render_state(self.env.v_state.data.reshape((5,5,5)).detach().numpy())
+                # print(torch.equal(old_v_state.data,self.env.v_state.data))
+                # print('***********************************')
                 #print("Reward:",reward)
                 #time.sleep(5)
                 self.memory.push(old_v_state.data, action_a, action_b, self.env.v_state.data, reward, not done)
@@ -116,41 +128,50 @@ class TestExecutor:
                 counter +=1
 
             if self.epsilon > 0.02:
-                # self.epsilon -= (1 / epochs)
-                self.epsilon = 1#self.epsilon
+                self.epsilon -= (1 / epochs)**(1/2)
+                # self.epsilon = 1#self.epsilon
             if i_episode % target_update == 0:
+                print('updating_target')
                 for head_number in range(self.agent_a.policy_net.number_heads):
                     self.agent_a.update_target_net()
                     self.agent_b.update_target_net()
             if self.plot:
-                if (i_episode%150 == 0):
+                if (i_episode%150 == 0 and i_episode>0):
                     fig, axs = plt.subplots(2,5,figsize=(15, 15))
                     for i in range(self.agent_a.number_heads):
                         #terminal_loss_heads_a = 1000*torch.ones(epochs,5,2)
+                        axs[0,i].plot(20*np.ones(counter),'r-',label = 'True mean')
+                        axs[0,i].plot(0*np.ones(counter),'b-', label = 'True std')
                         axs[0,i].plot(terminal_loss_heads_a[:counter,i,0],label = f'agent a head {i} mean')
-                        axs[0,i].plot(20*np.ones(counter),'r-',label = 'Mean')
-                        axs[0,i].plot(2*np.ones(counter),'b-', label = 'Std')
+                        
                         axs[0,i].plot(terminal_loss_heads_a[:counter,i,1],label = f'agent a head {i} std')
-                        axs[1,i].plot(terminal_loss_heads_b[:counter,i,0],label = f'agent a head {i} mean')
-                        axs[1,i].plot(20*np.ones(counter),'r-', label = 'Mean')
-                        axs[1,i].plot(2*np.ones(counter),'b-', label = 'Std')
-                        axs[1,i].plot(terminal_loss_heads_b[:counter,i,1],label = f'agent a head {i} std')
-                        plt.legend()
-                    plt.show()    
-        fig, axs = plt.subplots(2,5,figsize=(15, 15))
-        for i in range(self.agent_a.number_heads):
-            #terminal_loss_heads_a = 1000*torch.ones(epochs,5,2)
-            axs[0,i].plot(terminal_loss_heads_a[:counter,i,0],label = f'agent a head {i} mean')
-            axs[0,i].plot(terminal_loss_heads_a[:counter,i,1],label = f'agent a head {i} std')
-            axs[0,i].plot(20*np.ones(counter),'r-',label = 'Mean')
-            axs[0,i].plot(2*np.ones(counter),'b-', label = 'Std')
-            axs[1,i].plot(terminal_loss_heads_b[:counter,i,0],label = f'agent a head {i} mean')
-            axs[1,i].plot(terminal_loss_heads_b[:counter,i,1],label = f'agent a head {i} std')
-            axs[1,i].plot(20*np.ones(counter),'r-', label = 'Mean')
-            axs[1,i].plot(2*np.ones(counter),'b-', label = 'Std')
-            plt.legend()
-        plt.show()
-        plt.savefig('loss_mean_std.png')
+                        axs[0,i].legend()
+                        axs[1,i].plot(20*np.ones(counter),'r-', label = 'True mean')
+                        axs[1,i].plot(0*np.ones(counter),'b-', label = 'True std')
+                        axs[1,i].plot(terminal_loss_heads_b[:counter,i,0],label = f'agent b head {i} mean')
+                        
+                        axs[1,i].plot(terminal_loss_heads_b[:counter,i,1],label = f'agent b head {i} std')
+                        axs[1,i].legend()
+                    # plt.show()  
+                    plt.savefig(f'loss_mean_std_episode_{i_episode}.png')  
+                    plt.close()
+        # fig, axs = plt.subplots(2,5,figsize=(15, 15))
+        # for i in range(self.agent_a.number_heads):
+        #     axs[0,i].plot(20*np.ones(counter),'r-',label = 'Mean')
+        #     axs[0,i].plot(0*np.ones(counter),'b-', label = 'Std')
+        #     axs[0,i].plot(terminal_loss_heads_a[:counter,i,0],label = f'agent a head {i} mean')
+        #     axs[0,i].plot(terminal_loss_heads_a[:counter,i,1],label = f'agent a head {i} std')
+            
+        #     axs[0,i].legend()
+        #     axs[1,i].plot(20*np.ones(counter),'r-', label = 'Mean')
+        #     axs[1,i].plot(0*np.ones(counter),'b-', label = 'Std')
+        #     axs[1,i].plot(terminal_loss_heads_b[:counter,i,0],label = f'agent b head {i} mean')
+        #     axs[1,i].plot(terminal_loss_heads_b[:counter,i,1],label = f'agent b head {i} std')
+            
+        #     axs[1,i].legend()
+
+        # plt.show()
+        # plt.savefig('loss_mean_std.png')
         agentType = type(self.agent_a).__name__
         test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.asked_history,
                                   self.adviser_history, self.uncertainty)

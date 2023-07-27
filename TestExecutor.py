@@ -1,9 +1,10 @@
 from ReplayMemory import ReplayMemory
-from evaluation import *
+from evaluation_gold import *
 from collections import namedtuple
 import numpy as np
 import os
 import torch
+import matplotlib.pyplot as plt
 
 
 class TestExecutor:
@@ -20,11 +21,13 @@ class TestExecutor:
         self.asked_history = np.array([])
         self.adviser_history = np.array([])
         self.memory = ReplayMemory(buffer)
-        self.env = Goldmine()
+        # self.env = Goldmine()
+        self.env = TwoGoal()
         self.uncertainty = np.array([])
 
     def track_progress(self, episode_number):
-        if episode_number % 2000 == 0:
+        
+        if episode_number % 150 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -37,13 +40,18 @@ class TestExecutor:
             self.uncertainty = np.append(self.uncertainty, uncertainty_mean)
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
+        terminal_heads_a ={0: [],1: [], 2: [], 3:[], 4: [] }
+        terminal_heads_b ={0: [],1: [], 2: [], 3:[], 4: [] }
+        
         for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
-            if i_episode % 100 == 0:
+            if i_episode % 300 == 0:
                 print("%s Game #: %s,%f" % (os.getpid(), i_episode,self.reward_history[-1]))
             self.env.reset()
             done = False
             step = 0
+            loss_heads_a =np.zeros(5)
+            loss_heads_b =np.zeros(5)
             # while game still in progress
             while not done:
                 old_v_state = self.env.v_state
@@ -60,10 +68,37 @@ class TestExecutor:
                     else:
                         continue
                 states, actions_a, actions_b, new_states, reward, non_final = self.memory.sample(batch_size)
-                self.agent_a.optimize(states, actions_a, new_states, reward, non_final)
-                self.agent_b.optimize(states, actions_b, new_states, reward, non_final)
+                loss_heads_a = self.agent_a.optimize(states, actions_a, new_states, reward, non_final)
+                loss_heads_b = self.agent_b.optimize(states, actions_b, new_states, reward, non_final)
+                
+                
                 if step > 20:
                     break
+            if loss_heads_a[0]> 0:
+                for i in range(self.agent_a.number_heads):
+                    terminal_heads_a[i].append(loss_heads_a[i])
+                    terminal_heads_b[i].append(loss_heads_b[i])
+                    
+            if (i_episode%100 == 0 and i_episode>0):
+                fig, axs = plt.subplots(2,5,figsize=(15, 15))
+                for i in range(self.agent_a.number_heads):
+                    
+                    #terminal_loss_heads_a = 1000*torch.ones(epochs,5,2)
+                    # axs[0,i].plot(20*np.ones(counter),'r-',label = 'True mean')
+                    # axs[0,i].plot(0*np.ones(counter),'b-', label = 'True std')
+                    axs[0,i].plot(terminal_heads_a[i],label = f'agent a head {i} mean')
+                    
+                    # axs[0,i].plot(terminal_loss_heads_a[:counter,i,1],label = f'agent a head {i} std')
+                    axs[0,i].legend()
+                    # axs[1,i].plot(20*np.ones(counter),'r-', label = 'True mean')
+                    # axs[1,i].plot(0*np.ones(counter),'b-', label = 'True std')
+                    axs[1,i].plot(terminal_heads_b[i],label = f'agent b head {i} mean')
+                    
+                    # axs[1,i].plot(terminal_loss_heads_b[:counter,i,1],label = f'agent b head {i} std')
+                    axs[1,i].legend()
+                # plt.show()  
+                plt.savefig(f'loss_DQN_{i_episode}.png')  
+                plt.close()
             if self.epsilon > 0.02:
                 self.epsilon -= (1 / epochs)
             if i_episode % target_update == 0:

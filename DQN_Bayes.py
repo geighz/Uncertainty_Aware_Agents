@@ -64,6 +64,7 @@ class Head_net(nn.Module):
             out = unit(out)
         # out = self.final_unit(out)
         mu = self.mu(out)
+        #CHECKING THAT USAL DQN WORKS!! 
         std = self.std(out)
         std = 10e-6+ self.soft(std)
         

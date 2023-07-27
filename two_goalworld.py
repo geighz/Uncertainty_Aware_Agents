@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 from torch.autograd import Variable
+import pickle
+import os.path
 
 player_a = np.array([0, 0, 0, 1, 0])
 player_b = np.array([0, 0, 0, 0, 1])
@@ -8,12 +10,30 @@ wall = np.array([0, 0, 1, 0, 0])
 pit = np.array([0, 1, 0, 0, 0])
 goal = np.array([1, 0, 0, 0, 0])
 all_states = np.genfromtxt('twogoal_allstatesV2.csv', delimiter=',')
+dictionary_states = {}
+
+for i in range(506):
+    dictionary_states[i] = all_states[i].reshape((5, 5, 5))
+
+
+
 
 
 class TwoGoal:
     def __init__(self):
         self.state = init_grid_player()
         self.isDone = False
+        self.deterministic = True
+        
+        if ~os.path.isfile('all_states.pickle'):
+            all_states = np.genfromtxt('twogoal_allstatesV2.csv', delimiter=',')
+            for i in range(506):
+                all_states[i].reshape((5, 5, 5))
+            with open('all_states.pickle', 'wb') as handle:
+                pickle.dump(all_states, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        else:
+            with open('all_states.pickle', 'rb') as handle:
+                all_states = pickle.load(handle)
 
 
     def step(self, action_a, action_b):
@@ -36,6 +56,9 @@ class TwoGoal:
     def render(self, mode='human'):
         render(self.state)
 
+    def render_state(self, state):
+        render(state.reshape((5,5,5)).detach().numpy())
+
     def update_v_state(self):
         self.v_state = v_state(self.state)
 
@@ -52,6 +75,10 @@ def load_state_with_id(state_id):
    
     return all_states[state_id].reshape((5, 5, 5))
 
+def save_dictionary():
+
+    with open('all_states.pickle', 'wb') as handle:
+        pickle.dump(all_states, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def randPair(s, e):
     return np.random.randint(s, e), np.random.randint(s, e)
@@ -161,12 +188,12 @@ def make_move(state, action_a, action_b):
     actions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
     # e.g. up => (player row - 1, player column + 0)
     new_player_a_loc = (old_player_a_loc[0] + actions[action_a][0], old_player_a_loc[1] + actions[action_a][1])
-    if not in_bound(new_player_a_loc) or new_player_a_loc == wall_loc:
+    if not in_bound(new_player_a_loc): #or new_player_a_loc == wall_loc:
         new_player_a_loc = old_player_a_loc
 
     new_player_b_loc = (old_player_b_loc[0] + actions[action_b][0], old_player_b_loc[1] + actions[action_b][1])
     player_b_moved = True
-    if not in_bound(new_player_b_loc) or new_player_b_loc == wall_loc:
+    if not in_bound(new_player_b_loc): #or new_player_b_loc == wall_loc:
         new_player_b_loc = old_player_b_loc
         player_b_moved = False
 
@@ -206,32 +233,54 @@ def get_loc(state, level):
 
 
 def get_reward(state):
+    deterministic = True
     player_a_loc = get_loc(state, 3)
     player_b_loc = get_loc(state, 4)
     pit = get_loc(state, 1)
     goal = get_loc(state, 0)
    
     reward = 0
-    mu0, sigma0 = 20, 2
-    mu1,sigma1 = 20,8
-    s0 = np.random.normal(mu0, sigma0, 1)
-    s1 = np.random.normal(mu1, sigma1, 1)
+    player_a_terminal = False
+    if deterministic :
+        # if player_a_loc == pit:
+        #     reward += 20
+            
+        # elif player_a_loc == goal:
+        #     reward += 20
+        # else:
+        #     reward -= 1
 
-    #s[0] 
-    if player_a_loc == pit:
-        reward += s1[0]
-    elif player_a_loc == goal:
-        #mu, sigma = 0, 0.1 # mean and standard deviation
-        reward += s1[0]
+        # if player_b_loc == pit:
+        #     reward += 20
+        # elif player_b_loc == goal:
+        #     reward += 20#
+        # else:
+        #     reward -= 1
+        if player_a_loc == pit or player_a_loc == goal or player_b_loc == pit or player_b_loc == goal:
+            reward += 20
+        else:
+            reward -=2
     else:
-        reward -= 0.1
+        mu0, sigma0 = 20, 2
+        mu1,sigma1 = 20,8
+        s0 = np.random.normal(mu0, sigma0, 1)
+        s1 = np.random.normal(mu1, sigma1, 1)
 
-    if player_b_loc == pit:
-        reward += s1[0]
-    elif player_b_loc == goal:
-        reward += s1[0]
-    else:
-        reward -= 0.1
+        #s[0] 
+        if player_a_loc == pit:
+            reward += s0[0]
+        elif player_a_loc == goal:
+            #mu, sigma = 0, 0.1 # mean and standard deviation
+            reward += s1[0]
+        else:
+            reward -= 1
+
+        if player_b_loc == pit:
+            reward += s0[0]
+        elif player_b_loc == goal:
+            reward += s1[0]
+        else:
+            reward -= 1
 
     return reward
 
@@ -248,8 +297,8 @@ def find_objects(state):
 def render(state):
     grid = np.zeros((5, 5), dtype=str)
     player_a_loc, player_b_loc, wall_loc, goal_loc, pit = find_objects(state)
-    for i in range(0, 4):
-        for j in range(0, 4):
+    for i in range(0, 5):
+        for j in range(0, 5):
             grid[i, j] = ' '
 
     if player_a_loc:

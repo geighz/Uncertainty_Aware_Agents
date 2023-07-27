@@ -4,6 +4,7 @@ from two_goalworld import *
 import torch
 import torch.optim as optim
 from abc import ABC, abstractmethod
+import numpy as np
 
 # since it may take several moves to goal, making gamma high
 GAMMA = 0.9
@@ -22,7 +23,7 @@ def hash_state(state):
 class Miner(ABC):
     def __init__(self, number_heads, budget, va, vg):
         self.number_heads = number_heads
-        #CHANGE TO 80
+        # 80 for gridworld, 125 for twogoal()
         self.state_size = 125
         self.budget = budget
         self.va = va
@@ -112,13 +113,18 @@ class Miner(ABC):
 
         state_action_values = self.get_state_action_value(states, actions)
         loss = []
+        loss_terminal_heads = np.zeros((5))
         for head in range(self.number_heads):
             inp = state_action_values[head].view(10)
+            if inp[~non_final_mask].numel():
+                # print(inp[~non_final_mask])
+                loss_terminal_heads[head] = torch.mean(inp[~non_final_mask])
             target = targ_per_head[head].view(10)
             use_sample = np.random.randint(self.number_heads, size=10) != 0
             inp[use_sample] *= 0
             target[use_sample] *= 0
             loss.append(criterion(inp, target))
+            
 
         # Optimize the model
         for head in range(self.number_heads):
@@ -128,7 +134,8 @@ class Miner(ABC):
             loss[head].backward()
             # update model parameters
             self.optimizers[head].step()
-
+        
+        return loss_terminal_heads
     def update_target_net(self):
         for head in range(self.number_heads):
             policy_head = self.policy_net.nets[head]

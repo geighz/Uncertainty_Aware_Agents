@@ -13,7 +13,7 @@ def evaluate_agents(agent_a, agent_b):
     #Can evaluate on different environments...
     #env = Goldmine()
     num_of_possible_states = 23
-    show_heat_map = ~False
+    show_heat_map = False
     # dictionaries for quiver and heat map
     qval_dictionary_a = dict.fromkeys(list(range(0,num_of_possible_states)), 0)
     quiver_dictionary_a = dict.fromkeys(list(range(0,num_of_possible_states)), np.array([0,0]))
@@ -23,8 +23,11 @@ def evaluate_agents(agent_a, agent_b):
     agent_a.reset_uncertainty()
     agent_b.reset_uncertainty()
     for state_id in tqdm(range(number_of_eval_games), desc='Evaluating games'):
+        
         env.reset(state_id)
-        # env.render()
+        print('*********************************')
+        print('bef. step')
+        env.render()
         steps = 0
         done = False
         while not done:
@@ -33,6 +36,8 @@ def evaluate_agents(agent_a, agent_b):
             agent_a.probability_ask_in_state(env)
             action_b = agent_b.choose_best_action(env.v_state)
             agent_b.probability_ask_in_state(env)
+            #
+
             # Creation of heat map
             if show_heat_map and steps==0:
                 # Using floor and module to access correct locations for storing the policy
@@ -47,10 +52,15 @@ def evaluate_agents(agent_a, agent_b):
                     #print('Action a is:', action_a)
             state, reward, done, _ = env.step(action_a, action_b)
          
-            # env.render()
+            env.render()
+            
             reward_sum += reward
+            print('after step')
+            print(f'reward {reward_sum}')
+            print('---------------------------------------------------')
             steps += 1
             if steps > 10:
+                check=1
                 done = True
     uncertainty_mean = mean(agent_a.get_uncertainty(), agent_b.get_uncertainty())
     if show_heat_map:       
