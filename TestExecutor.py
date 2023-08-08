@@ -21,13 +21,13 @@ class TestExecutor:
         self.asked_history = np.array([])
         self.adviser_history = np.array([])
         self.memory = ReplayMemory(buffer)
-        # self.env = Goldmine()
-        self.env = TwoGoal()
+        self.env = GAME_ENV()
+        #self.env = TwoGoal()
         self.uncertainty = np.array([])
 
     def track_progress(self, episode_number):
         
-        if episode_number % 150 == 0:
+        if episode_number % 250 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -42,11 +42,11 @@ class TestExecutor:
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
         terminal_heads_a ={0: [],1: [], 2: [], 3:[], 4: [] }
         terminal_heads_b ={0: [],1: [], 2: [], 3:[], 4: [] }
-        
+        done_times = 0
         for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
-            if i_episode % 300 == 0:
-                print("%s Game #: %s,%f" % (os.getpid(), i_episode,self.reward_history[-1]))
+            if i_episode % 250 == 0:
+                print("%s Game #: %s,%f,%s" % (os.getpid(), i_episode,self.reward_history[-1],done_times))
             self.env.reset()
             done = False
             step = 0
@@ -62,6 +62,8 @@ class TestExecutor:
                 step += 1
                 self.memory.push(old_v_state.data, action_a, action_b, self.env.v_state.data, reward, not done)
                 # if buffer not filled, add to it
+                if done:
+                    done_times+=1
                 if len(self.memory) < self.memory.capacity:
                     if done:
                         break
@@ -74,12 +76,12 @@ class TestExecutor:
                 
                 if step > 20:
                     break
-            if loss_heads_a[0]> 0:
-                for i in range(self.agent_a.number_heads):
-                    terminal_heads_a[i].append(loss_heads_a[i])
-                    terminal_heads_b[i].append(loss_heads_b[i])
-                    
-            if (i_episode%100 == 0 and i_episode>0):
+            # if loss_heads_a[0]> 0:
+            for i in range(self.agent_a.number_heads):
+                terminal_heads_a[i].append(loss_heads_a[i])
+                terminal_heads_b[i].append(loss_heads_b[i])
+                
+            if (i_episode%500 == 0 and i_episode>0):
                 fig, axs = plt.subplots(2,5,figsize=(15, 15))
                 for i in range(self.agent_a.number_heads):
                     
@@ -97,7 +99,7 @@ class TestExecutor:
                     # axs[1,i].plot(terminal_loss_heads_b[:counter,i,1],label = f'agent b head {i} std')
                     axs[1,i].legend()
                 # plt.show()  
-                plt.savefig(f'loss_DQN_{i_episode}.png')  
+                plt.savefig('plots/loss_DQN_{}.png'.format(i_episode))  
                 plt.close()
             if self.epsilon > 0.02:
                 self.epsilon -= (1 / epochs)

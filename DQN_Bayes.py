@@ -43,6 +43,7 @@ class Head_net(nn.Module):
         self.net = net
         self.final_units = nn.ModuleList()
         self.soft = nn.Softplus()
+        self.relu = nn.ReLU()
         self.sig = nn.Sigmoid()
         last_index = len(self.net.hidden_units) - 1
         self.in_channels = self.net.hidden_units[last_index].nn.out_features
@@ -55,7 +56,8 @@ class Head_net(nn.Module):
         self.std = nn.Linear(prev_layer, out_channels)
         # nn.init.normal_(self.final_unit.weight, std=0.15)
         nn.init.normal_(self.mu.weight,std=0.15)
-        nn.init.normal_(self.std.weight,std=0.15)
+        # nn.init.normal_(self.std.weight,std=0.15)
+        # nn.init.uniform_(self.std.weight)
 
     def forward(self, x):
         # torch.autograd.set_detect_anomaly(True)
@@ -64,13 +66,11 @@ class Head_net(nn.Module):
             out = unit(out)
         # out = self.final_unit(out)
         mu = self.mu(out)
-        #CHECKING THAT USAL DQN WORKS!! 
-        std = self.std(out)
-        std = 10e-6+ self.soft(std)
         
-        # Apply softplus to ensure possitve std
-
-        # out = out+10e-6
+        std = self.std(out)
+        std =  self.relu(std) +10e-5
+        # std = self.mu(out)*0
+        
         
         
         return mu,std
@@ -110,16 +110,15 @@ class Bootstrapped_DQN(nn.Module):
             result.append(self.nets[i](x))
         return result
     #GOOD
+    '''
     def q_circumflex(self, x):
         qval = self.__call__(x)
         check = 1
         # q-values derived from all heads, compare with
         # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
         # page 5
-        # mean = torch.mean(torch.stack(qval))
         
-        #ADD ALL GAUSSIAN MEANS AND VARIANCES:
-        #for i in range(self.number_heads):
+        
             
         all_mu_and_sigs = torch.zeros([2, self.out_channels], dtype=torch.float)
         #Each action gets a mu and a variance
@@ -133,20 +132,38 @@ class Bootstrapped_DQN(nn.Module):
         std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0])
         all_mu_and_sigs[1] = std_sum
         
-           #mean = [ head[1][0][action] for head in qval]
-           #mean = qval[:][0][0][action]
-        #    check1 =qval[1]
-
-           #mixed_mu = torch.sum(qval[:][0][action])/self.number_heads
-           #mixed_std = torch.sqrt(torch.sum((qval[:][1][action]**2))/(self.number_heads**2))
-           #all_mu_and_sigs[0,action] = mixed_mu
-           #all_mu_and_sigs[1,action] = mixed_std
-        
-        # Return mean+std
+          
         
         if self.safe:
-            return all_mu_and_sigs[0]-all_mu_and_sigs[1] 
+            return all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
         else:
-            return all_mu_and_sigs[0]+all_mu_and_sigs[1]
+            return all_mu_and_sigs[0]*(1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) #all_mu_and_sigs[1]
+    '''
+    def q_circumflex_ev(self, x):
+        qval = self.__call__(x)
+        # q-values derived from all heads, compare with
+        # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
+        # page 5
+        
+        
+            
+        all_mu_and_sigs = torch.zeros([2, self.out_channels], dtype=torch.float)
+        #Each action gets a mu and a variance
+        mean_sum = torch.zeros([self.out_channels])
+        var_sum = torch.zeros([self.out_channels])
+        for head in qval:
+            mean_sum += head[0][0][:]
+            var_sum += head[1][0][:]**2+head[0][0][:]**2
 
-        #return sum / self.number_heads
+        all_mu_and_sigs[0] = mean_sum/self.number_heads
+        std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0])
+        all_mu_and_sigs[1] = std_sum
+        
+          
+        
+        if self.safe:
+            return all_mu_and_sigs[0]#all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
+        else:
+            return all_mu_and_sigs[0]#*(1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) #all_mu_and_sigs[
+
+        

@@ -1,7 +1,9 @@
 from Miner_Bayes import *
 #from gridworld import v_state
-from two_goalworld import v_state
+# from two_goalworld import v_state
 import torch.distributions as td
+import numpy as np
+from import_game  import *#get_grid_for_player,v_state
 
 
 
@@ -34,6 +36,7 @@ class BayesAwareMiner(Miner_Bayes):
         min_action = np.inf
         max_action = -1
         norm_variance = 0
+        
         for action in range(actions):
             min_head = np.inf
             max_head = -1

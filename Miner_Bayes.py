@@ -1,7 +1,8 @@
 #from DQN import *
 from DQN_Bayes import *
 #from stochastic_gridworld import *
-from two_goalworld import *
+# from two_goalworld import *
+from import_game import *#GAME_ENV,state_size
 import torch
 import torch.optim as optim
 from abc import ABC, abstractmethod
@@ -14,111 +15,44 @@ criterion_mse = torch.nn.MSELoss()#reduction='none'
 criterion_log_like = torch.nn.GaussianNLLLoss()
 
 def w2_multi_bandidt(target,input,rounds,non_final_mask,times_visited_terminal):  
-    total_error = torch.zeros_like(target)
-    check = input[non_final_mask,0]
-    check1 = target[non_final_mask,0]
-    
+    total_error = torch.zeros_like(target)    
     #Non terminal transitions    
     if True in non_final_mask:
-        total_error[non_final_mask,0] = torch.abs(target[non_final_mask,0] -input[non_final_mask,0])
-        total_error[non_final_mask,1] = torch.abs( torch.zeros_like(input[non_final_mask,1]) -input[non_final_mask,1])
+        
+        total_error[non_final_mask] = torch.abs(target[non_final_mask] -input[non_final_mask])
+        
     #Terminal transitions
     if False in non_final_mask:
-        mu_approx = (target[~non_final_mask,0]+times_visited_terminal*input[~non_final_mask,0])*(1/(times_visited_terminal+1))
-        check = target[~non_final_mask,0]
-        # print(input[~non_final_mask,0],input[~non_final_mask,1])
-        # mu_approx = 20*torch.ones_like(input[~non_final_mask,0],dtype= torch.float)
-        idx_visited = torch.where(times_visited_terminal>= 2)[0]
-        idx_nonvisited = torch.where(times_visited_terminal<2)[0]
-        if idx_visited.numel():
-            std_error = total_error[:,1].clone()
-            std_error_visited = std_error[~non_final_mask].clone()
-            first_term = (input[~non_final_mask,:][idx_visited,1]**2)*(times_visited_terminal[idx_visited]-2)
-            second_term = (target[~non_final_mask,:][idx_visited,0]-mu_approx[idx_visited])*(target[~non_final_mask,:][idx_visited,0]-input[~non_final_mask,:][idx_visited,0])
-            y_std = torch.sqrt((first_term+second_term)/(times_visited_terminal[idx_visited] -1))
-            # std_error_visited[idx_visited]= torch.abs(input[~non_final_mask,:][idx_visited,1]-y_std)
-            std_error_visited[idx_visited]= torch.abs(input[~non_final_mask,:][idx_visited,1]-torch.zeros_like(input[~non_final_mask,:][idx_visited,1]))
-            std_error[~non_final_mask] = std_error_visited
-            total_error[:,1] = std_error
-            
-        if idx_nonvisited.numel():
-            total_error[~non_final_mask,:][idx_nonvisited,1]  = target[~non_final_mask,:][idx_nonvisited,1]
-        # sig_approx = ((target[~non_final_mask,0]-input[~non_final_mask,0])**2+times_visited_terminal*input[~non_final_mask,1])*(1/(times_visited_terminal+1))
-        #MU
-        # total_error[~non_final_mask,0]  = torch.abs(input[~non_final_mask,0]-(mu_approx))
-        total_error[~non_final_mask,0]  = torch.abs(input[~non_final_mask,0]-target[~non_final_mask,0])
-        #STD
-        #total_error[~non_final_mask,1]  = torch.abs(input[~non_final_mask,1]-sig_approx )
-        # if target[~non_final_mask,0][-1] > 0 and rounds%500==0:
-        #     print(target[~non_final_mask,0][-1],input[~non_final_mask,0][-1],input[~non_final_mask,1][-1])
+        mu_approx = times_visited_terminal[:,1]
+        std = times_visited_terminal[:,2]
+        
+        
+        total_error[~non_final_mask,0]  = torch.abs(input[~non_final_mask,0]-(mu_approx))
+        total_error[~non_final_mask,1] = torch.abs(input[~non_final_mask,1]-std)
+        
         loss_terminal = (torch.mean(input[~non_final_mask,0]),torch.mean(input[~non_final_mask,1]))
     else: loss_terminal = (0,0)
     error = torch.sum(torch.linalg.vector_norm(total_error,dim = 0))#/len(target)
-    return error,loss_terminal
-
-def debug_loss(target,input,rounds,non_final_mask,times_visited_terminal):
-    total_error = torch.zeros_like(target)
-    
-    #Non terminal transitions    
-    if True in non_final_mask:
-        total_error[non_final_mask] = torch.abs(target[non_final_mask] -input[non_final_mask])
-        # print(input[non_final_mask,0])
-    #Terminal transitions
-    if False in non_final_mask:
-        mu_approx_1 = (target[~non_final_mask,0]+times_visited_terminal*input[~non_final_mask,0])*(1/(times_visited_terminal+1))
-        print(input[~non_final_mask,0])
-        mu_approx = 20*torch.ones_like(input[~non_final_mask,0],dtype= torch.float)
-        idx_visited = torch.where(times_visited_terminal>= 2)[0]
-        idx_nonvisited = torch.where(times_visited_terminal<2)[0]
-        if idx_visited.numel():
-            std_error = total_error[:,1].clone()
-            std_error_visited = std_error[~non_final_mask].clone()
-            first_term = (input[~non_final_mask,:][idx_visited,1]**2)*(times_visited_terminal[idx_visited]-2)
-            second_term = (target[~non_final_mask,:][idx_visited,0]-mu_approx_1[idx_visited])*(target[~non_final_mask,:][idx_visited,0]-input[~non_final_mask,:][idx_visited,0])
-            y_std = torch.sqrt((first_term+second_term)/(times_visited_terminal[idx_visited] -1))
-            std_error_visited[idx_visited]= torch.abs(input[~non_final_mask,:][idx_visited,1]-y_std)
-            std_error[~non_final_mask] = std_error_visited
-            # total_error[:,1] = std_error
-            total_error[:,1] = torch.zeros_like(std_error)
-            #print(first_term,second_term)
-            #print(input[~non_final_mask,:][idx_visited,1],y_std)
-            check = input[~non_final_mask,:][idx_visited,1]
-            check2 = torch.abs(input[~non_final_mask,:][idx_visited,1]-y_std)
-            check3 = total_error[~non_final_mask,:][idx_visited,1]
-            check = 1
-        if idx_nonvisited.numel():
-            total_error[~non_final_mask,:][idx_nonvisited,1]  = target[~non_final_mask,:][idx_nonvisited,1]
-        # sig_approx = ((target[~non_final_mask,0]-input[~non_final_mask,0])**2+times_visited_terminal*input[~non_final_mask,1])*(1/(times_visited_terminal+1))
-        #MU
-        total_error[~non_final_mask,0]  = torch.abs(input[~non_final_mask,0]-(mu_approx))
-        # total_error_t  = torch.abs(20*torch.ones_like(input[~non_final_mask,0])-input[~non_final_mask,0])
-        #STD
-        #total_error[~non_final_mask,1]  = torch.abs(input[~non_final_mask,1]-sig_approx )
-        # if target[~non_final_mask,0][-1] > 0 and rounds%500==0:
-        #     print(target[~non_final_mask,0][-1],input[~non_final_mask,0][-1],input[~non_final_mask,1][-1])
-        loss_terminal = (torch.mean(input[~non_final_mask,0]),0.*torch.mean(input[~non_final_mask,1]))
-        # loss_terminal = (torch.mean(input[~non_final_mask,0]),torch.mean(input[~non_final_mask,1]))
-    else: loss_terminal = (0,0)
-    error = torch.sum(torch.linalg.vector_norm(total_error,dim = 0))/len(target)
     return error,loss_terminal
 def w2(target,input,rounds,non_final_mask):  
     total_error = torch.zeros_like(target)
     # print(input)
     #Non terminal transitions    
     if True in non_final_mask:
-        total_error[non_final_mask] = torch.abs(target[non_final_mask] -input[non_final_mask])
+        total_error[non_final_mask] = torch.abs(target[non_final_mask] -input[non_final_mask])**2
     #Terminal transitions
     if False in non_final_mask:
         #MU
         total_error[~non_final_mask,0]  = torch.abs(target[~non_final_mask,0]-input[~non_final_mask,0])
-        # total_error_t  = torch.abs(20*torch.ones_like(input[~non_final_mask,0])-input[~non_final_mask,0])
+        
         #STD
-        total_error[~non_final_mask,1]  = torch.abs(input[~non_final_mask,1]-total_error[~non_final_mask,0] )
-        # if target[~non_final_mask,0][-1] > 0 and rounds%500==0:
-        #     print(target[~non_final_mask,0][-1],input[~non_final_mask,0][-1],input[~non_final_mask,1][-1])
+        total_error[~non_final_mask,1]  = torch.abs(input[~non_final_mask,1]-total_error[~non_final_mask,0] )**2
+        total_error[~non_final_mask,0] =total_error[~non_final_mask,0]**2
+        
         loss_terminal = (torch.mean(input[~non_final_mask,0]),torch.mean(input[~non_final_mask,1]))
     else: loss_terminal = (0,0)
-    error = torch.sum(torch.linalg.vector_norm(total_error,dim = 0))/len(target)
+    # error = torch.sum(torch.linalg.vector_norm(total_error,dim = 0))/len(target)
+    error = torch.sum(torch.sum(total_error,dim = 0)/len(target))/2
     return error,loss_terminal
    
 def hash_state(state):
@@ -131,8 +65,8 @@ def hash_state(state):
 
 class Miner_Bayes(ABC):
     def __init__(self, number_heads, budget, va, vg):
-        #State size = 80..
-        self.state_size = 125
+        #State size = 80.. or 125
+        self.state_size = state_size#80#125
         self.number_heads = number_heads
         self.budget = budget
         self.va = va
@@ -150,33 +84,46 @@ class Miner_Bayes(ABC):
         self.vars = []
         self.rounds = 0
         self.state_counter = []
-        self.env_2 = TwoGoal()
+        self.env = GAME_ENV()#Goldmine()#TwoGoal()
         # Fuer jeden head gibt es einen optimizer
         #there is one for every head optimizer
         for head_number in range(self.policy_net.number_heads):
-            self.optimizers.append(optim.Adam(self.policy_net.nets[head_number].parameters(), lr=0.0005,weight_decay=1e-4))
+            self.optimizers.append(optim.Adam(self.policy_net.nets[head_number].parameters()))#,lr = 0.0001))
             self.state_counter.append({})
             # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
             # optimizers_b.append(optim.SGD(agent_bQVAL = self.policy_net(states).model.heads[i].parameters(), lr=0.002))
 
     
     # Add hashing for visited terminal states
-    def count_state(self, state,head):
+    def count_state(self, state,head,sample):
         hash_of_state = hash_state(state)
         if hash_of_state in self.state_counter[head]:
-            self.state_counter[head][hash_of_state] += 1
+            #update number of times visited
+            self.state_counter[head][hash_of_state]['visited'] += 1
+            # Do we have to copy here?
+            previous_mean = self.state_counter[head][hash_of_state]['mean'].clone()
+            #update mean
+            self.state_counter[head][hash_of_state]['mean'] += (sample -self.state_counter[head][hash_of_state]['mean'])/self.state_counter[head][hash_of_state]['visited']
+            #update std
+            if self.state_counter[head][hash_of_state]['visited'] >= 2:
+                first_term = (self.state_counter[head][hash_of_state]['visited']-2)*self.state_counter[head][hash_of_state]['std']**2
+                second_term = (sample -self.state_counter[head][hash_of_state]['mean'] )*(sample - previous_mean)
+                self.state_counter[head][hash_of_state]['std'] = torch.sqrt((first_term+second_term)/(self.state_counter[head][hash_of_state]['visited']-1))
+            else: 
+                self.state_counter[head][hash_of_state]['std'] = 0
+
         else:
-            self.state_counter[head][hash_of_state] = 1
+            self.state_counter[head][hash_of_state] = {'visited': 1, 'mean': sample, 'std': 0 }
+            # self.state_counter[head][hash_of_state] = 1
 
     def times_visited(self, state,head):
         hash_of_state = hash_state(state)
         if hash_of_state in self.state_counter[head]:
-            return self.state_counter[head][hash_of_state]
+            # print([x for x in self.state_counter[head][hash_of_state].values()])
+            return [x for x in self.state_counter[head][hash_of_state].values()]#self.state_counter[head][hash_of_state].values()
         else:
             return 0
-    #
-    # model.load_state_dict(torch.load('/Users/Lukas/repositories/Reinforcement-Learning-Q-learning-Gridworld-Pytorch/graph_output/model_a.pth'))
-    # model.eval()
+    
     
     def set_partner(self, other_agent):
         self.other_agent = other_agent
@@ -189,7 +136,7 @@ class Miner_Bayes(ABC):
             return None
         self.times_adviser += 1
         inv_state = get_grid_for_player(env.state, np.array([0, 0, 0, 0, 1]))
-        action = self.choose_best_action(v_state(inv_state))
+        action = self.choose_best_action_ev(v_state(inv_state))
         return action
 
     @abstractmethod
@@ -206,7 +153,7 @@ class Miner_Bayes(ABC):
             action = np.random.randint(0, 4)
             # print("A takes random action {}".format(action_a))
         else:  # choose best action from Q(s,a) values
-            action = self.choose_best_action(env.v_state)
+            action = self.choose_best_action_ev(env.v_state)
             # print("A takes best action {}".format(action_a))
         return action
 
@@ -226,8 +173,12 @@ class Miner_Bayes(ABC):
         return action
     
     def choose_best_action(self, v_state):
-        state_action_values_joint = self.policy_net.q_circumflex(v_state)
+        # state_action_values_joint = self.policy_net.q_circumflex(v_state)
+        state_action_values_joint = self.policy_net.q_circumflex_ev(v_state)
         return torch.argmax(state_action_values_joint)
+    def choose_best_action_ev(self, v_state):
+        state_action_values_joint = self.policy_net.q_circumflex_ev(v_state)
+        return torch.argmax(state_action_values_joint)        
 
     def get_state_action_value_distributions(self, state, action):
         #qval: for each head retrieve the qvals for the state
@@ -247,12 +198,13 @@ class Miner_Bayes(ABC):
         
         #Obtain the mean for the largest mean+std
         # value_next_state_per_head = [[qval[0][np.arange(len(qval[0])),[(qval[0]+qval[1]).argmax(1)][0]],qval[1][np.arange(len(qval[0])),[(qval[0]+qval[1]).argmax(1)][0]]] for qval in qval_heads]
-        if self.safe:
+        if self.safe:#all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
             # value_next_state_per_head = [[qval[0][np.arange(len(qval[0])),[(qval[0]-qval[1]).argmax(1)][0]],qval[1][np.arange(len(qval[0])),[(qval[0]-qval[1]).argmax(1)][0]]] for qval in qval_heads]
+            # value_next_state_per_head = [[qval[0][np.arange(len(qval[0])),[(qval[0]*(1-.5*(qval[1]/(qval[1]+1)))).argmax(1)][0]],qval[1][np.arange(len(qval[0])),[(qval[0]*(1-.5*(qval[1]/(qval[1]+1)))).argmax(1)][0]]] for qval in qval_heads]
             value_next_state_per_head = [[qval[0][np.arange(len(qval[0])),[(qval[0]).argmax(1)][0]],qval[1][np.arange(len(qval[0])),[(qval[0]).argmax(1)][0]]] for qval in qval_heads]
-            # value_next_state_per_head = [x[0,:].max(1)[0] for x in qval_heads]
         else:
-            value_next_state_per_head = [[qval[0][np.arange(len(qval[0])),[(qval[0]+qval[1]).argmax(1)][0]],qval[1][np.arange(len(qval[0])),[(qval[0]+qval[1]).argmax(1)][0]]] for qval in qval_heads]
+            # value_next_state_per_head = [[qval[0][np.arange(len(qval[0])),[(qval[0]+qval[1]).argmax(1)][0]],qval[1][np.arange(len(qval[0])),[(qval[0]+qval[1]).argmax(1)][0]]] for qval in qval_heads]
+            value_next_state_per_head = [[qval[0][np.arange(len(qval[0])),[(qval[0]).argmax(1)][0]],qval[1][np.arange(len(qval[0])),[(qval[0]).argmax(1)][0]]] for qval in qval_heads]
        
 
         targ_per_head = []
@@ -269,17 +221,11 @@ class Miner_Bayes(ABC):
             
             target_mu[non_final_mask] +=  GAMMA*value_next_state[0][non_final_mask]
             
-            target_std[non_final_mask] = torch.maximum(EPSILON[non_final_mask], GAMMA**(.5) * value_next_state[1][non_final_mask])
+    
+            target_std[non_final_mask] = GAMMA**(.5) * value_next_state[1][non_final_mask]
             target_mu.detach()
             target_std.detach()
-            # if target_mu[non_final_mask].max() > 10:
-            #     prev_state = states[non_final_mask][target_mu[non_final_mask].argmax()]
-            #     problematic_state  = new_states[non_final_mask][target_mu[non_final_mask].argmax()]
-            #     self.env_2.render(prev_state)
-            #     self.env_2.render(problematic_state)
-            #     print(rewards[non_final_mask])
-            #     print(target_mu[non_final_mask])
-            #     check = target_mu[non_final_mask]
+            
             targ_per_head.append( torch.column_stack((target_mu,target_std)))
             
         state_action_values = self.get_state_action_value_distributions(states, actions)
@@ -289,66 +235,64 @@ class Miner_Bayes(ABC):
         #Per head, first column is the mean and second column is the standard deviation
         loss_terminal_heads = torch.zeros((5,2))
         for head in range(self.number_heads):
-            
+            # size = 10 because the batch is of size 10.
+            '''
             use_sample = np.random.randint(self.number_heads, size=10) == 0
             while True not in use_sample:
                 use_sample = np.random.randint(self.number_heads, size=10) == 0
             
             non_final_mask_cur_head = non_final_mask[use_sample]
 
-            used_states = new_states[use_sample]
+            # used_states = new_states[use_sample]
+            # used_rewards = rewards[use_sample]
 
-            for state in used_states[~non_final_mask_cur_head]:
-                self.count_state(state,head=head) 
-            # print('Head',head,'Dict',self.state_counter[head].values())
+            # for i,state in enumerate(used_states[~non_final_mask_cur_head]):
+            #     self.count_state(state,head=head,sample = used_rewards[~non_final_mask_cur_head][i]) 
             
-            
-            
-            # view reshapes, 10 batches \times 2 (mean,std)
             inp = state_action_values[head]
-            # if inp[non_final_mask,0].max() > 1:
-            #     prob_index = inp[non_final_mask,0].argmax()
-            #     prev_state = states[non_final_mask][prob_index ]
-            #     problematic_state  = new_states[non_final_mask][prob_index ]
-            #     prob_action = actions[non_final_mask][prob_index ]
-            #     self.env_2.render_state(prev_state)
-            #     self.env_2.render_state(problematic_state)
-            #     print(rewards[non_final_mask])
-            #     print(inp[non_final_mask,0])
-            #     print(targ_per_head[head][non_final_mask])
-            #     print(prob_action)
-            #     taco = self.policy_net(prev_state)
-            #     check = inp[non_final_mask,0]
-            # check = targ_per_head[head]
-            # num batches \times num_samples 
+            
+            
             target = targ_per_head[head]            
             inp =inp[use_sample] 
             target = target[use_sample] 
-            times_visited_terminal = torch.tensor([self.times_visited(state,head=head) for state in used_states[~non_final_mask_cur_head]])
-            # check = criterion(inp,inp)
-            #loss.append(loss_expected_log_likelihood(target, inp))
-            #loss.append(criterion_mse(target,inp.T[:][0],inp.T[:][1]))
-            #loss.append()
-            # loss_total = loss.append(criterion_mse(target,inp))
-            # loss_total,loss_terminal = w2(target,inp,self.rounds,non_final_mask=non_final_mask_cur_head)
-            loss_total,loss_terminal = w2_multi_bandidt(target,inp,self.rounds,
-            non_final_mask=non_final_mask_cur_head,times_visited_terminal=times_visited_terminal)
-
-            # loss_total,loss_terminal = debug_loss(target,inp,self.rounds,
+            
+            # times_visited_terminal = torch.tensor([self.times_visited(state,head=head) for state in used_states[~non_final_mask_cur_head]])
+            loss_total,loss_terminal = w2(target,inp,self.rounds,non_final_mask=non_final_mask_cur_head)
+            '''
+            
+            # loss_total,loss_terminal = w2_multi_bandidt(target,inp,self.rounds,
             # non_final_mask=non_final_mask_cur_head,times_visited_terminal=times_visited_terminal)
+            inp = state_action_values[head].clone()#.view(10)
+            if inp[~non_final_mask].numel():
+                # print(inp[~non_final_mask])
+                loss_terminal_heads[head,0] = torch.mean(inp[~non_final_mask,0])
+                loss_terminal_heads[head,1] = torch.mean(inp[~non_final_mask,1])
+            target = targ_per_head[head].clone()#.view(10)
+            use_sample = np.random.randint(self.number_heads, size=10) != 0
+            # while True not in use_sample and :
+            #     use_sample = np.random.randint(self.number_heads, size=10) != 0
+            inp[use_sample] *= 0
+            target[use_sample] *= 0
+            loss_total,loss_terminal = w2(target,inp,self.rounds,non_final_mask=non_final_mask)
+            
+            # if abs(loss_total - check)>10**-8:
+            #     print(abs(loss_total - check))
+            #     assert abs(loss_total - check)> 10**-8
+            # cccc = 1
+            # loss.append(criterion_mse(inp, target))
             loss.append(loss_total)
-            loss_terminal_heads[head,0], loss_terminal_heads[head,1] = loss_terminal[0],loss_terminal[1]
-            check = 1
+            # loss_terminal_heads[head,0], loss_terminal_heads[head,1] = loss_terminal[0],loss_terminal[1]
+            
+            # check = 1
             # loss.append(check)
         # print(loss)
         self.rounds+=1
-        # print('optimize')
-        # print(loss_total)
         # Optimize the model
         for head in range(self.number_heads):
             # clear gradient
             self.optimizers[head].zero_grad()
-            loss[head].backward(retain_graph=True)
+            # loss[head].backward(retain_graph=True)
+            loss[head].backward()
             # update model parameters
             self.optimizers[head].step()
     
@@ -369,18 +313,3 @@ class Miner_Bayes(ABC):
     #MAYBE CHANGE
     def reset_uncertainty(self):
         self.uncertainty = []
-        
-    # def max_gaussian_targets(self, new_states):
-    #     # This function is to replace 
-    #     # value_next_state_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
-    #     #Number of samples for the maximum
-    #     number_samples = int(5*10e2)
-    #     # First: get values from target net
-    #     qval= self.target_net(new_states)
-
-
-    #     # Per head, obtain main and variance of qvals. 
-    #     # Sample from each qval for each badge and get the maximum for each badge
-    #     return  [torch.stack([torch.normal(mean=qval_head[:,::2],std=qval_head[:,1::2]).max(1)[0]  for i in range(number_samples)  ]).T  for qval_head in qval]
-
-    # def wasserstein_loss(self,)

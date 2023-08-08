@@ -1,13 +1,16 @@
-from two_goalworld import *
+#from two_goalworld import *
+#from gridworld import *
+from import_game import *#GAME_ENV
 import numpy as np
 
-number_of_eval_games = 506
+#number_of_eval_games = 506
 
+# number_of_eval_games = 150
 
 def evaluate_agents(agent_a, agent_b):
     reward_sum = 0
-    # env = Goldmine()
-    env = TwoGoal()
+    env = GAME_ENV()
+    #env = TwoGoal()
     # env = 
     agent_a.reset_uncertainty()
     agent_b.reset_uncertainty()

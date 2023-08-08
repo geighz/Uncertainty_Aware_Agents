@@ -23,8 +23,8 @@ start_time_str = datetime.now(timezone_berlin).strftime(date_format)
 
 def plot(x, y, title, linelabel, xlabel, ylabel, lb=None, ub=None, ylim=None):
     plt.figure(title)
-    if ylim is not None:
-        plt.ylim(ylim)
+    # if ylim is not None:
+    #     plt.ylim(ylim)
     plt.title(title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)

@@ -8,6 +8,8 @@ wall = np.array([0, 0, 1, 0, 0])
 pit = np.array([0, 1, 0, 0, 0])
 goal = np.array([1, 0, 0, 0, 0])
 all_states = np.genfromtxt('all_states.csv', delimiter=',')
+number_of_eval_games = 150
+state_size = 80
 
 
 class Goldmine:

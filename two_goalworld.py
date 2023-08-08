@@ -11,6 +11,8 @@ pit = np.array([0, 1, 0, 0, 0])
 goal = np.array([1, 0, 0, 0, 0])
 all_states = np.genfromtxt('twogoal_allstatesV2.csv', delimiter=',')
 dictionary_states = {}
+number_of_eval_games =506
+state_size = 125
 
 for i in range(506):
     dictionary_states[i] = all_states[i].reshape((5, 5, 5))
@@ -25,14 +27,14 @@ class TwoGoal:
         self.isDone = False
         self.deterministic = True
         
-        if ~os.path.isfile('all_states.pickle'):
+        if ~os.path.isfile('all_states_two_goal.pickle'):
             all_states = np.genfromtxt('twogoal_allstatesV2.csv', delimiter=',')
             for i in range(506):
                 all_states[i].reshape((5, 5, 5))
-            with open('all_states.pickle', 'wb') as handle:
+            with open('all_states_two_goal.pickle', 'wb') as handle:
                 pickle.dump(all_states, handle, protocol=pickle.HIGHEST_PROTOCOL)
         else:
-            with open('all_states.pickle', 'rb') as handle:
+            with open('all_states_two_goal.pickle', 'r') as handle:
                 all_states = pickle.load(handle)
 
 
@@ -242,45 +244,57 @@ def get_reward(state):
     reward = 0
     player_a_terminal = False
     if deterministic :
-        # if player_a_loc == pit:
-        #     reward += 20
-            
-        # elif player_a_loc == goal:
-        #     reward += 20
-        # else:
-        #     reward -= 1
-
-        # if player_b_loc == pit:
-        #     reward += 20
-        # elif player_b_loc == goal:
-        #     reward += 20#
-        # else:
-        #     reward -= 1
-        if player_a_loc == pit or player_a_loc == goal or player_b_loc == pit or player_b_loc == goal:
-            reward += 20
-        else:
-            reward -=2
-    else:
-        mu0, sigma0 = 20, 2
-        mu1,sigma1 = 20,8
-        s0 = np.random.normal(mu0, sigma0, 1)
-        s1 = np.random.normal(mu1, sigma1, 1)
-
-        #s[0] 
         if player_a_loc == pit:
-            reward += s0[0]
+            reward -= 10
+            
         elif player_a_loc == goal:
-            #mu, sigma = 0, 0.1 # mean and standard deviation
-            reward += s1[0]
+            reward += 10
         else:
             reward -= 1
 
         if player_b_loc == pit:
-            reward += s0[0]
+            reward -= 10
         elif player_b_loc == goal:
-            reward += s1[0]
+            reward += 10#
         else:
             reward -= 1
+        # if player_a_loc == pit or player_b_loc == pit and not(player_a_loc == goal or player_b_loc == goal):
+        #     reward += 20
+        # elif player_a_loc == goal or player_b_loc == goal and not (player_a_loc == pit or player_b_loc == pit):
+        #     reward +=20
+        # elif player_a_loc == pit or player_b_loc == pit or player_a_loc == goal or player_b_loc == goal:
+        #     reward += 20
+        # else:
+        #     reward -=2
+    else:
+        mu0, sigma0 = 20, 2
+        mu1,sigma1 = 20,2#15,0.5
+        s0 = np.random.normal(mu0, sigma0, 1)
+        s1 = np.random.normal(mu1, sigma1, 1)
+
+        #s[0] 
+        # if player_a_loc == pit:
+        #     reward += s0[0]
+        # elif player_a_loc == goal:
+        #     #mu, sigma = 0, 0.1 # mean and standard deviation
+        #     reward += s1[0]
+        # else:
+        #     reward -= 1
+
+        # if player_b_loc == pit:
+        #     reward += s0[0]
+        # elif player_b_loc == goal:
+        #     reward += s1[0]
+        # else:
+        #     reward -= 1
+        if player_a_loc == pit or player_b_loc == pit and not(player_a_loc == goal or player_b_loc == goal):
+            reward += s0[0]
+        elif player_a_loc == goal or player_b_loc == goal and not (player_a_loc == pit or player_b_loc == pit):
+            reward +=s1[0]
+        elif player_a_loc == pit or player_b_loc == pit or player_a_loc == goal or player_b_loc == goal:
+            reward +=s1[0]/2+s0[0]/2
+        else:
+            reward -=.2
 
     return reward
 

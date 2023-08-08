@@ -1,6 +1,7 @@
 from DQN import *
 #from gridworld import *
-from two_goalworld import *
+# from two_goalworld import *
+from import_game import *
 import torch
 import torch.optim as optim
 from abc import ABC, abstractmethod
@@ -24,7 +25,7 @@ class Miner(ABC):
     def __init__(self, number_heads, budget, va, vg):
         self.number_heads = number_heads
         # 80 for gridworld, 125 for twogoal()
-        self.state_size = 125
+        self.state_size = state_size#125
         self.budget = budget
         self.va = va
         self.vg = vg
@@ -123,6 +124,8 @@ class Miner(ABC):
             use_sample = np.random.randint(self.number_heads, size=10) != 0
             inp[use_sample] *= 0
             target[use_sample] *= 0
+            # fake_target = 20*torch.ones_like(target)
+            #loss.append(criterion(inp, target))
             loss.append(criterion(inp, target))
             
 
