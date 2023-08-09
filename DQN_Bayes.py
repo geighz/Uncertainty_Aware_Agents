@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import time
 
 
 class hidden_unit(nn.Module):
@@ -110,8 +111,9 @@ class Bootstrapped_DQN(nn.Module):
             result.append(self.nets[i](x))
         return result
     #GOOD
-    '''
+    
     def q_circumflex(self, x):
+        t1 = time.time()
         qval = self.__call__(x)
         check = 1
         # q-values derived from all heads, compare with
@@ -122,24 +124,27 @@ class Bootstrapped_DQN(nn.Module):
             
         all_mu_and_sigs = torch.zeros([2, self.out_channels], dtype=torch.float)
         #Each action gets a mu and a variance
-        mean_sum = torch.zeros([self.out_channels])
-        var_sum = torch.zeros([self.out_channels])
-        for head in qval:
-            mean_sum += head[0][0][:]
-            var_sum += head[1][0][:]**2+head[0][0][:]**2
-
-        all_mu_and_sigs[0] = mean_sum/self.number_heads
-        std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0])
+        mean_sum = torch.sum(torch.stack([head[0][0] for head in qval]), dim=0)/self.number_heads
+        var_sum = torch.sum(torch.stack([head[1][0]**2 + head[0][0]**2 for head in qval]), dim=0)
+        
+        all_mu_and_sigs[0] = mean_sum
+        std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0]**2)
         all_mu_and_sigs[1] = std_sum
+        return all_mu_and_sigs
+    def q_circumflex_s(self,x):
+        all_mu_and_sigs = self.q_circumflex(x)
+        return all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
+    def q_circumflex_r(self,x):
+        all_mu_and_sigs = self.q_circumflex(x)
+        return all_mu_and_sigs[0]*(1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1)))  
+    def q_circumflex_n(self,x):
+        all_mu_and_sigs = self.q_circumflex(x)
+        return all_mu_and_sigs[0]
         
-          
         
-        if self.safe:
-            return all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
-        else:
-            return all_mu_and_sigs[0]*(1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) #all_mu_and_sigs[1]
-    '''
+    
     def q_circumflex_ev(self, x):
+        t1 = time.time()
         qval = self.__call__(x)
         # q-values derived from all heads, compare with
         # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
@@ -149,18 +154,17 @@ class Bootstrapped_DQN(nn.Module):
             
         all_mu_and_sigs = torch.zeros([2, self.out_channels], dtype=torch.float)
         #Each action gets a mu and a variance
-        mean_sum = torch.zeros([self.out_channels])
-        var_sum = torch.zeros([self.out_channels])
-        for head in qval:
-            mean_sum += head[0][0][:]
-            var_sum += head[1][0][:]**2+head[0][0][:]**2
 
-        all_mu_and_sigs[0] = mean_sum/self.number_heads
-        std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0])
+
+        mean_sum = torch.sum(torch.stack([head[0][0] for head in qval]), dim=0)/self.number_heads
+        var_sum = torch.sum(torch.stack([head[1][0]**2 + head[0][0]**2 for head in qval]), dim=0)
+        
+        all_mu_and_sigs[0] = mean_sum
+        std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0]**2)
         all_mu_and_sigs[1] = std_sum
         
           
-        
+        #print(f' q_ev {t1-time.time()}')
         if self.safe:
             return all_mu_and_sigs[0]#all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
         else:

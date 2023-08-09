@@ -4,12 +4,13 @@ from Miner_Bayes import *
 import torch.distributions as td
 import numpy as np
 from import_game  import *#get_grid_for_player,v_state
+import time
 
 
 
 class BayesAwareMiner(Miner_Bayes):
-    def __init__(self, number_heads, budget, va, vg):
-        super(BayesAwareMiner, self).__init__(number_heads, budget, va, vg)
+    def __init__(self, number_heads, budget, va, vg,agent_type_loss, agent_type_train,agent_type_eval):
+        super(BayesAwareMiner, self).__init__(number_heads, budget, va, vg,agent_type_loss, agent_type_train,agent_type_eval)
         
     def probability_advise_in_state(self, state):
         inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
@@ -32,33 +33,35 @@ class BayesAwareMiner(Miner_Bayes):
     def calculate_uncertainty(self, v_state,pessimistic):
         qval = self.policy_net(v_state)
         actions = len(qval[0][0][0])
-        disagreement_actions = torch.zeros(actions)
-        min_action = np.inf
+    
+        if self.number_heads <2:
+            check = 1
+            return torch.max(qval[0][1]) if pessimistic else torch.min(qval[0][1])
+
+        min_action = float('inf')
         max_action = -1
         norm_variance = 0
-        
+
+
         for action in range(actions):
-            min_head = np.inf
-            max_head = -1
-            means_action = []
-            for head in qval:
-                #head[0][0][action] USED FOR MEAN
-                #head[1][0][action] USED FOR STD
-                if head[1][0][action] >= max_head:
-                    max_head = head[1][0][action]
-                if head[1][0][action] <= min_head:
-                    min_head = head[1][0][action]
-                means_action.append(head[0][0][action])         
-            norm_variance += self.variance(means_action) 
-            if min_head >= max_action:
-                max_action = min_head
-            if max_head <= min_action:
-                min_action = max_head
-    
+            min_heads, _ = torch.min(torch.stack([head[1][0][action] for head in qval]), dim=0)
+            max_heads, _ = torch.max(torch.stack([head[1][0][action] for head in qval]), dim=0)
+            
+            # stds_action = torch.stack([head[1][0][action] for head in qval])
+            means_action = torch.stack([head[0][0][action] for head in qval])
+
+            min_action = min(min_action, max_heads.item())
+            max_action = max(max_action, min_heads.item())
+
+            norm_variance += self.variance(means_action)
+
+            #norm_variance += self.variance(means_actions)
+
         uncertainty_measure = norm_variance+min_action if pessimistic else norm_variance + max_action
         # var_uncertainty = min_action if pessimistic else max_action
         # uncertainty = var_uncertainty+norm_variance
         self.uncertainty.append(uncertainty_measure.detach().numpy())
+        #print(f'time uq computation {t1 - time.time()}')
         return uncertainty_measure.detach().numpy()
 # Unceratinty quantification using discrepancy in Wasserstein space.    
     def calculate_uncertainty_alternative(self, v_state,*arg):
@@ -88,7 +91,7 @@ class BayesAwareMiner(Miner_Bayes):
         return uncertainty
 
     def variance(self, predictions):
-        predictions = torch.stack(predictions)
+        
         var = predictions.var(dim=0)
         mean = abs(predictions.mean())
         return var / mean

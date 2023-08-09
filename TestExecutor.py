@@ -5,6 +5,7 @@ import numpy as np
 import os
 import torch
 import matplotlib.pyplot as plt
+import time
 
 
 class TestExecutor:
@@ -70,9 +71,10 @@ class TestExecutor:
                     else:
                         continue
                 states, actions_a, actions_b, new_states, reward, non_final = self.memory.sample(batch_size)
+                t1 = time.time()
                 loss_heads_a = self.agent_a.optimize(states, actions_a, new_states, reward, non_final)
                 loss_heads_b = self.agent_b.optimize(states, actions_b, new_states, reward, non_final)
-                
+                #print(t1-time.time())
                 
                 if step > 20:
                     break

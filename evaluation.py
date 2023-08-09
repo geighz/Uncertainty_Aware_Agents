@@ -13,10 +13,10 @@ def evaluate_agents(agent_a, agent_b):
     reward_sum = 0
     #Can evaluate on different environments...
     env = GAME_ENV()
-    num_of_possible_states = 23
     show_heat_map = False
     # dictionaries for quiver and heat map
     if show_heat_map:
+        num_of_possible_states = 23
         qval_dictionary_a = dict.fromkeys(list(range(0,num_of_possible_states)), 0)
         quiver_dictionary_a = dict.fromkeys(list(range(0,num_of_possible_states)), np.array([0,0]))
         qval_dictionary_b = dict.fromkeys(list(range(0,num_of_possible_states)), 0)
