@@ -28,7 +28,7 @@ class TestExecutor:
 
     def track_progress(self, episode_number):
         
-        if episode_number % 250 == 0:
+        if episode_number % 500 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -41,18 +41,22 @@ class TestExecutor:
             self.uncertainty = np.append(self.uncertainty, uncertainty_mean)
 
     def train_and_evaluate_agent(self, epochs, target_update, batch_size):
-        terminal_heads_a ={0: [],1: [], 2: [], 3:[], 4: [] }
-        terminal_heads_b ={0: [],1: [], 2: [], 3:[], 4: [] }
+        agent_a_terminal = {}
+        agent_b_terminal = {}
+        for i in range(self.agent_a.number_heads):
+            agent_a_terminal[i] = {'mean':[],'std':[]}
+            agent_b_terminal[i] = {'mean':[],'std':[]}
+        
         done_times = 0
         for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
-            if i_episode % 250 == 0:
+            if i_episode % 500 == 0:
                 print("%s Game #: %s,%f,%s" % (os.getpid(), i_episode,self.reward_history[-1],done_times))
             self.env.reset()
             done = False
             step = 0
-            loss_heads_a =np.zeros(5)
-            loss_heads_b =np.zeros(5)
+            # loss_heads_a =np.zeros(5)
+            # loss_heads_b =np.zeros(5)
             # while game still in progress
             while not done:
                 old_v_state = self.env.v_state
@@ -62,6 +66,13 @@ class TestExecutor:
                 _, reward, done, _ = self.env.step(action_a, action_b)
                 step += 1
                 self.memory.push(old_v_state.data, action_a, action_b, self.env.v_state.data, reward, not done)
+                #if done and reward > 0:
+                    #TODO
+                    #track_terminal()
+                # if (i_episode%2000 == 0 ):
+                #TODO
+                # plot_terminal_state()
+
                 # if buffer not filled, add to it
                 if done:
                     done_times+=1
@@ -71,38 +82,14 @@ class TestExecutor:
                     else:
                         continue
                 states, actions_a, actions_b, new_states, reward, non_final = self.memory.sample(batch_size)
-                t1 = time.time()
-                loss_heads_a = self.agent_a.optimize(states, actions_a, new_states, reward, non_final)
-                loss_heads_b = self.agent_b.optimize(states, actions_b, new_states, reward, non_final)
+                
+                self.agent_a.optimize(states, actions_a, new_states, reward, non_final)
+                self.agent_b.optimize(states, actions_b, new_states, reward, non_final)
                 #print(t1-time.time())
                 
                 if step > 20:
                     break
-            # if loss_heads_a[0]> 0:
-            for i in range(self.agent_a.number_heads):
-                terminal_heads_a[i].append(loss_heads_a[i])
-                terminal_heads_b[i].append(loss_heads_b[i])
-                
-            if (i_episode%500 == 0 and i_episode>0):
-                fig, axs = plt.subplots(2,5,figsize=(15, 15))
-                for i in range(self.agent_a.number_heads):
-                    
-                    #terminal_loss_heads_a = 1000*torch.ones(epochs,5,2)
-                    # axs[0,i].plot(20*np.ones(counter),'r-',label = 'True mean')
-                    # axs[0,i].plot(0*np.ones(counter),'b-', label = 'True std')
-                    axs[0,i].plot(terminal_heads_a[i],label = f'agent a head {i} mean')
-                    
-                    # axs[0,i].plot(terminal_loss_heads_a[:counter,i,1],label = f'agent a head {i} std')
-                    axs[0,i].legend()
-                    # axs[1,i].plot(20*np.ones(counter),'r-', label = 'True mean')
-                    # axs[1,i].plot(0*np.ones(counter),'b-', label = 'True std')
-                    axs[1,i].plot(terminal_heads_b[i],label = f'agent b head {i} mean')
-                    
-                    # axs[1,i].plot(terminal_loss_heads_b[:counter,i,1],label = f'agent b head {i} std')
-                    axs[1,i].legend()
-                # plt.show()  
-                plt.savefig('plots/loss_DQN_{}.png'.format(i_episode))  
-                plt.close()
+            
             if self.epsilon > 0.02:
                 self.epsilon -= (1 / epochs)
             if i_episode % target_update == 0:
@@ -113,6 +100,13 @@ class TestExecutor:
         test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.asked_history,
                                   self.adviser_history, self.uncertainty)
         return test_result
+    def track_termianl():
+        #TODO
+        return 
+    def plot_terminal_state():
+        #TODO
+        return 
+
 
 
 Test_result = namedtuple('Test_result',

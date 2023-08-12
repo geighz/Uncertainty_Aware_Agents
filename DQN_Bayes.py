@@ -43,9 +43,9 @@ class Head_net(nn.Module):
         super(Head_net, self).__init__()
         self.net = net
         self.final_units = nn.ModuleList()
-        self.soft = nn.Softplus()
+        # self.soft = nn.Softplus()
         self.relu = nn.ReLU()
-        self.sig = nn.Sigmoid()
+        # self.sig = nn.Sigmoid()
         last_index = len(self.net.hidden_units) - 1
         self.in_channels = self.net.hidden_units[last_index].nn.out_features
         prev_layer = self.in_channels
@@ -55,10 +55,10 @@ class Head_net(nn.Module):
         # self.final_unit = nn.Linear(prev_layer, out_channels*2)
         self.mu = nn.Linear(prev_layer, out_channels)
         self.std = nn.Linear(prev_layer, out_channels)
-        # nn.init.normal_(self.final_unit.weight, std=0.15)
+        #  Initialize means
         nn.init.normal_(self.mu.weight,std=0.15)
-        # nn.init.normal_(self.std.weight,std=0.15)
-        # nn.init.uniform_(self.std.weight)
+        # Initialize stds
+        nn.init.uniform_(self.std.weight)
 
     def forward(self, x):
         # torch.autograd.set_detect_anomaly(True)
@@ -83,7 +83,7 @@ class Bootstrapped_DQN(nn.Module):
         self.number_heads = number_heads
         out_body = hidden_layers.pop()
         self.out_channels = out_channels
-        self.safe = True
+        
         # TODO: make NN architecture more flexible to inits
         # bc I pop a layer from the hidden layers into the head, I have more diversity across heads
         head_hidden_layers = [hidden_layers.pop()]
@@ -113,24 +113,23 @@ class Bootstrapped_DQN(nn.Module):
     #GOOD
     
     def q_circumflex(self, x):
-        t1 = time.time()
+        
         qval = self.__call__(x)
-        check = 1
+        
         # q-values derived from all heads, compare with
         # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
         # page 5
         
-        
-            
         all_mu_and_sigs = torch.zeros([2, self.out_channels], dtype=torch.float)
         #Each action gets a mu and a variance
-        mean_sum = torch.sum(torch.stack([head[0][0] for head in qval]), dim=0)/self.number_heads
-        var_sum = torch.sum(torch.stack([head[1][0]**2 + head[0][0]**2 for head in qval]), dim=0)
+        mean_sum = torch.sum(torch.stack([head[0][0] for head in qval]).detach(), dim=0)/self.number_heads
+        var_sum = torch.sum(torch.stack([head[1][0]**2 + head[0][0]**2 for head in qval]).detach(), dim=0)
         
         all_mu_and_sigs[0] = mean_sum
         std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0]**2)
         all_mu_and_sigs[1] = std_sum
-        return all_mu_and_sigs
+        return all_mu_and_sigs.detach()
+    
     def q_circumflex_s(self,x):
         all_mu_and_sigs = self.q_circumflex(x)
         return all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
@@ -143,31 +142,31 @@ class Bootstrapped_DQN(nn.Module):
         
         
     
-    def q_circumflex_ev(self, x):
-        t1 = time.time()
-        qval = self.__call__(x)
-        # q-values derived from all heads, compare with
-        # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
-        # page 5
+    # def q_circumflex_ev(self, x):
+    #     t1 = time.time()
+    #     qval = self.__call__(x)
+    #     # q-values derived from all heads, compare with
+    #     # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
+    #     # page 5
         
         
             
-        all_mu_and_sigs = torch.zeros([2, self.out_channels], dtype=torch.float)
-        #Each action gets a mu and a variance
+    #     all_mu_and_sigs = torch.zeros([2, self.out_channels], dtype=torch.float)
+    #     #Each action gets a mu and a variance
 
 
-        mean_sum = torch.sum(torch.stack([head[0][0] for head in qval]), dim=0)/self.number_heads
-        var_sum = torch.sum(torch.stack([head[1][0]**2 + head[0][0]**2 for head in qval]), dim=0)
+    #     mean_sum = torch.sum(torch.stack([head[0][0] for head in qval]), dim=0)/self.number_heads
+    #     var_sum = torch.sum(torch.stack([head[1][0]**2 + head[0][0]**2 for head in qval]), dim=0)
         
-        all_mu_and_sigs[0] = mean_sum
-        std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0]**2)
-        all_mu_and_sigs[1] = std_sum
+    #     all_mu_and_sigs[0] = mean_sum
+    #     std_sum = torch.sqrt(var_sum/(self.number_heads)-all_mu_and_sigs[0]**2)
+    #     all_mu_and_sigs[1] = std_sum
         
           
-        #print(f' q_ev {t1-time.time()}')
-        if self.safe:
-            return all_mu_and_sigs[0]#all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
-        else:
-            return all_mu_and_sigs[0]#*(1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) #all_mu_and_sigs[
+    #     #print(f' q_ev {t1-time.time()}')
+    #     if self.safe:
+    #         return all_mu_and_sigs[0]#all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
+    #     else:
+    #         return all_mu_and_sigs[0]#*(1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) #all_mu_and_sigs[
 
         

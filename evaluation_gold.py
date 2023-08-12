@@ -1,6 +1,6 @@
 #from two_goalworld import *
 #from gridworld import *
-from import_game import *#GAME_ENV
+from import_game import GAME_ENV,number_of_eval_games
 import numpy as np
 
 #number_of_eval_games = 506
@@ -21,6 +21,7 @@ def evaluate_agents(agent_a, agent_b):
         done = False
         while not done:
             action_a = agent_a.choose_best_action(env.v_state)
+
             agent_a.probability_ask_in_state(env)
             action_b = agent_b.choose_best_action(env.v_state)
             agent_b.probability_ask_in_state(env)
@@ -31,6 +32,7 @@ def evaluate_agents(agent_a, agent_b):
             if steps > 10:
                 done = True
     uncertainty_mean = mean(agent_a.get_uncertainty(), agent_b.get_uncertainty())
+    print(reward_sum / number_of_eval_games)
     return reward_sum / number_of_eval_games, uncertainty_mean
 
 

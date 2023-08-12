@@ -102,10 +102,11 @@ class Miner(ABC):
         return [qval_head.gather(1, action) for qval_head in qval]
 
     def optimize(self, states, actions, new_states, rewards, non_final_mask):
-        check = self.target_net(new_states)
+        
         
         value_next_state_per_head = [x.max(1)[0] for x in self.target_net(new_states)]
         targ_per_head = []
+        
         for value_next_state in value_next_state_per_head:
             target = rewards.clone()
             target[non_final_mask] += GAMMA * value_next_state[non_final_mask]
@@ -114,18 +115,14 @@ class Miner(ABC):
 
         state_action_values = self.get_state_action_value(states, actions)
         loss = []
-        loss_terminal_heads = np.zeros((5))
+        
         for head in range(self.number_heads):
             inp = state_action_values[head].view(10)
-            if inp[~non_final_mask].numel():
-                # print(inp[~non_final_mask])
-                loss_terminal_heads[head] = torch.mean(inp[~non_final_mask])
             target = targ_per_head[head].view(10)
             use_sample = np.random.randint(self.number_heads, size=10) != 0
             inp[use_sample] *= 0
             target[use_sample] *= 0
-            # fake_target = 20*torch.ones_like(target)
-            #loss.append(criterion(inp, target))
+            
             loss.append(criterion(inp, target))
             
 
@@ -138,7 +135,7 @@ class Miner(ABC):
             # update model parameters
             self.optimizers[head].step()
         
-        return loss_terminal_heads
+
     def update_target_net(self):
         for head in range(self.number_heads):
             policy_head = self.policy_net.nets[head]
