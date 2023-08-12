@@ -43,7 +43,7 @@ def evaluate_agents(agent_a, agent_b):
             if show_heat_map and steps==0:
                 # Using floor and module to access correct locations for storing the policy
                 qval_dictionary_a[state_id//(num_of_possible_states-1)] += agent_a.policy_net.q_circumflex(env.v_state).squeeze()[action_a.item()].detach().numpy()
-                quiver_dictionary_a[state_id//(num_of_possible_states-1)] =quiver_dictionary_a[state_id//(num_of_possible_states-1)]+ get_action(action_a.item())
+                # quiver_dictionary_a[state_id//(num_of_possible_states-1)] =quiver_dictionary_a[state_id//(num_of_possible_states-1)]+ get_action(action_a.item())
                 #TODO Fix the heat map for agent B
                 if state_id//(num_of_possible_states-1) < state_id%(num_of_possible_states):
                     qval_dictionary_b[(state_id%(num_of_possible_states))-1] += agent_b.policy_net.q_circumflex(env.v_state).squeeze()[action_b.item()].detach().numpy()
