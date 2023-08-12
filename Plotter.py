@@ -9,11 +9,14 @@ from mpl_toolkits.mplot3d import Axes3D
 from time import strftime
 import pytz
 from datetime import datetime
+import warnings
 
 uncertainty_labels = ('Average Uncertainty', 'Episode', 'Uncertainty \u03BC', (0, 3))
 give_labels = ('Give_Advice', 'Episode', 'times as adviser')
 ask_labels = ('Ask_for_Advice', 'Episode', 'times asked for advise')
 reward_labels = ('Evaluation_during Training', 'Episode', 'Reward')
+terminal_a_labels =  {'Terminal state agent a','Episode','Mean and std'}
+terminal_b_labels =  {'Terminal state agent b','Episode','Mean and std'}
 start_time = strftime("%Y%m%d-%H%M%S")
 out_folder = os.path.join('out', start_time)
 timezone_berlin = pytz.timezone('Europe/Berlin')
@@ -39,8 +42,10 @@ def plot_results_with_confidence_interval(linelabel, x, y, title, xlabel, ylabel
     x = np.average(x, axis=0)
     y = np.stack(y)
     y[y == 0] = np.nan
-    mean = np.nanmean(y, axis=0)
-    mean[np.isnan(mean)] = 0
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        mean = np.nanmean(y, axis=0)
+        mean[np.isnan(mean)] = 0
     standard_errors = st.sem(y, axis=0, nan_policy='omit')
     ci = np.array([])
     for index in range(len(y[0])):
@@ -64,13 +69,13 @@ def create_folder():
 
 def save_plots():
     plt.figure(reward_labels[0])
-    plt.savefig(os.path.join(out_folder, f"{reward_labels[0]}.pdf"))
+    plt.savefig(os.path.join(out_folder, f"{reward_labels[0]}.png"))
     plt.figure(ask_labels[0])
-    plt.savefig(os.path.join(out_folder, f"{ask_labels[0]}.pdf"))
+    plt.savefig(os.path.join(out_folder, f"{ask_labels[0]}.png"))
     plt.figure(give_labels[0])
-    plt.savefig(os.path.join(out_folder, f"{give_labels[0]}.pdf"))
+    plt.savefig(os.path.join(out_folder, f"{give_labels[0]}.png"))
     plt.figure(uncertainty_labels[0])
-    plt.savefig(os.path.join(out_folder, f"{uncertainty_labels[0]}.pdf"))
+    plt.savefig(os.path.join(out_folder, f"{uncertainty_labels[0]}.png"))
 
 
 def save(test_results):
@@ -99,15 +104,24 @@ def plot_test(test_results):
         times_asked = [test_run.TIMES_ASKED for test_run in results]
         times_adviser = [test_run.TIMES_GIVEN for test_run in results]
         uncertainty = [test_run.UNCERTAINTY for test_run in results]
+        agent_a_terminal = [test_run.TERMINAL_TRACK_A for test_run in results]
+        agent_b_terminal = [test_run.TERMINAL_TRACK_B for test_run in results]
+        # type_loss = [test_run.TERMINAL_TRACK_A for test_run in results]
+        # type_loss = [test_run.TERMINAL_TRACK_A for test_run in results]
+        # type_loss = [test_run.TERMINAL_TRACK_A for test_run in results]
+
+        # print(agent_a_terminal)
 
         #plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels, ylim=(-16, 6))
         plot_results_with_confidence_interval(label, epoch_ids, rewards, *reward_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
         plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)
+        plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)
+        # plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)
     create_folder()
     save_plots()
-    plt.show()
+    # plt.show()
 
 
 def get_scalar_map(cs, colors_map='jet'):
@@ -129,8 +143,8 @@ def scatter3d(x, y, z):
     ax.set_ylabel('vg')
     ax.set_zlabel('reward')
     create_folder()
-    plt.savefig(os.path.join(out_folder, "scatter3D.pdf"))
-    plt.show()
+    plt.savefig(os.path.join(out_folder, "scatter3D.png"))
+    # plt.show()
 
 
 def scatter2d(x, y, z):
@@ -142,8 +156,8 @@ def scatter2d(x, y, z):
     ax.set_xlabel('va')
     ax.set_ylabel('vg')
     create_folder()
-    plt.savefig(os.path.join(out_folder, "scatter2D.pdf"))
-    plt.show()
+    plt.savefig(os.path.join(out_folder, "scatter2D.png"))
+    # plt.show()
 
 
 def write_to_file(*args):
@@ -172,3 +186,5 @@ def print_time():
     time_str = get_time().strftime(date_format)
     print(time_str)
     return time_str
+
+

@@ -33,7 +33,7 @@ class TestExecutor:
         #self.env.render()
 
     def track_progress(self, episode_number):
-        if episode_number % 500 == 0 and episode_number >0:
+        if episode_number % 50 == 0 and episode_number >0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -100,8 +100,8 @@ class TestExecutor:
                     break
             
 
-            if (i_episode%5000 == 0 and i_episode>0 ):
-                self.plot_terminal_state(i_episode,agent_a_terminal,agent_b_terminal)
+            # if (i_episode%5000 == 0 and i_episode>0 ):
+            #     self.plot_terminal_state(i_episode,agent_a_terminal,agent_b_terminal)
             
 
 
@@ -113,10 +113,10 @@ class TestExecutor:
                 for head_number in range(self.agent_a.policy_net.number_heads):
                     self.agent_a.update_target_net()
                     self.agent_b.update_target_net()
-        self.plot_terminal_state(i_episode,agent_a_terminal,agent_b_terminal)
+        # self.plot_terminal_state(i_episode,agent_a_terminal,agent_b_terminal)
         agentType = 'PNN-DQN-'+self.agent_a.agent_type_loss+self.agent_a.agent_type_train+self.agent_a.agent_type_eval
         test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.asked_history,
-                                  self.adviser_history, self.uncertainty)
+                                  self.adviser_history, self.uncertainty,agent_a_terminal,agent_b_terminal,self.agent_a.agent_type_loss,self.agent_a.agent_type_train,self.agent_a.agent_type_eval)
         print(test_result)
         return test_result
     def track_terminal(self,number_heads,agent_a_terminal,agent_b_terminal,old_v_state,action_a,action_b,i_episode):
@@ -163,7 +163,7 @@ class TestExecutor:
 
 
 Test_result = namedtuple('Test_result',
-                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_GIVEN', 'UNCERTAINTY'))
+                         ('AgentType', 'EPOCH_ID', 'REWARDS', 'TIMES_ASKED', 'TIMES_GIVEN', 'UNCERTAINTY','TERMINAL_TRACK_A','TERMINAL_TRACK_B','Loss','Train','Evaluation'))
 Test_setup_bayes = namedtuple('Test_setup',
                         ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE', 'BUDGET', 'VA',
                          'VG','Loss','Train','Evaluation'))

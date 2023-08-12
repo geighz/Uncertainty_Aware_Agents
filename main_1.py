@@ -17,11 +17,11 @@ from torch import multiprocessing
 
 print_time()
 start_time = get_time().timestamp()
-EPOCHS = 25_000
+EPOCHS = 250
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE =30
-NUMBER_EXECUTIONS = 2
+NUMBER_EXECUTIONS = 1
 BUDGET = 100000
 # loss, train,eval
 test_setups = [
@@ -33,11 +33,11 @@ test_setups = [
     # loss, train,eval
     Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'N','N'),
     Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','N'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','S'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','N'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','R'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'S', 'S','S'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'R', 'R','R')
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','S'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','N'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','R'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'S', 'S','S'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'R', 'R','R')
     # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'R', 'N','N'),
     # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'S', 'N','N')
 
