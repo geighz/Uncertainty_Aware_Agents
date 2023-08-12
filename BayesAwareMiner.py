@@ -45,11 +45,11 @@ class BayesAwareMiner(Miner_Bayes):
 
 
         for action in range(actions):
-            min_heads, _ = torch.min(torch.stack([head[1][0][action] for head in qval]), dim=0).detach()
-            max_heads, _ = torch.max(torch.stack([head[1][0][action] for head in qval]), dim=0).detach()
+            min_heads, _ = torch.min(torch.stack([head[1][0][action] for head in qval]).detach(), dim=0)
+            max_heads, _ = torch.max(torch.stack([head[1][0][action] for head in qval]).detach(), dim=0)
             
             # stds_action = torch.stack([head[1][0][action] for head in qval])
-            means_action = torch.stack([head[0][0][action] for head in qval]).detach()
+            means_action = torch.stack([head[0][0][action] for head in qval])
 
             min_action = min(min_action, max_heads.item())
             max_action = max(max_action, min_heads.item())

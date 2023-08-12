@@ -32,7 +32,7 @@ def evaluate_agents(agent_a, agent_b):
             if steps > 10:
                 done = True
     uncertainty_mean = mean(agent_a.get_uncertainty(), agent_b.get_uncertainty())
-    print(reward_sum / number_of_eval_games)
+    
     return reward_sum / number_of_eval_games, uncertainty_mean
 
 

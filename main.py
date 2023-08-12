@@ -17,7 +17,7 @@ from torch import multiprocessing
 
 print_time()
 start_time = get_time().timestamp()
-EPOCHS = 100000
+EPOCHS = 10000
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE =30
@@ -31,13 +31,13 @@ test_setups = [
     # Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.14, 1.61),
     # Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.77, 2.45),
     # loss, train,eval
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'N','N'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','N'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','S'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','N'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','R'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'S', 'S','S'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'R', 'R','R')
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'N','N'),
+    Test_setup_bayes(BayesAwareMiner, 2, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','N'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','S'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','N'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','R'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'S', 'S','S'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'R', 'R','R')
 
 ]
 
@@ -70,9 +70,9 @@ for process in testProcesses:
     process.join()
 
 plot_test(test_results)
-# write_to_file(f"EPOCHS: {EPOCHS}", f"BUFFER: {BUFFER}", f"BATCH_SIZE: {BATCH_SIZE}",
-#               f"TARGET_UPDATE: {TARGET_UPDATE}", f"NUMBER_EXECUTIONS: {NUMBER_EXECUTIONS}", f"BUDGET: {BUDGET}",
-#               f"test_setups: {test_setups}")
-# duration = int(get_time().timestamp() - start_time)
-# print(f"Duration {duration} seconds")
-# zip_out_folder()
+write_to_file(f"EPOCHS: {EPOCHS}", f"BUFFER: {BUFFER}", f"BATCH_SIZE: {BATCH_SIZE}",
+              f"TARGET_UPDATE: {TARGET_UPDATE}", f"NUMBER_EXECUTIONS: {NUMBER_EXECUTIONS}", f"BUDGET: {BUDGET}",
+              f"test_setups: {test_setups}")
+duration = int(get_time().timestamp() - start_time)
+print(f"Duration {duration} seconds")
+zip_out_folder()
