@@ -3,11 +3,13 @@ from VisitBasedMiner import VisitBasedMiner
 from UncertaintyAwareMiner import UncertaintyAwareMiner
 from UncertaintyAwareMinerNormalised import UncertaintyAwareMinerNormalised
 from BayesAwareMiner import BayesAwareMiner
+from Miner_Single import Miner_Single
 from TDMiner import TDMiner
 from psutil import Process
 from os import getpid
-from TestExecutor import Test_setup, execute_test
+#from TestExecutor import Test_setup, execute_test
 from BayesTestExecutor import Test_setup_bayes, execute_test_bayes
+from SingleTestExecutor import Test_setup_single, execute_test_single
 from Plotter import plot_test, print_time, get_time, write_to_file, zip_out_folder
 from torch.multiprocessing import Pool, Manager
 from torch import multiprocessing
@@ -17,11 +19,11 @@ from torch import multiprocessing
 
 print_time()
 start_time = get_time().timestamp()
-EPOCHS = 25_000
+EPOCHS = 30_000
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE =30
-NUMBER_EXECUTIONS = 2
+NUMBER_EXECUTIONS = 1
 BUDGET = 100000
 # loss, train,eval
 test_setups = [
@@ -30,16 +32,17 @@ test_setups = [
     # Test_setup(TDMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.21, 1.51),
     # Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.14, 1.61),
     # Test_setup(UncertaintyAwareMinerNormalised, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.77, 2.45),
-    # loss, train,eval
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'N','N'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','N'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','S'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','N'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','R'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'S', 'S','S'),
-    Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'R', 'R','R')
+    # # loss, train,eval
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'N','N'),
+    #Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'N','S'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'S','S'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','N'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'R','R'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'S', 'S','S'),
+    # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'R', 'R','R')
     # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'R', 'N','N'),
     # Test_setup_bayes(BayesAwareMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'S', 'N','N')
+    Test_setup_single(Miner_Single, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0., 0.0,'N', 'N','N')
 
 ]
 
@@ -48,7 +51,7 @@ test_results = Manager().dict()
 # for test_setup in test_setups:
 #     for test_number in range(NUMBER_EXECUTIONS):
 #         execute_test(id, test_setup, test_results)
-
+print('Minigrid')
 
 def limit_cpu():
     p = Process(getpid())
@@ -60,7 +63,7 @@ testProcesses = []
 id = 0
 pool = Pool()#processes=12, initializer=limit_cpu())
 context = multiprocessing.get_context('fork')
-exc_tests = [execute_test_bayes]#[,execute_test,execute_test_bayes,execute_test_bayes]
+exc_tests = [execute_test_single]#[,execute_test,execute_test_bayes,execute_test_bayes]
 for i,test_setup in enumerate(test_setups):
     for test_number in range(NUMBER_EXECUTIONS):
         id += 1
