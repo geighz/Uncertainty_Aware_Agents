@@ -33,7 +33,7 @@ class TestExecutor:
         #self.env.render()
 
     def track_progress(self, episode_number):
-        if episode_number % 50 == 0 and episode_number >0:
+        if episode_number % 1000 == 0 and episode_number >0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -72,6 +72,7 @@ class TestExecutor:
             # while game still in progress
             while not done:
                 old_v_state = self.env.v_state
+                # print(self.env.v_state)
                 # t1 = time.time()
                 action_a = self.agent_a.choose_training_action(self.env, self.epsilon)
                 action_b = self.agent_b.choose_training_action(self.env, self.epsilon)

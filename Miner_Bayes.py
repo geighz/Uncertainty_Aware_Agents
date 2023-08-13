@@ -185,18 +185,7 @@ class Miner_Bayes(ABC):
             print(' non valid agent ')
             return
         return torch.argmax(state_action_values_joint) 
-        
-    # def choose_best_action_ev(self, v_state):
-    #     if self.agent_type_eval == 'S':
-    #         state_action_values_joint = self.policy_net.q_circumflex_s(v_state)
-    #     elif self.agent_type_eval == 'R':
-    #         state_action_values_joint = self.policy_net.q_circumflex_r(v_state)
-    #     elif self.agent_type_eval == 'N':
-    #         state_action_values_joint = self.policy_net.q_circumflex_n(v_state)
-    #     else:
-    #         print(' non valid agent ')
-    #         return
-    #     return torch.argmax(state_action_values_joint)        
+              
 
     def get_state_action_value_distributions(self, state, action):
         #qval: for each head retrieve the qvals for the state
@@ -213,6 +202,9 @@ class Miner_Bayes(ABC):
         
         
         qval_heads = self.target_net(new_states)
+        print(new_states)
+        print(new_states[0])
+        print(new_states[0].size())
         
         #Obtain the mean for the largest mean+std
 
@@ -294,7 +286,7 @@ class Miner_Bayes(ABC):
             # loss.append(criterion_mse(inp, target))
             loss.append(loss_total)
             # loss.append(criterion(inp, target))
-        
+       
         for head in range(self.number_heads):
             # clear gradient
             self.optimizers[head].zero_grad()
