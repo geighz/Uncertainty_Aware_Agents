@@ -202,9 +202,7 @@ class Miner_Bayes(ABC):
         
         
         qval_heads = self.target_net(new_states)
-        print(new_states)
-        print(new_states[0])
-        print(new_states[0].size())
+        
         
         #Obtain the mean for the largest mean+std
 

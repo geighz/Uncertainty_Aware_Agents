@@ -64,14 +64,11 @@ def hash_state(state):
     return hash_value
 
 class Miner_Single(ABC):
-    def __init__(self, number_heads, budget, va, vg,agent_type_loss, agent_type_train,agent_type_eval):
+    def __init__(self, number_heads,agent_type_loss, agent_type_train,agent_type_eval):
         #State size = 80.. or 125
         self.state_size = state_size#80#125
 
         self.number_heads = number_heads
-        self.budget = budget
-        self.va = va
-        self.vg = vg
         self.uncertainty = []
         self.agent_type_loss = agent_type_loss
         self.agent_type_train = agent_type_train

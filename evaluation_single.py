@@ -13,7 +13,7 @@ def evaluate_single_agent(agent_a):
     env = GAME_ENV
     #env = TwoGoal()
     # env = 
-    number_of_eval_games = 10
+    # number_of_eval_games = 5
     agent_a.reset_uncertainty()
     for state_id in range(number_of_eval_games):
 

@@ -81,7 +81,7 @@ class TestExecutor:
                 step += 1
                 # print(f'time training action computation {t1 - time.time()}')
                 self.memory.push(old_v_state.data, action_a, action_b, self.env.v_state.data, reward, not done)
-                if done and reward > 0 and i_episode%10==0:
+                if done and reward > 0:
                     self.track_terminal(self.agent_a.number_heads,agent_a_terminal,agent_b_terminal,old_v_state,action_a,action_b,i_episode)
                 
                 if done:

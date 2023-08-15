@@ -7,19 +7,20 @@ from Miner_Single import Miner_Single
 from TDMiner import TDMiner
 from psutil import Process
 from os import getpid
-from TestExecutor import Test_setup, execute_test
-from BayesTestExecutor import Test_setup_bayes, execute_test_bayes
+# from TestExecutor import Test_setup, execute_test
+# from BayesTestExecutor import Test_setup_bayes, execute_test_bayes
 from SingleTestExecutor import Test_setup_single, execute_test_single
 from Plotter import plot_test, print_time, get_time, write_to_file, zip_out_folder
 from torch.multiprocessing import Pool, Manager
 from torch import multiprocessing
+import os
 import os
 
 
 
 print_time()
 start_time = get_time().timestamp()
-EPOCHS = 30_000
+EPOCHS = 2_000
 BUFFER = 80
 BATCH_SIZE = 10
 TARGET_UPDATE =30
@@ -27,7 +28,7 @@ NUMBER_EXECUTIONS = 1
 BUDGET = 100000
 # loss, train,eval
 test_setups = [
-    #Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0, 0),
+    # Test_setup(NoAdviceMiner, 1, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0, 0),
     # Test_setup(VisitBasedMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.41, 2.2),
     # Test_setup(TDMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 1.21, 1.51),
     # Test_setup(UncertaintyAwareMiner, 5, EPOCHS, BUFFER, BATCH_SIZE, TARGET_UPDATE, BUDGET, 0.14, 1.61),
@@ -62,7 +63,7 @@ def limit_cpu():
 
 testProcesses = []
 id = 0
-watched_pids = []
+watched_pids = 0
 pool = Pool()#processes=12, initializer=limit_cpu())
 context = multiprocessing.get_context('fork')
 exc_tests = [execute_test_single]#[,execute_test,execute_test_bayes,execute_test_bayes]
@@ -73,12 +74,11 @@ for i,test_setup in enumerate(test_setups):
         exc_tests = execute_test
     for test_number in range(NUMBER_EXECUTIONS):
         id += 1
-        watched_pids.append(id)
-        if len(watched_pids) > 2:
-            print(id)
+        watched_pids +=1
+        if watched_pids> 2:
             os.wait()
-            watched_pids.pop(0)
-        testProcess = pool.Process(ctx=context, target=exc_tests, args=(id, test_setup, test_results))
+            watched_pids -= 1
+        testProcess = pool.Process(ctx=context, target=exc_tests[0], args=(id, test_setup, test_results))
         testProcesses.append(testProcess)
         testProcess.start()
 
