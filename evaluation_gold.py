@@ -25,7 +25,7 @@ def evaluate_agents(agent_a, agent_b):
             agent_a.probability_ask_in_state(env)
             action_b = agent_b.choose_best_action(env.v_state)
             agent_b.probability_ask_in_state(env)
-            state, reward, done, _ = env.step(action_a, action_b)
+            state, reward, done, _ = env.step(action_a, action_b)#,flag=True)
             # env.render()
             reward_sum += reward
             steps += 1

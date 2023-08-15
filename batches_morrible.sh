@@ -3,4 +3,4 @@
 # run: bash batches_morrible.sh
 # python3 main.py
 # python3 main.py
-python3 main_1.py
+

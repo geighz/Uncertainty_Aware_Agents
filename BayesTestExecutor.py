@@ -33,7 +33,7 @@ class TestExecutor:
         #self.env.render()
 
     def track_progress(self, episode_number):
-        if episode_number % 1000 == 0 and episode_number >0:
+        if episode_number % 1000 == 0 :
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -55,7 +55,7 @@ class TestExecutor:
         
         
         done_times = 0
-        for i_episode in tqdm(range(epochs),desc='Training'):
+        for i_episode in tqdm(range(epochs+1),desc='Training'):
             # There's a problem here for sure
             self.track_progress(i_episode)
 
@@ -107,7 +107,7 @@ class TestExecutor:
 
 
             if self.epsilon > 0.02:
-                self.epsilon -= (1 / epochs)
+                self.epsilon -= (1 / epochs)**(1/2)
             
             if i_episode % target_update == 0:
                 
@@ -118,7 +118,7 @@ class TestExecutor:
         agentType = 'PNN-DQN-'+self.agent_a.agent_type_loss+self.agent_a.agent_type_train+self.agent_a.agent_type_eval
         test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.asked_history,
                                   self.adviser_history, self.uncertainty,agent_a_terminal,agent_b_terminal,self.agent_a.agent_type_loss,self.agent_a.agent_type_train,self.agent_a.agent_type_eval)
-        print(test_result)
+        # print(test_result)
         return test_result
     def track_terminal(self,number_heads,agent_a_terminal,agent_b_terminal,old_v_state,action_a,action_b,i_episode):
         for i in range(number_heads):

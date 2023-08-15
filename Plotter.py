@@ -104,8 +104,8 @@ def plot_test(test_results):
         times_asked = [test_run.TIMES_ASKED for test_run in results]
         times_adviser = [test_run.TIMES_GIVEN for test_run in results]
         uncertainty = [test_run.UNCERTAINTY for test_run in results]
-        agent_a_terminal = [test_run.TERMINAL_TRACK_A for test_run in results]
-        agent_b_terminal = [test_run.TERMINAL_TRACK_B for test_run in results]
+        # agent_a_terminal = [test_run.TERMINAL_TRACK_A for test_run in results]
+        # agent_b_terminal = [test_run.TERMINAL_TRACK_B for test_run in results]
         # type_loss = [test_run.TERMINAL_TRACK_A for test_run in results]
         # type_loss = [test_run.TERMINAL_TRACK_A for test_run in results]
         # type_loss = [test_run.TERMINAL_TRACK_A for test_run in results]
@@ -117,7 +117,7 @@ def plot_test(test_results):
         plot_results_with_confidence_interval(label, epoch_ids, times_asked, *ask_labels)
         plot_results_with_confidence_interval(label, epoch_ids, times_adviser, *give_labels)
         plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)
-        plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)
+        # plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)
         # plot_results_with_confidence_interval(label, epoch_ids, uncertainty, *uncertainty_labels)
     create_folder()
     save_plots()

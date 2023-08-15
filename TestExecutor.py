@@ -28,7 +28,7 @@ class TestExecutor:
 
     def track_progress(self, episode_number):
         
-        if episode_number % 500 == 0:
+        if episode_number % 1000 == 0:
             self.episode_ids = np.append(self.episode_ids, episode_number)
             agent_a = self.agent_a
             agent_b = self.agent_b
@@ -50,7 +50,7 @@ class TestExecutor:
         done_times = 0
         for i_episode in range(epochs + 1):
             self.track_progress(i_episode)
-            if i_episode % 500 == 0:
+            if i_episode % 1000 == 0:
                 print("%s Game #: %s,%f,%s" % (os.getpid(), i_episode,self.reward_history[-1],done_times))
             self.env.reset()
             done = False
@@ -91,7 +91,7 @@ class TestExecutor:
                     break
             
             if self.epsilon > 0.02:
-                self.epsilon -= (1 / epochs)
+                self.epsilon -= (1 / epochs)**(1/2)
             if i_episode % target_update == 0:
                 for head_number in range(self.agent_a.policy_net.number_heads):
                     self.agent_a.update_target_net()
