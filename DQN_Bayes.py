@@ -56,9 +56,9 @@ class Head_net(nn.Module):
         self.mu = nn.Linear(prev_layer, out_channels)
         self.std = nn.Linear(prev_layer, out_channels)
         #  Initialize means
-        nn.init.normal_(self.mu.weight,std=0.15)
+        nn.init.uniform_(self.mu.weight,a = 0.0,b = 0.35)
         # Initialize stds
-        nn.init.uniform_(self.std.weight)
+        nn.init.uniform_(self.std.weight,a = 0.0,b = 0.35)
 
     def forward(self, x):
         # torch.autograd.set_detect_anomaly(True)
@@ -69,7 +69,7 @@ class Head_net(nn.Module):
         mu = self.mu(out)
         
         std = self.std(out)
-        std =  self.relu(std) +10e-5
+        std =  self.relu(std) #+10e-5
         # std = self.mu(out)*0
         
         
@@ -112,9 +112,9 @@ class Bootstrapped_DQN(nn.Module):
         return result
     #GOOD
     
-    def q_circumflex(self, x):
-        
-        qval = self.__call__(x)
+    def q_circumflex(self, qval=None, v_state=None):
+        if qval == None:
+            qval = self.__call__(v_state)
         
         # q-values derived from all heads, compare with
         # Uncertainty-Aware Action Advising for Deep Reinforcement Learning Agents
@@ -130,15 +130,15 @@ class Bootstrapped_DQN(nn.Module):
         all_mu_and_sigs[1] = std_sum
         return all_mu_and_sigs.detach()
     
-    def q_circumflex_s(self,x):
-        all_mu_and_sigs = self.q_circumflex(x)
-        return all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
-    def q_circumflex_r(self,x):
-        all_mu_and_sigs = self.q_circumflex(x)
-        return all_mu_and_sigs[0]*(1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1)))  
-    def q_circumflex_n(self,x):
-        all_mu_and_sigs = self.q_circumflex(x)
-        return all_mu_and_sigs[0]
+    # def q_circumflex_s(self,x):
+    #     all_mu_and_sigs = self.q_circumflex(x)
+    #     return all_mu_and_sigs[0]*(1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1))) 
+    # def q_circumflex_r(self,x):
+    #     all_mu_and_sigs = self.q_circumflex(x)
+    #     return all_mu_and_sigs[0]*(1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1)))  
+    # def q_circumflex_n(self,x):
+    #     all_mu_and_sigs = self.q_circumflex(x)
+    #     return all_mu_and_sigs[0]
         
         
     

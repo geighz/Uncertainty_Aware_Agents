@@ -7,6 +7,8 @@ import torch
 import torch.optim as optim
 from abc import ABC, abstractmethod
 import time
+from ReplayMemorySingle import ReplayMemorySingle
+import copy
 # from math import
 
 # since it may take several moves to goal, making gamma high
@@ -34,20 +36,26 @@ GAMMA = 0.9
 #     else: loss_terminal = (0,0)
 #     error = torch.sum(torch.linalg.vector_norm(total_error,dim = 0))#/len(target)
 #     return error,loss_terminal
-def w2(target,input,non_final_mask):  
+def w2(target,input,old_inp,non_final_mask):  
     total_error = torch.zeros_like(target)
+
+    # Error in Q-value prediction 
+    total_error[:,0] = (target[:,0]-input[:,0])**2
+    # Error of error prediction
+    total_error[:,1] =(input[:,1] - (torch.abs(old_inp[:,0]-target[:,0])+ target[:,1]))**2
+
     
-    #Non terminal transitions    
-    if True in non_final_mask:
-        total_error[non_final_mask] = torch.abs(target[non_final_mask] -input[non_final_mask])**2
-    #Terminal transitions
-    if False in non_final_mask:
-        #MU
-        total_error[~non_final_mask,0]  = torch.abs(target[~non_final_mask,0]-input[~non_final_mask,0])
+    # #Non terminal transitions    
+    # if True in non_final_mask:
+    #     total_error[non_final_mask] = torch.abs(target[non_final_mask] -input[non_final_mask])**2
+    # #Terminal transitions
+    # if False in non_final_mask:
+    #     #MU
+    #     total_error[~non_final_mask,0]  = torch.abs(target[~non_final_mask,0]-input[~non_final_mask,0])
         
-        #STD
-        total_error[~non_final_mask,1]  = torch.abs(input[~non_final_mask,1]-total_error[~non_final_mask,0] )**2
-        total_error[~non_final_mask,0] =total_error[~non_final_mask,0]**2
+    #     #STD
+    #     total_error[~non_final_mask,1]  = torch.abs(input[~non_final_mask,1]-total_error[~non_final_mask,0] )**2
+    #     total_error[~non_final_mask,0] =total_error[~non_final_mask,0]**2
         
     
     
@@ -64,18 +72,29 @@ def hash_state(state):
     return hash_value
 
 class Miner_Single(ABC):
-    def __init__(self, number_heads,agent_type_loss, agent_type_train,agent_type_eval):
+    def __init__(self, number_heads,buffer, budget, va, vg,agent_type_loss, agent_type_train,agent_type_eval,ID):
         #State size = 80.. or 125
-        self.state_size = state_size#80#125
-
+        self.state_size = GAME_ENVS[ID][4]#state_size#80#125
+        self.reward_history = []
+        self.episode_ids = np.array([])
+        self.asked_history = np.array([])
+        self.adviser_history = np.array([])
+        self.memory = ReplayMemorySingle(buffer)
+        self.env = GAME_ENVS[ID][0]
+        self.ACTION_SPACE_LIST = GAME_ENVS[ID][2]
+        self.number_of_eval_games = GAME_ENVS[ID][3]
+        self.ID = ID
+        self.uncertainty = np.array([])
+        self.epsilon = 1
         self.number_heads = number_heads
         self.uncertainty = []
         self.agent_type_loss = agent_type_loss
         self.agent_type_train = agent_type_train
         self.agent_type_eval = agent_type_eval
+        self.ACTION_SPACE = GAME_ENVS[ID][1]
         #[164, 150]
-        self.policy_net = Bootstrapped_DQN(number_heads, self.state_size, [164, 150], ACTION_SPACE, hidden_unit)
-        self.target_net = Bootstrapped_DQN(number_heads, self.state_size, [164, 150], ACTION_SPACE, hidden_unit)
+        self.policy_net = Bootstrapped_DQN(number_heads, self.state_size, [164, 150], self.ACTION_SPACE, hidden_unit)
+        self.target_net = Bootstrapped_DQN(number_heads, self.state_size, [164, 150], self.ACTION_SPACE, hidden_unit)
         self.update_target_net()
         self.times_asked = 0
         self.times_advisee = 0
@@ -83,14 +102,20 @@ class Miner_Single(ABC):
         self.optimizers = []
         self.measured_loss = []
         self.optim_loss = 0
-        # self.vars = []
+        self.terminal = {}
+        self.budget = budget
         self.rounds = 0
+        self.agent_list = []
+        self.va = va
+        self.vg = vg
+        self.times_won = 0
         # self.state_counter = []
         # self.env = GAME_ENV()#Goldmine()#TwoGoal()
         # Fuer jeden head gibt es einen optimizer
         #there is one for every head optimizer
         for head_number in range(self.policy_net.number_heads):
             self.optimizers.append(optim.Adam(self.policy_net.nets[head_number].parameters()))#,lr = 0.0001))
+            self.terminal[head_number] = {'ep':[],'mean':[],'std':[]}
             # self.state_counter.append({})
             # optimizers_a.append(optim.SGD(agent_a.model.heads[i].parameters(), lr=0.002))
             # optimizers_b.append(optim.SGD(agent_bQVAL = self.policy_net(states).model.heads[i].parameters(), lr=0.002))
@@ -127,41 +152,144 @@ class Miner_Single(ABC):
     #         return 0
     
     
+    def set_partner(self, other_agent_list):
+        self.other_agent_list = copy.deepcopy(other_agent_list)
+        self.other_agent_list.pop(self.ID)
     
+    def give_advise(self, env):
+        prob_give = self.probability_advise_in_state(env)
+        if self.times_adviser >= self.budget:
+            return None
+       
+        # inv_state = get_grid_for_player(env.state, np.array([0, 0, 0, 0, 1]))
+        # action = self.choose_best_action(env)
+
+        #q_values = self.q_circumflex(env)
+        return prob_give
+
+    @abstractmethod
+    def probability_advise_in_state(self, state):
+        pass
+    # Look at SingleAwareMiner
+    @abstractmethod
+    def probability_ask_in_state(self, env):
+        pass
     
     def exploration_strategy(self, v_state, epsilon):
         # choose random action
         if np.random.random() < epsilon:
-            action = np.random.choice(ACTION_SPACE_LIST)#np.random.randint(0, ACTION_SPACE)
-            # print("A takes random action {}".format(action_a))
+            #Regular epsion-greedy
+            # action = np.random.choice(self.ACTION_SPACE_LIST)#np.random.randint(0, ACTION_SPACE)
+            # Thomson heuristic
+            action = self.thomson_sampling(v_state=v_state)
+            # print("A takes random action {}".format(action_a))a
         else:  # choose best action from Q(s,a) values
             action = self.choose_best_action(v_state)
             # print("A takes best action {}".format(action_a))
         return action
 
+    def thomson_sampling(self,v_state):
+        qvals = self.policy_net.q_circumflex(v_state=v_state)
+        samples = torch.normal(mean= qvals[0],std=qvals[1])
+        action = torch.argmax(samples)
+        return action
+
+
     # This is choosing an action
     
     def choose_training_action(self, env, epsilon):
-        action = self.exploration_strategy(env,epsilon)
+    
+        action = None
+        recieved_advice = False
+
+        if self.times_advisee < self.budget:
+            prob_ask = self.probability_ask_in_state(env)
+            if prob_ask:
+                self.times_asked +=1
+                q_vals = self.policy_net.q_circumflex(v_state=env)
+                current_means = q_vals[0].clone()
+                current_stds = q_vals[1].clone()
+                # other_agent_uncertainties = []
+                for i, other_agent in enumerate(self.agent_list):
+                    give_advise = other_agent.probability_advise_in_state(env)
+                    if give_advise:
+                        ensemble_qvals = other_agent.policy_net.q_circumflex(v_state=env)
+                        other_means,other_stds = ensemble_qvals[0],ensemble_qvals[1]
+                        idx = torch.where(other_stds < current_stds)[0]
+                        if idx.numel():
+                            # print(f'advice to {self.ID} from {other_agent.ID}')
+                            # print(self.env)
+                            self.times_advisee += 1
+                            recieved_advice = True
+                            current_means[idx] = other_means[idx].clone()
+                            current_stds[idx] = other_stds[idx].clone()                
+                if recieved_advice:
+                    q_vals[0] = current_means
+                    q_vals[1] = current_stds
+                    action = self.choose_best_action(qvals = q_vals)
+                else:
+                    action = self.exploration_strategy(v_state = env,epsilon=self.epsilon)
+            else:
+                action = self.exploration_strategy(v_state = env,epsilon=self.epsilon)
+        
+        else:
+            action = self.exploration_strategy(v_state = env,epsilon=self.epsilon)
+
+        return action 
+
+                    
+                #TODO ask agents for advice
+
+    
+        #TODO:  when doing action advising we need to add it here!!!!!!
+        # action = self.exploration_strategy(env,epsilon)
     
         return action
     
-    def choose_best_action(self, v_state):
-        if self.agent_type_train == 'S':
-            state_action_values_joint = self.policy_net.q_circumflex_s(v_state)
-        elif self.agent_type_train == 'R':
-            state_action_values_joint = self.policy_net.q_circumflex_r(v_state)
-        elif self.agent_type_train == 'N':
-            state_action_values_joint = self.policy_net.q_circumflex_n(v_state)
+    def choose_best_action(self,v_state=None, qvals=None,training=True):
+        if qvals == None:
+            qvals = self.policy_net.q_circumflex(v_state=v_state)
+
+        
+        
+        all_mu_and_sigs = qvals
+    
+
+        if training:       
+            if self.agent_type_train == 'S':
+                incentive = (1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1)))
+                state_action_values_joint = all_mu_and_sigs[0] * incentive
+            elif self.agent_type_train == 'R':
+                incentive = (1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1)))
+                state_action_values_joint = all_mu_and_sigs[0] * incentive
+            elif self.agent_type_train == 'N':
+                state_action_values_joint = all_mu_and_sigs[0]
+            else:
+                print(' non valid agent ')
+                return
+            return torch.argmax(state_action_values_joint)
         else:
-            print(' non valid agent ')
-            return
-        return torch.argmax(state_action_values_joint) 
+            if self.agent_type_eval == 'S':
+                incentive = (1-0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1)))
+                state_action_values_joint = all_mu_and_sigs[0] * incentive
+            elif self.agent_type_eval == 'R':
+                incentive = (1+0.5*(all_mu_and_sigs[1]/(all_mu_and_sigs[1]+1)))
+                state_action_values_joint = all_mu_and_sigs[0] * incentive
+            elif self.agent_type_eval == 'N':
+                state_action_values_joint = all_mu_and_sigs[0]
+            else:
+                print(' non valid agent ')
+                return
+            return torch.argmax(state_action_values_joint)
+
               
 
-    def get_state_action_value_distributions(self, state, action):
+    def get_state_action_value_distributions(self, state, action, current=True):
         #qval: for each head retrieve the qvals for the state
-        qval = self.policy_net(state)
+        if current == True:
+            qval = self.policy_net(state)
+        else:
+            qval = self.target_net(state)
         # for each head, stack the mean and variance of the action for each batch
         # Don't worry about the squeeze 
         return  [torch.stack((qval_head[0].gather(1, action),qval_head[1].gather(1, action)),-1).squeeze(1)   for qval_head in qval]
@@ -174,6 +302,7 @@ class Miner_Single(ABC):
         
         
         qval_heads = self.target_net(new_states)
+        #old_qval_heads = self.target_net(states)
    
         #Obtain the mean for the largest mean+std
 
@@ -191,7 +320,7 @@ class Miner_Single(ABC):
        
         
         targ_per_head = []
-        EPSILON = 0.00001*torch.ones_like(rewards)
+        EPSILON = 0.00001*torch.zeros_like(rewards)
         
         for value_next_state in value_next_state_per_head:
             # Store mean and std 
@@ -208,6 +337,7 @@ class Miner_Single(ABC):
         #print(f'time value next state {t1 -time.time()}')  
         
         state_action_values = self.get_state_action_value_distributions(states, actions)
+        state_action_values_old = self.get_state_action_value_distributions(states, actions,current=False)
         #print(f'time get state act {t1 -time.time()}')  
         
         loss = []
@@ -239,17 +369,19 @@ class Miner_Single(ABC):
             # times_visited_terminal = torch.tensor([self.times_visited(state,head=head) for state in used_states[~non_final_mask_cur_head]])
             loss_total,loss_terminal = w2(target,inp,self.rounds,non_final_mask=non_final_mask_cur_head)
             '''
-            
-            
             inp = state_action_values[head].clone()#.view(10)
-            
+            old_inp = state_action_values_old[head].clone()
+                
             target = targ_per_head[head].clone()#.view(10)
+            
+                
             use_sample = np.random.randint(self.number_heads, size=10) != 0
             # while True not in use_sample and :
             #     use_sample = np.random.randint(self.number_heads, size=10) != 0
             inp[use_sample] *= 0
             target[use_sample] *= 0
-            loss_total = w2(target,inp,non_final_mask=non_final_mask)
+            old_inp[use_sample] *= 0
+            loss_total = w2(target,inp,old_inp,non_final_mask=non_final_mask)
             # loss_total,loss_terminal = w2_multi_bandidt(target,inp,self.rounds,
             # non_final_mask=non_final_mask_cur_head,times_visited_terminal=times_visited_terminal)
             # loss.append(criterion_mse(inp, target))

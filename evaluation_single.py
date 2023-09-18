@@ -1,32 +1,40 @@
 #from two_goalworld import *
 #from gridworld import *
-from import_game import GAME_ENV,number_of_eval_games
+# from import_game import GAME_ENVS#GAME_ENV,number_of_eval_games
 import numpy as np
 from torch.autograd import Variable
 import torch
+import copy
+from copy import deepcopy
 #number_of_eval_games = 506
 
 # number_of_eval_games = 150
 
-def evaluate_single_agent(agent_a):
+def evaluate_single_agent(agent):
     reward_sum = 0
-    env = GAME_ENV
+    env = deepcopy(agent.env)
+    #Intialize seed for reproducibility
+    SEED = 10
+    env.reset(seed=SEED)
     #env = TwoGoal()
     # env = 
     # number_of_eval_games = 5
-    agent_a.reset_uncertainty()
-    for state_id in range(number_of_eval_games):
+    agent.reset_uncertainty()
+    for state_id in range(agent.number_of_eval_games):
 
-        old_v_state, _ = GAME_ENV.reset(seed=state_id)
+        old_v_state, _ = env.reset()
+        # print(env)
+        #Format for NN
         old_v_state = Variable(torch.from_numpy(old_v_state)).view(1, -1).detach()
         steps = 0
         done = False
 
         while not done:
 
-            action_a = agent_a.choose_best_action(old_v_state)
-            agent_a.calculate_uncertainty(old_v_state)
-            new_v_state, reward, done, _, _ = env.step(action_a)
+            action = agent.choose_best_action(v_state=old_v_state)
+            agent.calculate_uncertainty(old_v_state,True)
+            new_v_state, reward, done, _, _ = env.step(action)
+            # print(env)
             reward_sum += reward
             steps += 1
 
@@ -35,10 +43,10 @@ def evaluate_single_agent(agent_a):
             if steps > 30:
                 done = True
 
-    uncertainty_mean = mean(agent_a.get_uncertainty())
+    uncertainty_mean = mean(agent.get_uncertainty())
     print(reward_sum)
     print(uncertainty_mean)
-    return reward_sum / number_of_eval_games, uncertainty_mean
+    return reward_sum / agent.number_of_eval_games, uncertainty_mean
 
 
 def mean(*vas):

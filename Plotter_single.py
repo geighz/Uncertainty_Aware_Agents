@@ -181,7 +181,3 @@ def print_time():
     time_str = get_time().strftime(date_format)
     print(time_str)
     return time_str
-
-
-test_results = load_from('20230815-101005')
-plot_test(test_results)

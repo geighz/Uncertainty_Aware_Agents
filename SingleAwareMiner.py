@@ -10,22 +10,19 @@ import time
 
 
 class SingleAwareMiner(Miner_Single):
-    def __init__(self, number_heads, budget, va, vg,agent_type_loss, agent_type_train,agent_type_eval):
-        super(SingleAwareMiner, self).__init__(number_heads, budget, va, vg,agent_type_loss, agent_type_train,agent_type_eval)
+    def __init__(self, number_heads,buffer, budget, va, vg,agent_type_loss, agent_type_train,agent_type_eval,ID):
+        super(SingleAwareMiner, self).__init__(number_heads,buffer, budget, va, vg,agent_type_loss, agent_type_train,agent_type_eval,ID)
         
     def probability_advise_in_state(self, state):
-        inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
+        # inverse_state = get_grid_for_player(state, np.array([0, 0, 0, 0, 1]))
         pessimistic = False
-        uncertainty = self.calculate_uncertainty(v_state(inverse_state),pessimistic)
-        if uncertainty < self.vg:
-            return 1
-        else:
-            return 0
+        uncertainty = self.calculate_uncertainty(state,pessimistic)
+        return uncertainty < self.vg
     def probability_ask_in_state(self, env):
         pessimistic=True
-        uncertainty = self.calculate_uncertainty(env.v_state,pessimistic)
+        uncertainty = self.calculate_uncertainty(env,pessimistic)
         if uncertainty > self.va:
-            return 1
+            return uncertainty
         else:
             return 0
 
@@ -36,7 +33,7 @@ class SingleAwareMiner(Miner_Single):
         actions = len(qval[0][0][0])
         # return 1
         if self.number_heads <2:
-            uncertainty_measure = (torch.max(qval[0][1]) if pessimistic else torch.min(qval[0][1])).detach().numpy()
+            uncertainty_measure = (torch.max(qval[0][1]) if pessimistic else torch.max(qval[0][1])).detach().numpy()
             self.uncertainty.append(uncertainty_measure)
             return uncertainty_measure
 

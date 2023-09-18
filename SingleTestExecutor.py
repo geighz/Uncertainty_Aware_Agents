@@ -1,6 +1,6 @@
-from ReplayMemory import ReplayMemory
+
 #from evaluation_gold import *
-from import_game import GAME_ENV
+#from import_game import GAME_ENV
 from collections import namedtuple
 import numpy as np
 import os
@@ -15,106 +15,123 @@ sns.set_theme()
 from torch.autograd import Variable
 from evaluation_single import evaluate_single_agent
 
+
+Test_result = namedtuple('Test_result',
+                         ('AgentType', 'EPOCH_ID', 'REWARDS',  'UNCERTAINTY','TERMINAL_TRACK_A','Loss','Train','Evaluation'))
+Test_setup_single = namedtuple('Test_setup',
+                        ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE','BUDGET','VA',
+                        'VG','Loss','Train','Evaluation','Number_Agents'))
+
 class TestExecutor:
-    def __init__(self, number_heads, buffer, agent,agent_type_loss, agent_type_train,agent_type_eval):
+    def __init__(self, number_heads, buffer, agent,budget,va,vg,agent_type_loss, agent_type_train,agent_type_eval,number_agents):
         np.random.seed()
         torch.random.seed()
-        self.epsilon = 1
-        self.agent_a = agent(number_heads,agent_type_loss, agent_type_train,agent_type_eval)
-        self.reward_history = []
-        self.episode_ids = np.array([])
-        self.asked_history = np.array([])
-        self.adviser_history = np.array([])
-        self.memory = ReplayMemory(buffer)
-        self.env = GAME_ENV
-        self.uncertainty = np.array([])
+        # self.agent_a = agent(number_heads,buffer,agent_type_loss, agent_type_train,agent_type_eval,ID = 'agent_a')
+        # self.agent_b = agent(number_heads,buffer,agent_type_loss, agent_type_train,agent_type_eval,ID = 'agent_b')
+        self.agent_list = []
+        for i in range(number_agents):
+            self.agent_list.append(agent(number_heads,buffer,budget,va,vg,agent_type_loss, agent_type_train,agent_type_eval,i))
+        for i in range(number_agents):
+           self.agent_list[i].agent_list = self.agent_list
+
+        # self.agent_a.set_partner(self.agent_b)
+        # self.agent_b.set_partner(self.agent_a)        
         self.plot = True
         # Render env
         #self.env.render()
 
-    def track_progress(self, episode_number):
-        if episode_number % 50 == 0 :
-            self.episode_ids = np.append(self.episode_ids, episode_number)
-            agent_a = self.agent_a
-          
-            mean_reward, uncertainty_mean = evaluate_single_agent(agent_a)
-            self.reward_history = np.append(self.reward_history, mean_reward)
+    def track_progress(self, episode_number,agent):
+        if episode_number % 500 == 0 :
+            agent.episode_ids = np.append(agent.episode_ids, episode_number)          
+            mean_reward, uncertainty_mean = evaluate_single_agent(agent)
             
+            agent.reward_history = np.append(agent.reward_history, mean_reward)
+            # agent.uncertainty = np.append(agent.uncertainty, uncertainty_mean)
+            self.vars = []
+    def train_and_evaluate_agent_episode(self,agent,i_episode,epochs,target_update,batch_size):
+        
+        # tracking_time = 100      
             
-            self.uncertainty = np.append(self.uncertainty, uncertainty_mean)
-            # self.vars = []
-
-    def train_and_evaluate_agent(self, epochs, target_update, batch_size):
-        agent_a_terminal = {}
- 
-        for i in range(self.agent_a.number_heads):
-            agent_a_terminal[i] = {'ep':[],'mean':[],'std':[]}
-        
-        
-        
+        old_v_state, _ = agent.env.reset()
+        # print(agent.env)
+        # print(old_v_state)
+       
+        old_v_state = Variable(torch.from_numpy(old_v_state)).view(1, -1).detach()
+        # print(old_v_state)
+        done = False
+        step = 0
         done_times = 0
-        for i_episode in tqdm(range(epochs+1),desc='Training'):
+        while not done:
+            #old_v_state = self.env.gen_obs()
             
-            tracking_time = 1000
-            self.track_progress(i_episode)
-            if i_episode % tracking_time == 0 and i_episode >0:
-                
-                print("%s Game #: %s, %f, %f,%s" % (os.getpid(), i_episode,self.reward_history[-1],self.uncertainty[-1],done_times))
-                
-            old_v_state, _ = self.env.reset()
-            old_v_state = Variable(torch.from_numpy(old_v_state)).view(1, -1).detach()
-            done = False
-            step = 0
+            # print(self.env.v_state)
+            # t1 = time.time()
+            action = agent.choose_training_action(old_v_state, agent.epsilon)
+            #action_b = agent_b.choose_training_action(self.env, self.epsilon)
+            # Take action, observe new state S'
+            new_v_state, reward, done, _, _= agent.env.step(action)
+            
+            step += 1
+            new_v_state = Variable(torch.from_numpy(new_v_state)).view(1, -1).detach()
+            # print(f'time training action computation {t1 - time.time()}')
+            agent.memory.push(old_v_state, action,  new_v_state, reward, not done)
+            old_v_state = new_v_state 
 
-            while not done:
-                #old_v_state = self.env.gen_obs()
-               
-                # print(self.env.v_state)
-                # t1 = time.time()
-                action_a = self.agent_a.choose_training_action(old_v_state, self.epsilon)
-                #action_b = self.agent_b.choose_training_action(self.env, self.epsilon)
-                # Take action, observe new state S'
-                new_v_state, reward, done, _, _= self.env.step(action_a)
-                step += 1
-                new_v_state = Variable(torch.from_numpy(new_v_state)).view(1, -1).detach()
-                # print(f'time training action computation {t1 - time.time()}')
-                self.memory.push(old_v_state, action_a, 0,  new_v_state, reward, not done)
-                old_v_state = new_v_state 
-
-                if reward > 0:
-                   
-                    self.track_terminal(self.agent_a.number_heads,agent_a_terminal,old_v_state,action_a,i_episode)
+            # if reward > 0:
                 
+            #     self.track_terminal(agent.number_heads,agent.terminal,old_v_state,action,i_episode)
+            
+            if done and reward > 0:
+                #done_times+=1
+                #agent.reward_history.append(reward)
+                agent.times_won +=1
+                # print(done)
+            # if buffer not filled, add to it
+            if len(agent.memory) < agent.memory.capacity:
                 if done:
-                    done_times+=1
-                # if buffer not filled, add to it
-                if len(self.memory) < self.memory.capacity:
-                    if done:
-                        break
-                    else:
-                        continue
-                
-                states, actions_a, actions_b, new_states, reward, non_final = self.memory.sample(batch_size)              
-                self.agent_a.optimize(states, actions_a, new_states, reward, non_final)
-                # print(f'time optimize computation {t1 - time.time()}')
-                if step > 30:
                     break
+                else:
+                    continue
             
-
-            # if (i_episode%5000 == 0 and i_episode>0 ):
-            #     self.plot_terminal_state(i_episode,agent_a_terminal,agent_b_terminal)
+            states, actions, new_states, reward, non_final = agent.memory.sample(batch_size)              
+            agent.optimize(states, actions, new_states, reward, non_final)
+            # print(f'time optimize computation {t1 - time.time()}')
+            if step > 30:
+                break
+        if i_episode%100 == 0 and i_episode > 0:
+            print(agent.ID)
+            print('Times won:',agent.times_won/100)
+            agent.times_won = 0
         
-            if self.epsilon > 0.02:
-                self.epsilon -= (1 / epochs)
+        # if (i_episode%5000 == 0 and i_episode>0 ):
+        #     self.plot_terminal_state(i_episode,agent_a_terminal,agent_b_terminal)
+    
+        if agent.epsilon > 0.02:
+            agent.epsilon -= (1 / epochs)#**(1/2)
+        
+        if i_episode % target_update == 0:
             
-            if i_episode % target_update == 0:
+            for head_number in range(agent.policy_net.number_heads):
+                agent.update_target_net()
+        
+    def train_and_evaluate_agent(self, epochs, target_update, batch_size):        
+        tracking_time = 500
+        done_times = 0
+        for i_episode in tqdm(range(epochs+1),desc='Training'):   
+            for agent in self.agent_list:
+                self.track_progress(i_episode,agent)
                 
-                for head_number in range(self.agent_a.policy_net.number_heads):
-                    self.agent_a.update_target_net()
+                if i_episode % tracking_time == 0:
+                    print("%s Game #: %s, %f,%s,%f,%f,%f" % (os.getpid(), i_episode,agent.reward_history[-1],done_times,agent.times_asked,agent.times_advisee,agent.epsilon))
+
+
+                self.train_and_evaluate_agent_episode(agent,i_episode,epochs,target_update,batch_size)
         
         # self.plot_terminal_state(i_episode,agent_a_terminal)
-        agentType = 'PNN-DQN-'+self.agent_a.agent_type_loss+self.agent_a.agent_type_train+self.agent_a.agent_type_eval
-        test_result = Test_result(agentType, self.episode_ids, self.reward_history, self.uncertainty,agent_a_terminal,self.agent_a.agent_type_loss,self.agent_a.agent_type_train,self.agent_a.agent_type_eval)
+        test_result = []
+        for agent in self.agent_list:
+            agentType = 'PNN-DQN-'+agent.agent_type_loss+agent.agent_type_train+agent.agent_type_eval
+            test_result.append(Test_result(agentType, agent.episode_ids, agent.reward_history, agent.uncertainty,agent.terminal,agent.agent_type_loss,agent.agent_type_train,agent.agent_type_eval))
         # print(test_result)
         return test_result
     def track_terminal(self,number_heads,agent_a_terminal,old_v_state,action_a,i_episode):
@@ -146,17 +163,13 @@ class TestExecutor:
         return
 
 
-Test_result = namedtuple('Test_result',
-                         ('AgentType', 'EPOCH_ID', 'REWARDS',  'UNCERTAINTY','TERMINAL_TRACK_A','Loss','Train','Evaluation'))
-Test_setup_single = namedtuple('Test_setup',
-                        ('AgentType', 'NUMBER_HEADS', 'EPOCHS', 'BUFFER', 'BATCH_SIZE', 'TARGET_UPDATE','Loss','Train','Evaluation'))
 
 
 def execute_test_single(test_id, test, return_dict):
     print(test)
-    agenttype, number_heads, epochs, buffer, batch_size, target_update,agent_type_loss, agent_type_train,agent_type_eval = test
+    agenttype, number_heads, epochs, buffer, batch_size, target_update,budget,va,vg,agent_type_loss, agent_type_train,agent_type_eval,number_agents= test
     print("test #: %s" % test_id)
-    executor = TestExecutor(number_heads, buffer, agenttype,agent_type_loss, agent_type_train,agent_type_eval)
+    executor = TestExecutor(number_heads, buffer, agenttype,budget,va,vg,agent_type_loss, agent_type_train,agent_type_eval,number_agents)
     return_dict[test_id] = executor.train_and_evaluate_agent(epochs, target_update, batch_size)
 
 

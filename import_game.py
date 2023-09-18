@@ -5,6 +5,7 @@ import numpy as np
 import gymnasium as gym
 import minigrid
 from minigrid.wrappers import FlatObsWrapper
+from collections import namedtuple
 
 '''
 Envs:
@@ -32,13 +33,22 @@ This environment is useful for studying safety and safe exploration.
 
 Complexity: Medium
 '''
-
-env = gym.make("MiniGrid-LavaGapS5-v0")
-number_of_eval_games = 25
-observation, info = env.reset(seed=42)
-GAME_ENV = FlatObsWrapper(env)
-obs, _ = GAME_ENV.reset()
-ACTION_SPACE_LIST = [0,1,2]
-ACTION_SPACE= len(ACTION_SPACE_LIST)
-
-state_size = obs.shape[0]
+Game_tuple = namedtuple(('Game_tuple'),('ENV','ACTION_SPACE','ACTION_SPACE_LIST','Number_of_eval_games','state_size'))
+number_agents = 1
+envs_to_play = ["MiniGrid-Empty-Random-6x6-v0","MiniGrid-Empty-Random-6x6-v0","MiniGrid-Empty-Random-6x6-v0"]
+number_of_eval_games_list = [96,96,96]
+GAME_ENVS = []
+for i in range(number_agents):
+    env = gym.make(envs_to_play[i])
+    
+    number_of_eval_games = number_of_eval_games_list[i]
+    observation, info = env.reset(seed=i)
+    # env.render()
+    # print(observation)
+    GAME_ENV = FlatObsWrapper(env)
+    obs, _ = GAME_ENV.reset()
+    ACTION_SPACE_LIST = [0,1,2]
+    ACTION_SPACE= len(ACTION_SPACE_LIST)
+    state_size = obs.shape[0]
+    Game_tuple = (GAME_ENV,ACTION_SPACE,ACTION_SPACE_LIST,number_of_eval_games,state_size)
+    GAME_ENVS.append(Game_tuple)
